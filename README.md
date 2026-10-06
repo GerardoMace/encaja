@@ -6,6 +6,7 @@ Small puzzle games for mobile browsers, each written in plain HTML, CSS and Java
 |------|------|
 | **Encaja**: 8×8 block puzzle | https://gerardomace.github.io/encaja/ |
 | **Colonia**: puzzle levels on Conway's Game of Life | https://gerardomace.github.io/encaja/colonia/ |
+| **Cat Evolution**: wake Egyptian cat statues, breed them, discover mutations (in progress) | https://gerardomace.github.io/encaja/cat-evolution/ |
 
 ## Encaja
 
@@ -25,4 +26,8 @@ You plant a few cells inside a marked zone, press *Crecer* (grow) and watch the 
 
 Every level was checked by a brute-force solver that simulates every possible planting. That confirms each level can be solved and that random planting rarely works: on the glider levels fewer than 1% of plantings win. The in-game hint reveals one solution found by that solver, one cell at a time.
 
-The interface of both games is in Spanish.
+## Cat Evolution (in progress)
+
+A cat-breeding game with an Egyptian temple theme. Every cat has four genes (fur, pattern, eyes, accessory). Kittens inherit each gene from one parent at random, and each gene can mutate into one of three families (Elegant, Egyptian, Mystic) with 12 mutations in total. Rarity depends on the number of mutated genes, and rarer kittens take longer to incubate. Cats are drawn as layered SVG, so any gene combination renders; the layers will later be replaced by final artwork.
+
+The interface of all games is in Spanish.

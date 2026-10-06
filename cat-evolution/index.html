@@ -1,0 +1,804 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#131b4a">
+<meta name="description" content="Cat Evolution: despierta estatuas de gatos egipcios, crúzalos y descubre mutaciones.">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}*,*::before,*::after{box-sizing:border-box}[hidden]{display:none!important}</style>
+<title>Cat Evolution</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Nunito:wght@600;800;900&display=swap">
+<style>
+/* Layout: app de una columna; templo arriba, contenido en pestañas y barra de navegación fija abajo */
+:root{
+  --bg:#131b4a;
+  --bg-hi:#1d2a6e;
+  --panel:#202f7a;
+  --panel-hi:#2a3b8f;
+  --sand:#f1ddb0;
+  --sand-ink:#3a2814;
+  --gold:#f4c24f;
+  --turq:#36cbb9;
+  --ink:#f7f0e2;
+  --muted:#aeb6e0;
+  --r-comun:#c9b48a;
+  --r-raro:#36cbb9;
+  --r-epico:#b48cff;
+  --r-legend:#f4c24f;
+  --display:"Bagel Fat One","Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif;
+  --body:"Nunito",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:dark;
+}
+html,body{min-height:100%}
+body{
+  margin:0;color:var(--ink);font-family:var(--body);
+  background:
+    radial-gradient(110% 55% at 50% 0%,var(--bg-hi) 0%,transparent 70%),
+    repeating-linear-gradient(90deg,transparent 0 46px,rgba(244,194,79,.035) 46px 48px),
+    var(--bg);
+  background-attachment:fixed;
+  padding-inline:16px;display:flex;justify-content:center;
+  -webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;
+}
+.app{width:100%;max-width:520px;padding-block:0 110px}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
+button:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+button:disabled{cursor:default;opacity:.5}
+h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-spacing:.01em}
+.cat{display:block;width:100%;height:auto;overflow:visible}
+
+.topbar{
+  position:sticky;top:env(safe-area-inset-top,0px);z-index:5;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  padding-block:12px;background:linear-gradient(var(--bg) 70%,transparent);
+}
+.logo{font-family:var(--display);font-size:1.5rem;line-height:1}
+.logo em{font-style:normal;color:var(--gold)}
+.purse{display:flex;align-items:center;gap:6px;background:var(--panel);border-radius:999px;padding:6px 14px 6px 8px;font-weight:900;font-variant-numeric:tabular-nums}
+.purse svg{width:22px;height:22px}
+.purse.bump{animation:pulse .4s}
+
+/* Templo */
+.intro{display:grid;justify-items:center;text-align:center;gap:14px;padding-block:20px}
+.intro .big{width:min(78vw,300px)}
+.intro p{margin:0;color:var(--muted);font-size:1.05rem;line-height:1.45;max-width:30ch}
+.guide{display:grid;grid-template-columns:92px 1fr;gap:12px;align-items:center;margin-top:4px}
+.bubble{
+  position:relative;background:var(--sand);color:var(--sand-ink);border-radius:18px;padding:12px 14px;
+  font-weight:800;font-size:.95rem;line-height:1.4;
+}
+.bubble::before{content:"";position:absolute;left:-8px;top:50%;margin-top:-8px;border:8px solid transparent;border-left:0;border-right-color:var(--sand)}
+.bubble small{display:block;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;opacity:.6;margin-bottom:2px}
+.block{margin-top:22px;display:grid;gap:12px}
+.altar{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;background:var(--panel);border-radius:18px;padding:12px 14px}
+.altar svg{width:40px;height:40px}
+.altar b{display:block;font-size:.98rem}
+.altar small{color:var(--muted);font-size:.82rem}
+.bar{height:8px;border-radius:99px;background:var(--bg);margin-top:6px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--gold);border-radius:99px;transition:width .4s}
+.btn{border-radius:14px;padding:12px 16px;font-weight:900;background:var(--panel-hi)}
+.btn.gold{background:var(--gold);color:var(--sand-ink);box-shadow:0 4px 0 #b9881f}
+.btn.gold:active:not(:disabled){transform:translateY(2px);box-shadow:0 2px 0 #b9881f}
+.btn.turq{background:var(--turq);color:#08302b;box-shadow:0 4px 0 #23917f}
+.btn.turq:active:not(:disabled){transform:translateY(2px);box-shadow:0 2px 0 #23917f}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.slots{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.slot{
+  background:var(--panel);border-radius:18px;padding:12px;display:grid;justify-items:center;gap:6px;text-align:center;min-height:200px;align-content:center;
+}
+.slot.empty{background:transparent;border:2px dashed var(--panel-hi);color:var(--muted);font-weight:800}
+.slot .sarc{width:72px;filter:drop-shadow(0 0 10px var(--glow,transparent))}
+.slot.ready .sarc{animation:wobble 1.2s infinite}
+.slot .time{font-family:var(--display);font-size:1.3rem;font-variant-numeric:tabular-nums}
+.slot small{color:var(--muted);font-size:.8rem;line-height:1.3}
+.slot.ready{box-shadow:inset 0 0 0 3px var(--gold)}
+
+/* Gatos */
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+@media (min-width:540px){.grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.card{
+  background:var(--sand);color:var(--sand-ink);border-radius:20px;padding:10px 10px 12px;text-align:left;
+  display:grid;gap:4px;position:relative;
+}
+.card .art{border-radius:14px;padding:6px 10px 0;background:radial-gradient(circle at 50% 60%,var(--halo,#fff7e6) 0%,transparent 70%)}
+.card .name{font-family:var(--display);font-size:1.1rem;line-height:1.1}
+.card .meta{font-size:.78rem;font-weight:800;opacity:.75}
+.card.stone{background:#d9c9a3}
+.card.stone .name{opacity:.7}
+.badge{display:inline-block;border-radius:99px;padding:2px 9px;font-size:.72rem;font-weight:900;letter-spacing:.04em;color:#1c1430}
+.b-comun{background:var(--r-comun)}.b-raro{background:var(--r-raro)}.b-epico{background:var(--r-epico)}.b-legend{background:var(--r-legend)}
+.card.legend{box-shadow:0 0 0 3px var(--r-legend),0 0 22px rgba(244,194,79,.45)}
+.card.epico{box-shadow:0 0 0 3px var(--r-epico)}
+.book{display:grid;gap:10px}
+.fam{background:var(--panel);border-radius:16px;padding:12px}
+.fam h3{margin:0 0 8px;font-size:.95rem;font-weight:900;display:flex;justify-content:space-between}
+.fam h3 span{color:var(--muted);font-weight:800}
+.fam ul{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.fam li{background:var(--bg);border-radius:10px;padding:7px 10px;font-size:.85rem;font-weight:800}
+.fam li.no{color:var(--muted);font-weight:600}
+.fam li small{display:block;font-size:.7rem;color:var(--muted);font-weight:700}
+.reset{margin-top:28px;color:var(--muted);font-size:.85rem;text-decoration:underline;justify-self:start}
+.reset.confirm{color:#ff8a8a;font-weight:900}
+
+/* Juegos */
+.game{background:var(--panel);border-radius:20px;padding:16px;display:grid;gap:6px}
+.game b{font-family:var(--display);font-weight:400;font-size:1.25rem}
+.game p{margin:0;color:var(--muted);line-height:1.45}
+.soon{justify-self:start;background:var(--bg);color:var(--gold);border-radius:99px;padding:3px 10px;font-size:.75rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
+
+/* Navegación */
+.tabs{
+  position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;justify-content:center;
+  padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));background:rgba(15,21,60,.94);backdrop-filter:blur(8px);
+}
+.tabs div{width:100%;max-width:520px;display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+.tab{border-radius:14px;padding:10px 4px;font-weight:900;font-size:.9rem;color:var(--muted);display:grid;justify-items:center;gap:2px}
+.tab svg{width:24px;height:24px}
+.tab[aria-selected="true"]{background:var(--panel);color:var(--ink)}
+.tab .dot{width:8px;height:8px;border-radius:50%;background:var(--gold);margin-top:-2px}
+
+/* Hoja inferior */
+.sheet{position:fixed;inset:0;z-index:10;background:rgba(8,12,36,.72);display:flex;align-items:flex-end;justify-content:center;padding:16px 16px 0}
+.sheet-card{
+  width:100%;max-width:520px;max-height:90vh;overflow:auto;background:var(--bg-hi);border-radius:26px 26px 0 0;
+  padding:22px 18px calc(22px + env(safe-area-inset-bottom,0px));display:grid;gap:14px;animation:up .32s cubic-bezier(.2,1.2,.4,1);
+}
+.sheet-head{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.x{width:38px;height:38px;border-radius:12px;background:var(--panel);font-size:1.3rem;line-height:1}
+.hero{width:min(64vw,250px);justify-self:center;position:relative}
+.hero.halo{background:radial-gradient(circle at 50% 60%,var(--halo,rgba(255,255,255,.12)) 0%,transparent 68%)}
+.center{text-align:center;display:grid;gap:6px;justify-items:center}
+.big-name{font-family:var(--display);font-size:2rem;line-height:1}
+.genes{display:grid;gap:6px;margin:0;padding:0;list-style:none}
+.genes li{display:flex;justify-content:space-between;gap:10px;background:var(--panel);border-radius:12px;padding:10px 12px;font-weight:800}
+.genes li span{color:var(--muted);font-weight:700}
+.genes li.mut{box-shadow:inset 4px 0 0 var(--fc)}
+.genes li.mut b{color:var(--fc)}
+.note{margin:0;color:var(--muted);line-height:1.45;font-size:.92rem;text-align:center}
+.new-mut{background:var(--gold);color:var(--sand-ink);border-radius:14px;padding:10px 12px;font-weight:900;text-align:center}
+.pick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.pick .card{padding:6px 6px 8px;gap:2px;font-size:.9rem}
+.pick .card .name{font-size:.95rem}
+.pick .card[aria-pressed="true"]{box-shadow:0 0 0 4px var(--turq)}
+.pick .card .tag{position:absolute;top:6px;left:6px;background:var(--turq);color:#08302b;border-radius:99px;font-weight:900;font-size:.75rem;padding:1px 8px}
+.pair{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:6px;text-align:center;font-weight:900}
+.pair .cat{width:90px;margin:auto}
+.pair .ph{width:90px;height:94px;margin:auto;border-radius:16px;border:2px dashed var(--panel-hi)}
+.plus{font-family:var(--display);font-size:1.6rem;color:var(--gold)}
+
+.toast{
+  position:fixed;left:50%;bottom:calc(88px + env(safe-area-inset-bottom,0px));z-index:20;transform:translateX(-50%);
+  background:var(--sand);color:var(--sand-ink);font-weight:900;border-radius:14px;padding:10px 16px;
+  box-shadow:0 10px 30px rgba(0,0,0,.35);max-width:calc(100vw - 32px);text-align:center;
+}
+.waking{animation:shake .9s}
+.flash{animation:flash .7s}
+.pop{animation:pop .5s cubic-bezier(.2,1.5,.4,1)}
+@keyframes shake{0%,100%{transform:none}15%{transform:translateX(-6px) rotate(-2deg)}30%{transform:translateX(6px) rotate(2deg)}45%{transform:translateX(-8px) rotate(-3deg)}60%{transform:translateX(8px) rotate(3deg)}80%{transform:translateX(-4px)}}
+@keyframes flash{0%{filter:brightness(3) saturate(0)}100%{filter:none}}
+@keyframes pop{from{transform:scale(.6);opacity:0}to{transform:none;opacity:1}}
+@keyframes wobble{0%,100%{transform:rotate(0)}25%{transform:rotate(-4deg)}75%{transform:rotate(4deg)}}
+@keyframes pulse{50%{transform:scale(1.12)}}
+@keyframes up{from{transform:translateY(60px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.waking,.flash,.pop,.slot.ready .sarc,.sheet-card,.purse.bump{animation:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="topbar">
+    <div class="logo">Cat <em>Evolution</em></div>
+    <div class="purse" id="purse" title="Ofrendas">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#f4c24f" stroke="#7a5410" stroke-width="1.2" d="M12 2.5c-2.6 0-4.3 2-4.3 4.4 0 1.7.9 3.1 2.2 4.1H5.5v2.6h5.2V21.5h2.6V13.6h5.2V11h-4.4c1.3-1 2.2-2.4 2.2-4.1 0-2.4-1.7-4.4-4.3-4.4zm0 2.4c1.1 0 1.8.9 1.8 2s-.8 2.4-1.8 3.3c-1-.9-1.8-2.2-1.8-3.3s.7-2 1.8-2z"/></svg>
+      <b id="ofr">0</b><span class="sr" hidden>ofrendas</span>
+    </div>
+  </header>
+
+  <main>
+    <section id="tab-templo"></section>
+    <section id="tab-gatos" hidden></section>
+    <section id="tab-juegos" hidden>
+      <div class="block">
+        <h2>Juegos del templo</h2>
+        <div class="game"><span class="soon">Próximamente</span><b>Ofrendas</b><p>Estilo Candy Crush: junta 3 o más escarabajos, ojos de Horus o pescados. Ganas ofrendas para despertar estatuas y criar gatitos, y a veces una estatua de premio.</p></div>
+        <div class="game"><span class="soon">Próximamente</span><b>Pirámide</b><p>Estilo Encaja: acomoda bloques de piedra. Ganas piedra para agrandar el templo con más sarcófagos y más espacio para gatos.</p></div>
+        <div class="game"><span class="soon">Después</span><b>Poderes de tus gatos</b><p>Cada gato te ayudará en los juegos según sus mutaciones. Los legendarios tendrán los poderes más fuertes.</p></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<nav class="tabs" id="tabs" hidden>
+  <div role="tablist">
+    <button class="tab" role="tab" data-tab="templo" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3L2 21h20L12 3z"/><path d="M7 21l5-9 5 9"/></svg>Templo</button>
+    <button class="tab" role="tab" data-tab="gatos" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M5 20c0-6 2-8 2-8L5 4l5 3h4l5-3-2 8s2 2 2 8H5z"/></svg>Gatos<span class="dot" id="dot-gatos" hidden></span></button>
+    <button class="tab" role="tab" data-tab="juegos" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>Juegos</button>
+  </div>
+</nav>
+
+<div class="sheet" id="sheet" hidden><div class="sheet-card" id="sheet-card" role="dialog" aria-modal="true"></div></div>
+<div class="toast" id="toast" hidden></div>
+
+<script>
+(() => {
+  'use strict';
+  // ================= Reglas del juego (valores de prueba) =================
+  const COST = { awaken: 15, breed: 10, dig: 30 };
+  const ALTAR = { everyMs: 4000, cap: 40 };            // 1 ofrenda cada 4 s, máximo 40 guardadas
+  const INCUBATE = { comun: 15, raro: 40, epico: 90, legend: 180 }; // segundos (en el juego final serían horas)
+  const MUT_RATE = 0.14;                                // probabilidad de mutación por gen
+  const FAM_WEIGHT = { elegante: .55, egipcio: .30, mistico: .15 };
+
+  const RARITY = {
+    comun: { label: 'Común', cls: 'b-comun', halo: '#fff3d6' },
+    raro: { label: 'Raro', cls: 'b-raro', halo: '#bff3ec' },
+    epico: { label: 'Épico', cls: 'b-epico', halo: '#e3d4ff' },
+    legend: { label: 'Legendario', cls: 'b-legend', halo: '#ffe7a3' },
+  };
+  const FAMILY = {
+    elegante: { label: 'Elegante', color: '#dfe5f2' },
+    egipcio: { label: 'Egipcia', color: '#f4c24f' },
+    mistico: { label: 'Mística', color: '#b48cff' },
+  };
+  const GENES = {
+    fur:  { label: 'Pelaje',    common: ['naranja', 'gris', 'negro', 'blanco', 'crema', 'cafe'], mut: { elegante: 'plateado', egipcio: 'dorado', mistico: 'cosmico' } },
+    pat:  { label: 'Patrón',    common: ['liso', 'atigrado', 'manchas', 'bicolor'],              mut: { elegante: 'smoking', egipcio: 'jeroglificos', mistico: 'constelacion' } },
+    eyes: { label: 'Ojos',      common: ['verde', 'ambar', 'azul'],                               mut: { elegante: 'heterocromia', egipcio: 'kohl', mistico: 'galaxia' } },
+    acc:  { label: 'Accesorio', common: ['ninguno', 'cascabel'],                                  mut: { elegante: 'mono', egipcio: 'usekh', mistico: 'luna' } },
+  };
+  const GENE_KEYS = Object.keys(GENES);
+  const NAMES_OF = {
+    naranja: 'Naranja', gris: 'Gris', negro: 'Negro', blanco: 'Blanco', crema: 'Crema', cafe: 'Café',
+    plateado: 'Plateado', dorado: 'Dorado', cosmico: 'Cósmico', arena: 'Arena',
+    liso: 'Liso', atigrado: 'Atigrado', manchas: 'Manchas', bicolor: 'Bicolor',
+    smoking: 'Esmoquin', jeroglificos: 'Jeroglíficos', constelacion: 'Constelación',
+    verde: 'Verdes', ambar: 'Ámbar', azul: 'Azules', heterocromia: 'Heterocromía', kohl: 'Delineado de Horus', galaxia: 'Galaxia',
+    ninguno: 'Ninguno', cascabel: 'Cascabel', mono: 'Moño de gala', usekh: 'Collar usekh', luna: 'Tiara lunar', nemes: 'Tocado nemes',
+  };
+  const MUT_FAMILY = {};
+  GENE_KEYS.forEach(k => Object.entries(GENES[k].mut).forEach(([fam, v]) => { MUT_FAMILY[v] = fam; }));
+  const CAT_NAMES = ['Cleo', 'Nefer', 'Ramsés', 'Tut', 'Isis', 'Osiris', 'Anubis', 'Horus', 'Seti', 'Amira', 'Nilo', 'Kaia', 'Luna', 'Momo', 'Churro', 'Canela', 'Mango', 'Kiwi', 'Oreo', 'Nala', 'Pelusa', 'Tamal', 'Concha', 'Michi', 'Bigotes', 'Dátil', 'Papiro', 'Menta', 'Chispa', 'Miel', 'Coco', 'Simón', 'Pixel', 'Nube', 'Duna', 'Cairo', 'Giza', 'Zafiro', 'Perla', 'Ónix', 'Sol', 'Tofu', 'Nacho', 'Pistache'];
+
+  const rarityOf = g => { const n = GENE_KEYS.filter(k => MUT_FAMILY[g[k]]).length; return n === 0 ? 'comun' : n === 1 ? 'raro' : n === 2 ? 'epico' : 'legend'; };
+  function styleOf(g) {
+    const c = {};
+    GENE_KEYS.forEach(k => { const f = MUT_FAMILY[g[k]]; if (f) c[f] = (c[f] || 0) + 1; });
+    const order = ['mistico', 'egipcio', 'elegante'];
+    let best = null;
+    order.forEach(f => { if (c[f] && (!best || c[f] > c[best])) best = f; });
+    return best ? FAMILY[best].label : 'Caricatura';
+  }
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  function pickFamily(bias) {
+    const w = { ...FAM_WEIGHT };
+    Object.entries(bias || {}).forEach(([f, n]) => { w[f] += n * .25; });
+    let x = Math.random() * Object.values(w).reduce((a, b) => a + b, 0);
+    for (const [f, v] of Object.entries(w)) { x -= v; if (x < 0) return f; }
+    return 'elegante';
+  }
+  function breedGenes(a, b, forceMutation) {
+    const bias = {};
+    [a, b].forEach(p => GENE_KEYS.forEach(k => { const f = MUT_FAMILY[p.genes[k]]; if (f) bias[f] = (bias[f] || 0) + 1; }));
+    const g = {};
+    GENE_KEYS.forEach(k => {
+      g[k] = Math.random() < .5 ? a.genes[k] : b.genes[k];
+      if (Math.random() < MUT_RATE) g[k] = GENES[k].mut[pickFamily(bias)];
+    });
+    if (forceMutation && rarityOf(g) === 'comun') {
+      const k = pick(GENE_KEYS);
+      g[k] = GENES[k].mut[Math.random() < .6 ? 'elegante' : 'egipcio'];
+    }
+    return g;
+  }
+  function randomStatueGenes() {
+    const g = {};
+    GENE_KEYS.forEach(k => { g[k] = pick(GENES[k].common); });
+    if (Math.random() < .12) { const k = pick(GENE_KEYS); g[k] = GENES[k].mut[pickFamily()]; }
+    return g;
+  }
+
+  // ================= Dibujo de gatos por capas (provisional, luego se reemplaza por arte IA) =================
+  let uid = 0;
+  const FUR = {
+    naranja: { b: '#f39a4a' }, gris: { b: '#9aa4b2' }, negro: { b: '#3d3846' }, blanco: { b: '#f6f1e9' }, crema: { b: '#f1d9ab' }, cafe: { b: '#9c6b45' },
+    plateado: { b: '#d3dae6', g: ['#f7f9fc', '#a9b5ca'] }, dorado: { b: '#f2c14e', g: ['#ffe48d', '#d68e17'] },
+    cosmico: { b: '#5a48d6', g: ['#8a67ff', '#1f6fd1'] }, arena: { b: '#e2bf7e', g: ['#f2d79f', '#c7954c'] },
+  };
+  const IRIS = { verde: '#69c34d', ambar: '#f0a32e', azul: '#4aa9ec', kohl: '#e8b33a' };
+  function shade(hex, f) {
+    const n = parseInt(hex.slice(1), 16);
+    let r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+    const t = f < 0 ? 0 : 255, p = Math.abs(f);
+    r = Math.round((t - r) * p + r); g = Math.round((t - g) * p + g); b = Math.round((t - b) * p + b);
+    return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+  }
+  const lum = hex => { const n = parseInt(hex.slice(1), 16); return (.3 * (n >> 16) + .59 * ((n >> 8) & 255) + .11 * (n & 255)) / 255; };
+  function star4(x, y, r, fill) {
+    return `<path d="M${x} ${y - r} Q${x + r * .22} ${y - r * .22} ${x + r} ${y} Q${x + r * .22} ${y + r * .22} ${x} ${y + r} Q${x - r * .22} ${y + r * .22} ${x - r} ${y} Q${x - r * .22} ${y - r * .22} ${x} ${y - r}Z" fill="${fill}"/>`;
+  }
+
+  function catSVG(g, o = {}) {
+    const id = 'k' + (++uid), st = !!o.statue;
+    const F = FUR[g.fur] || FUR.naranja;
+    const P = st
+      ? { fur: '#cdb488', body: '#cdb488', dark: '#a98f62', white: '#dcc8a0', ink: '#6b5634', ear: '#b89c6c', nose: '#a98f62', gold: '#b39a6c', star: '#a98f62', red: '#a98f62', blue: '#b39a6c', turq: '#c2a878' }
+      : { fur: F.g ? `url(#${id}f)` : F.b, body: F.g ? `url(#${id}f)` : F.b, dark: lum(F.b) < .3 ? shade(F.b, .3) : shade(F.b, -.3), white: '#fbf6ee', ink: '#2a1f35', ear: '#f6a5b6', nose: '#ef7f98', gold: '#f4c24f', star: '#fff6c4', red: '#d94848', blue: '#1f5fbf', turq: '#36cbb9' };
+    let defs = '';
+    if (!st && F.g) defs += `<linearGradient id="${id}f" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${F.g[0]}"/><stop offset="1" stop-color="${F.g[1]}"/></linearGradient>`;
+    const S = `stroke="${P.ink}" stroke-width="3" stroke-linejoin="round"`;
+    const pat = g.pat;
+    const smoking = pat === 'smoking';
+    let o2 = '';
+
+    // cola
+    o2 += `<path d="M146 176C192 172 194 116 168 106C158 102 152 112 160 117C176 127 172 158 142 160Z" fill="${smoking && !st ? '#2b2731' : P.fur}" ${S}/>`;
+    // cuerpo
+    o2 += `<ellipse cx="100" cy="150" rx="50" ry="46" fill="${smoking && !st ? '#2b2731' : P.body}" ${S}/>`;
+    if (pat === 'atigrado') o2 += `<path d="M58 138q12 4 14 16M55 156q12 2 14 13M142 138q-12 4-14 16M145 156q-12 2-14 13" stroke="${P.dark}" stroke-width="5" stroke-linecap="round" fill="none"/>`;
+    if (pat === 'manchas') o2 += [[74, 142, 9], [128, 160, 11], [112, 130, 6], [86, 170, 7]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${P.dark}"/>`).join('');
+    if (pat === 'bicolor') o2 += `<ellipse cx="100" cy="152" rx="26" ry="32" fill="${P.white}"/>`;
+    if (smoking) o2 += `<path d="M100 118L80 162Q100 178 120 162Z" fill="${P.white}"/>`;
+    if (pat === 'jeroglificos') o2 += `<path d="M58 158q42 16 84 0" stroke="${P.gold}" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M95 146a5 6 0 1 0 10 0a5 6 0 1 0-10 0M100 152v18M92 158h16" stroke="${P.gold}" stroke-width="3.5" fill="none" stroke-linecap="round"/>`;
+    if (pat === 'constelacion') {
+      const pts = [[70, 150], [88, 134], [112, 146], [128, 170], [96, 172]];
+      o2 += `<path d="M${pts.map(p => p.join(' ')).join('L')}" stroke="${P.star}" stroke-opacity=".7" stroke-width="1.6" fill="none"/>`;
+      o2 += pts.map(([x, y], i) => star4(x, y, i % 2 ? 5 : 7, P.star)).join('');
+    }
+    // patas
+    const paw = (pat === 'bicolor' || smoking) ? P.white : P.body;
+    o2 += `<ellipse cx="80" cy="192" rx="16" ry="10" fill="${paw}" ${S}/><ellipse cx="120" cy="192" rx="16" ry="10" fill="${paw}" ${S}/>`;
+    // orejas
+    if (g.acc !== 'nemes') {
+      o2 += `<path d="M54 72L58 26Q60 20 66 24L94 48Z" fill="${P.fur}" ${S}/><path d="M146 72L142 26Q140 20 134 24L106 48Z" fill="${P.fur}" ${S}/>`;
+      o2 += `<path d="M63 60L65 35L84 50Z" fill="${P.ear}"/><path d="M137 60L135 35L116 50Z" fill="${P.ear}"/>`;
+    }
+    // cabeza
+    o2 += `<ellipse cx="100" cy="88" rx="54" ry="46" fill="${P.fur}" ${S}/>`;
+    if (pat === 'atigrado') o2 += `<path d="M100 45v14M87 48l4 11M113 48l-4 11M47 84h13M48 95h12M153 84h-13M152 95h-12" stroke="${P.dark}" stroke-width="5" stroke-linecap="round" fill="none"/>`;
+    if (pat === 'manchas') o2 += `<circle cx="122" cy="60" r="8" fill="${P.dark}"/><circle cx="70" cy="70" r="6" fill="${P.dark}"/>`;
+    if (pat === 'jeroglificos') o2 += `<path d="M86 58q14-9 28 0M100 50v-7" stroke="${P.gold}" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="62" cy="66" r="3" fill="${P.gold}"/><circle cx="138" cy="66" r="3" fill="${P.gold}"/>`;
+    if (pat === 'constelacion') o2 += star4(80, 58, 6, P.star) + star4(120, 54, 4, P.star) + star4(132, 72, 3, P.star);
+    if (pat === 'bicolor' || smoking) o2 += `<ellipse cx="100" cy="109" rx="22" ry="15" fill="${P.white}"/>`;
+    // ojos
+    if (st) {
+      o2 += `<path d="M68 92q10 8 20 0M112 92q10 8 20 0" stroke="${P.ink}" stroke-width="3.5" fill="none" stroke-linecap="round"/>`;
+    } else {
+      let L = IRIS[g.eyes] || IRIS.verde, R = L;
+      if (g.eyes === 'heterocromia') { L = IRIS.azul; R = IRIS.ambar; }
+      if (g.eyes === 'galaxia') {
+        defs += `<radialGradient id="${id}g" cx=".45" cy=".4" r=".7"><stop offset="0" stop-color="#f1e6ff"/><stop offset=".45" stop-color="#8a5cff"/><stop offset="1" stop-color="#1b2a85"/></radialGradient>`;
+        L = R = `url(#${id}g)`;
+      }
+      [[78, L], [122, R]].forEach(([x, c]) => {
+        o2 += `<ellipse cx="${x}" cy="90" rx="11" ry="13" fill="${c}" stroke="${P.ink}" stroke-width="2.5"/>`;
+        o2 += g.eyes === 'galaxia'
+          ? star4(x, 91, 6, '#ffffff')
+          : `<ellipse cx="${x}" cy="91" rx="4.5" ry="9" fill="${P.ink}"/><circle cx="${x + 3.5}" cy="85" r="3.5" fill="#fff"/>`;
+      });
+      if (g.eyes === 'kohl') o2 += `<path d="M92 84Q78 73 66 84L55 79M108 84Q122 73 134 84L145 79M70 101l-6 10M130 101l6 10" stroke="${P.ink}" stroke-width="3.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+    }
+    // nariz, boca, bigotes, rubor
+    o2 += `<path d="M94 104L106 104L100 111Z" fill="${P.nose}" stroke="${P.ink}" stroke-width="2" stroke-linejoin="round"/>`;
+    o2 += `<path d="M100 111Q100 118 92 118M100 111Q100 118 108 118" stroke="${P.ink}" stroke-width="2.5" fill="none" stroke-linecap="round"/>`;
+    o2 += `<path d="M70 108L40 104M70 113L42 120M130 108L160 104M130 113L158 120" stroke="${P.ink}" stroke-opacity=".45" stroke-width="2" stroke-linecap="round"/>`;
+    if (!st) o2 += `<ellipse cx="65" cy="106" rx="7" ry="4" fill="#ff8fa8" opacity=".4"/><ellipse cx="135" cy="106" rx="7" ry="4" fill="#ff8fa8" opacity=".4"/>`;
+    // accesorios
+    const usekh = () => [P.blue, P.turq, P.gold, P.red].map((c, i) => `<path d="M62 124Q100 ${170 - i * 8} 138 124" stroke="${c}" stroke-width="6" fill="none" stroke-linecap="round"/>`).join('');
+    if (g.acc === 'cascabel') o2 += `<path d="M66 128Q100 146 134 128" stroke="${P.red}" stroke-width="7" fill="none" stroke-linecap="round"/><circle cx="100" cy="139" r="7" fill="${P.gold}" stroke="${P.ink}" stroke-width="2"/><path d="M96 141h8" stroke="${P.ink}" stroke-width="1.5"/>`;
+    if (g.acc === 'mono') o2 += `<path d="M100 137L80 126L80 148ZM100 137L120 126L120 148Z" fill="${st ? P.dark : '#b8325f'}" stroke="${P.ink}" stroke-width="2.5" stroke-linejoin="round"/><circle cx="100" cy="137" r="5.5" fill="${st ? P.gold : '#8e2148'}" stroke="${P.ink}" stroke-width="2"/>`;
+    if (g.acc === 'usekh') o2 += usekh();
+    if (g.acc === 'luna') o2 += (st ? '' : `<circle cx="100" cy="30" r="20" fill="#fff0a8" opacity=".22"/>`) + `<path d="M106 16a15 15 0 1 0 0 28a12 12 0 1 1 0-28Z" fill="${st ? P.gold : '#fff0a8'}" stroke="${P.ink}" stroke-width="2"/>` + (st ? '' : star4(118, 22, 4, '#fff6c4'));
+    if (g.acc === 'nemes') {
+      defs += `<pattern id="${id}n" width="200" height="10" patternUnits="userSpaceOnUse"><rect width="200" height="10" fill="${P.gold}"/><rect width="200" height="5" fill="${P.blue}"/></pattern>`;
+      o2 += `<path d="M40 104L52 46Q100 12 148 46L160 104L140 134L138 80Q100 60 62 80L60 134Z" fill="url(#${id}n)" ${S}/>`;
+      o2 += `<path d="M62 80Q100 60 138 80" stroke="${P.gold}" stroke-width="6" fill="none"/>`;
+      o2 += `<circle cx="100" cy="52" r="5" fill="${P.gold}" stroke="${P.ink}" stroke-width="2"/>`;
+      o2 += usekh();
+    }
+    if (!st && g.fur === 'cosmico') o2 += star4(70, 160, 4, '#fff6c4') + star4(126, 140, 3, '#fff6c4') + star4(140, 70, 3, '#fff6c4');
+    if (o.cracks) o2 += `<path d="M70 58l8 12-4 10 10 8M130 146l-10 10 4 12M96 172l6-12-4-8M128 52l-6 10 6 6" stroke="#7a6440" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>`;
+    return `<svg class="cat" viewBox="0 0 200 210" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>${defs}</defs>${o2}</svg>`;
+  }
+
+  function sarcSVG() {
+    return `<svg class="sarc" viewBox="0 0 120 180" aria-hidden="true">
+      <path d="M60 6C88 6 104 26 104 52L96 166Q60 178 24 166L16 52C16 26 32 6 60 6Z" fill="#f4c24f" stroke="#2a1f35" stroke-width="4"/>
+      <path d="M22 50Q60 20 98 50L94 88Q60 72 26 88Z" fill="#1f5fbf"/>
+      <path d="M26 62Q60 40 94 62M25 75Q60 56 95 75" stroke="#f4c24f" stroke-width="3" fill="none"/>
+      <ellipse cx="60" cy="54" rx="19" ry="23" fill="#f6d79a" stroke="#2a1f35" stroke-width="3"/>
+      <path d="M50 52q4-3 8 0M62 52q4-3 8 0M60 58v6M55 68q5 3 10 0" stroke="#2a1f35" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M28 104Q60 122 92 104" stroke="#36cbb9" stroke-width="8" fill="none"/>
+      <path d="M27 128H93M26 146H94" stroke="#1f5fbf" stroke-width="5"/>
+    </svg>`;
+  }
+
+  // ================= Estado =================
+  const KEY = 'catevolution.v1';
+  const SPHINX = { fur: 'arena', pat: 'liso', eyes: 'kohl', acc: 'nemes' };
+  function freshState() {
+    return { v: 1, sphinxAwake: false, ofrendas: 0, altarAt: Date.now(), cats: [], slots: [null, null], found: [], births: 0, nextId: 1, tab: 'templo', tip: 0 };
+  }
+  let S = freshState();
+  function load() { try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && d.v === 1 && Array.isArray(d.cats)) return d; } catch (e) {} return null; }
+  function save() { try { localStorage.setItem(KEY, JSON.stringify(S)); } catch (e) {} }
+
+  function uniqueName() {
+    const used = new Set(S.cats.map(c => c.name));
+    const free = CAT_NAMES.filter(n => !used.has(n));
+    if (free.length) return pick(free);
+    let base = pick(CAT_NAMES), i = 2;
+    while (used.has(`${base} ${i}`)) i++;
+    return `${base} ${i}`;
+  }
+  function addCat(genes, extra) {
+    const cat = { id: S.nextId++, name: uniqueName(), genes, awake: false, gen: 1, parents: null, ...extra };
+    S.cats.push(cat);
+    return cat;
+  }
+  function discover(genes) {
+    const fresh = [];
+    GENE_KEYS.forEach(k => { const v = genes[k]; if (MUT_FAMILY[v] && !S.found.includes(v)) { S.found.push(v); fresh.push(v); } });
+    return fresh;
+  }
+  const altarAmount = () => Math.min(ALTAR.cap, Math.floor((Date.now() - S.altarAt) / ALTAR.everyMs));
+  const fmt = s => s >= 60 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}` : `${s} s`;
+
+  // ================= Utilidades de interfaz =================
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  let toastTimer = 0;
+  function toast(msg) {
+    const t = $('toast'); t.textContent = msg; t.hidden = false;
+    clearTimeout(toastTimer); toastTimer = setTimeout(() => { t.hidden = true; }, 2600);
+  }
+  function setOfrendas(delta) {
+    S.ofrendas += delta;
+    $('ofr').textContent = S.ofrendas;
+    const p = $('purse'); p.classList.remove('bump'); void p.offsetWidth; p.classList.add('bump');
+  }
+  function buzz(p) { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} }
+  function badge(r) { return `<span class="badge ${RARITY[r].cls}">${RARITY[r].label}</span>`; }
+
+  // Sonido sintetizado
+  let actx = null;
+  function ensureAudio() {
+    if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { actx = null; } }
+    if (actx && actx.state === 'suspended') actx.resume().catch(() => {});
+  }
+  function tone(f, at, dur, type, vol) {
+    if (!actx) return;
+    const t = actx.currentTime + at, o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t);
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + .015); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g).connect(actx.destination); o.start(t); o.stop(t + dur + .03);
+  }
+  const sfx = {
+    coin() { tone(988, 0, .08, 'square', .04); tone(1319, .07, .14, 'square', .04); },
+    rumble() { for (let i = 0; i < 6; i++) tone(70 + Math.random() * 40, i * .12, .16, 'sawtooth', .05); },
+    awake() { [392, 523, 659, 784].forEach((f, i) => tone(f, .05 + i * .07, .3, 'triangle', .08)); },
+    meow() { if (!actx) return; const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain(); o.type = 'triangle'; o.frequency.setValueAtTime(620, t); o.frequency.linearRampToValueAtTime(900, t + .12); o.frequency.linearRampToValueAtTime(520, t + .4); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.12, t + .04); g.gain.exponentialRampToValueAtTime(.0001, t + .45); o.connect(g).connect(actx.destination); o.start(t); o.stop(t + .5); },
+    legend() { [523, 659, 784, 1047, 1319, 1568].forEach((f, i) => tone(f, i * .08, .35, 'triangle', .08)); },
+  };
+
+  // ================= Pantallas =================
+  function guideText() {
+    const awake = S.cats.filter(c => c.awake), statues = S.cats.filter(c => !c.awake);
+    const busy = S.slots.filter(Boolean);
+    if (S.slots.some(s => s && Date.now() >= s.readyAt)) return '¡Un sarcófago está listo! Tócalo para ver al gatito que nació.';
+    if (awake.length < 2 && statues.length) return `Te dejé estatuas en la pestaña Gatos. Despiértalas con ofrendas: cuesta ${COST.awaken} cada una.`;
+    if (!S.births && !busy.length) return '¡Ya tienes dos gatos despiertos! Toca "Criar gatitos" y elige a los dos padres.';
+    if (!S.births && busy.length) return 'Mientras más raro sea el bebé, más tarda en despertar. Si el sarcófago brilla, viene algo especial.';
+    const tips = [
+      'Los gatitos heredan pelaje, patrón, ojos y accesorio de sus padres.',
+      'Si cruzas dos gatos con mutaciones de la misma familia, es más fácil que salga otra de esa familia.',
+      `Hay ${Object.keys(MUT_FAMILY).length} mutaciones en 3 familias: Elegante, Egipcia y Mística. ¿Las encontrarás todas?`,
+      'Un gato con 3 o más mutaciones es Legendario.',
+      'Si se te acaban las ofrendas, el altar junta más con el tiempo.',
+    ];
+    return tips[S.tip % tips.length];
+  }
+
+  function renderTemplo() {
+    const el = $('tab-templo');
+    if (!S.sphinxAwake) {
+      el.innerHTML = `<div class="intro">
+        <h2>El templo dormido</h2>
+        <button class="big" id="sphinx-statue" type="button" aria-label="Despertar a la esfinge">${catSVG(SPHINX, { statue: true })}</button>
+        <p>Una esfinge de piedra custodia el templo de los gatos. Tócala para despertarla.</p>
+      </div>`;
+      $('sphinx-statue').addEventListener('click', wakeSphinx);
+      return;
+    }
+    el.innerHTML = `
+      <div class="guide">
+        <div>${catSVG(SPHINX)}</div>
+        <p class="bubble"><small>La Esfinge</small><span id="guide-text">${esc(guideText())}</span></p>
+      </div>
+      <div class="block">
+        <div class="altar">
+          ${altarSVG()}
+          <div><b>Altar de ofrendas</b><small id="altar-txt"></small><div class="bar"><i id="altar-bar"></i></div></div>
+          <button class="btn gold" id="btn-altar" type="button">Recoger</button>
+        </div>
+      </div>
+      <div class="block">
+        <h2>Sarcófagos de cría</h2>
+        <div class="slots" id="slots"></div>
+        <div class="actions">
+          <button class="btn turq" id="btn-breed" type="button">Criar gatitos · ${COST.breed}</button>
+          <button class="btn" id="btn-dig" type="button">Excavar estatua · ${COST.dig}</button>
+        </div>
+      </div>`;
+    $('btn-altar').addEventListener('click', collectAltar);
+    $('btn-breed').addEventListener('click', openBreed);
+    $('btn-dig').addEventListener('click', dig);
+    tickTemplo();
+  }
+  function altarSVG() {
+    return `<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M6 30h28v6H6z" fill="#c9a66b"/><path d="M10 22h20v8H10z" fill="#e2bf7e"/><path d="M20 4c4 5 6 8 6 11a6 6 0 0 1-12 0c0-3 2-6 6-11z" fill="#f4c24f"/><path d="M20 10c2 3 3 4 3 6a3 3 0 0 1-6 0c0-2 1-3 3-6z" fill="#fff0a8"/></svg>`;
+  }
+  function tickTemplo() {
+    if (!S.sphinxAwake || $('tab-templo').hidden) return;
+    const a = altarAmount();
+    const txt = $('altar-txt'); if (!txt) return;
+    txt.textContent = a >= ALTAR.cap ? `${a} listas · el altar está lleno` : `${a} listas · +1 cada ${ALTAR.everyMs / 1000} s`;
+    $('altar-bar').style.width = (100 * a / ALTAR.cap) + '%';
+    $('btn-altar').disabled = a === 0;
+    const gt = $('guide-text'); const t = guideText(); if (gt.textContent !== t) gt.textContent = t;
+    const box = $('slots');
+    box.innerHTML = S.slots.map((s, i) => {
+      if (!s) return `<div class="slot empty">Sarcófago vacío</div>`;
+      const left = Math.max(0, Math.ceil((s.readyAt - Date.now()) / 1000));
+      const glow = s.rarity === 'comun' ? 'transparent' : getComputedStyle(document.documentElement).getPropertyValue(s.rarity === 'raro' ? '--r-raro' : s.rarity === 'epico' ? '--r-epico' : '--r-legend');
+      return `<button class="slot${left ? '' : ' ready'}" data-slot="${i}" type="button" style="--glow:${glow}">
+        ${sarcSVG()}
+        <span class="time">${left ? fmt(left) : '¡Listo!'}</span>
+        <small>${esc(s.names[0])} + ${esc(s.names[1])}${left ? '' : '<br>Toca para abrir'}</small>
+      </button>`;
+    }).join('');
+    box.querySelectorAll('[data-slot]').forEach(b => b.addEventListener('click', () => openSlot(Number(b.dataset.slot))));
+    $('btn-breed').disabled = false;
+  }
+
+  function renderGatos() {
+    const el = $('tab-gatos');
+    const cats = [...S.cats].sort((a, b) => (a.awake === b.awake ? b.id - a.id : a.awake ? 1 : -1));
+    const fams = Object.keys(FAMILY).map(f => {
+      const muts = GENE_KEYS.map(k => ({ k, v: GENES[k].mut[f] }));
+      const got = muts.filter(m => S.found.includes(m.v)).length;
+      return `<div class="fam"><h3 style="color:${FAMILY[f].color}">${FAMILY[f].label}<span>${got}/${muts.length}</span></h3><ul>${
+        muts.map(m => S.found.includes(m.v) ? `<li>${NAMES_OF[m.v]}<small>${GENES[m.k].label}</small></li>` : `<li class="no">???<small>${GENES[m.k].label}</small></li>`).join('')
+      }</ul></div>`;
+    }).join('');
+    el.innerHTML = `
+      <div class="block"><h2>Tus gatos <span style="color:var(--muted);font-size:1rem">(${S.cats.filter(c => c.awake).length} despiertos)</span></h2>
+        <div class="grid">${cats.map(cardHTML).join('') || '<p class="note">Aún no tienes gatos.</p>'}</div>
+      </div>
+      <div class="block"><h2>Libro de mutaciones</h2><div class="book">${fams}</div></div>
+      <button class="reset" id="btn-reset" type="button">Borrar mi progreso</button>`;
+    el.querySelectorAll('[data-cat]').forEach(b => b.addEventListener('click', () => openCat(Number(b.dataset.cat))));
+    let armed = false;
+    $('btn-reset').addEventListener('click', e => {
+      if (!armed) { armed = true; e.currentTarget.classList.add('confirm'); e.currentTarget.textContent = 'Toca otra vez para borrar todo'; return; }
+      S = freshState(); save(); $('ofr').textContent = 0; showTab('templo'); renderAll();
+    });
+    $('dot-gatos').hidden = !S.cats.some(c => !c.awake);
+  }
+  function cardHTML(c) {
+    if (!c.awake) return `<button class="card stone" data-cat="${c.id}" type="button">
+      <div class="art">${catSVG(c.genes, { statue: true })}</div>
+      <span class="name">Estatua</span><span class="meta">Toca para despertar · ${COST.awaken}</span></button>`;
+    const r = rarityOf(c.genes);
+    return `<button class="card ${r === 'legend' ? 'legend' : r === 'epico' ? 'epico' : ''}" data-cat="${c.id}" type="button" style="--halo:${RARITY[r].halo}">
+      <div class="art">${catSVG(c.genes)}</div>
+      <span class="name">${esc(c.name)}</span><span class="meta">${badge(r)} ${styleOf(c.genes)} · Gen ${c.gen}</span></button>`;
+  }
+
+  function genesHTML(g) {
+    return `<ul class="genes">${GENE_KEYS.map(k => {
+      const f = MUT_FAMILY[g[k]];
+      return `<li class="${f ? 'mut' : ''}" style="${f ? `--fc:${FAMILY[f].color}` : ''}"><span>${GENES[k].label}</span><b>${NAMES_OF[g[k]]}${f ? ` · ${FAMILY[f].label}` : ''}</b></li>`;
+    }).join('')}</ul>`;
+  }
+
+  // ================= Acciones =================
+  function wakeSphinx() {
+    ensureAudio();
+    const b = $('sphinx-statue');
+    b.disabled = true;
+    b.innerHTML = catSVG(SPHINX, { statue: true, cracks: true });
+    b.classList.add('waking'); sfx.rumble(); buzz([30, 60, 30, 60, 80]);
+    setTimeout(() => {
+      b.classList.remove('waking');
+      b.innerHTML = catSVG(SPHINX); b.classList.add('flash'); sfx.awake();
+      setTimeout(() => {
+        S.sphinxAwake = true;
+        addCat({ fur: 'naranja', pat: 'atigrado', eyes: 'ambar', acc: 'cascabel' });
+        addCat({ fur: 'negro', pat: 'liso', eyes: 'verde', acc: 'ninguno' });
+        S.ofrendas = 40; S.altarAt = Date.now();
+        save(); renderAll();
+        openSheet(`<div class="center"><div class="hero">${catSVG(SPHINX)}</div>
+          <div class="big-name">¡Despertaste a la Esfinge!</div>
+          <p class="note">"Hace siglos que los gatos de este templo duermen convertidos en piedra. Te regalo 2 estatuas y 40 ofrendas. Despiértalas, crúzalas… y descubre qué nace."</p>
+          <button class="btn gold" id="go-cats" type="button">Ver mis estatuas</button></div>`);
+        $('go-cats').addEventListener('click', () => { closeSheet(); showTab('gatos'); });
+      }, 700);
+    }, 950);
+  }
+
+  function collectAltar() {
+    ensureAudio();
+    const a = altarAmount(); if (!a) return;
+    S.altarAt = Date.now(); setOfrendas(a); sfx.coin(); buzz(10); save(); tickTemplo();
+    toast(`+${a} ofrendas`);
+  }
+
+  function dig() {
+    ensureAudio();
+    if (S.ofrendas < COST.dig) { toast(`Te faltan ${COST.dig - S.ofrendas} ofrendas. El altar junta más con el tiempo.`); return; }
+    setOfrendas(-COST.dig);
+    const c = addCat(randomStatueGenes());
+    save(); sfx.rumble(); renderGatos();
+    openSheet(`<div class="center"><div class="hero pop">${catSVG(c.genes, { statue: true })}</div>
+      <div class="big-name">¡Encontraste una estatua!</div>
+      <p class="note">Nadie sabe qué gato duerme adentro hasta despertarlo.</p>
+      <button class="btn gold" id="wake-now" type="button">Despertar · ${COST.awaken}</button></div>`);
+    $('wake-now').addEventListener('click', () => openCat(c.id));
+  }
+
+  function openCat(id) {
+    ensureAudio();
+    const c = S.cats.find(x => x.id === id); if (!c) return;
+    if (!c.awake) {
+      openSheet(`<div class="sheet-head"><h2>Estatua dormida</h2><button class="x" id="x" type="button" aria-label="Cerrar">×</button></div>
+        <div class="center"><div class="hero" id="statue">${catSVG(c.genes, { statue: true })}</div>
+        <p class="note">Algo se mueve dentro de la piedra…</p>
+        <button class="btn gold" id="wake" type="button" ${S.ofrendas < COST.awaken ? 'disabled' : ''}>${S.ofrendas < COST.awaken ? `Te faltan ${COST.awaken - S.ofrendas} ofrendas` : `Despertar · ${COST.awaken} ofrendas`}</button></div>`);
+      $('x').addEventListener('click', closeSheet);
+      $('wake').addEventListener('click', () => wakeCat(c));
+      return;
+    }
+    const r = rarityOf(c.genes);
+    openSheet(`<div class="sheet-head"><h2>${esc(c.name)}</h2><button class="x" id="x" type="button" aria-label="Cerrar">×</button></div>
+      <div class="hero halo" style="--halo:${RARITY[r].halo}55">${catSVG(c.genes)}</div>
+      <div class="center">${badge(r)}<span class="note">Estilo ${styleOf(c.genes)} · Generación ${c.gen}${c.parents ? ` · Hijo de ${esc(c.parents[0])} y ${esc(c.parents[1])}` : ' · Despertado de una estatua'}</span></div>
+      ${genesHTML(c.genes)}`);
+    $('x').addEventListener('click', closeSheet);
+  }
+
+  function wakeCat(c) {
+    if (S.ofrendas < COST.awaken) return;
+    setOfrendas(-COST.awaken);
+    const box = $('statue'); $('wake').disabled = true;
+    box.innerHTML = catSVG(c.genes, { statue: true, cracks: true });
+    box.classList.add('waking'); sfx.rumble(); buzz([30, 60, 30, 60, 80]);
+    setTimeout(() => {
+      c.awake = true;
+      const fresh = discover(c.genes);
+      save(); renderGatos(); renderTemplo();
+      showReveal(c, `¡${c.name} despertó!`, fresh);
+    }, 950);
+  }
+
+  function showReveal(c, title, fresh) {
+    const r = rarityOf(c.genes);
+    openSheet(`<div class="center"><div class="hero halo flash" style="--halo:${RARITY[r].halo}66">${catSVG(c.genes)}</div>
+      ${badge(r)}<div class="big-name">${esc(title)}</div>
+      <span class="note">Estilo ${styleOf(c.genes)}${c.parents ? ` · Hijo de ${esc(c.parents[0])} y ${esc(c.parents[1])}` : ''}</span></div>
+      ${fresh.map(v => `<div class="new-mut">¡Mutación nueva descubierta: ${NAMES_OF[v]}!</div>`).join('')}
+      ${genesHTML(c.genes)}
+      <button class="btn gold" id="ok" type="button">¡Genial!</button>`);
+    r === 'legend' ? sfx.legend() : sfx.awake();
+    setTimeout(() => sfx.meow(), 450);
+    buzz(r === 'comun' ? 20 : [20, 40, 20, 40, 60]);
+    $('ok').addEventListener('click', closeSheet);
+  }
+
+  let picked = [];
+  function openBreed() {
+    ensureAudio();
+    const awake = S.cats.filter(c => c.awake);
+    const free = S.slots.findIndex(s => !s);
+    if (awake.length < 2) { toast('Necesitas al menos 2 gatos despiertos. Despierta estatuas en la pestaña Gatos.'); return; }
+    if (free < 0) { toast('Los dos sarcófagos están ocupados. Espera a que nazcan los gatitos.'); return; }
+    picked = picked.filter(id => awake.some(c => c.id === id)).slice(0, 2);
+    drawBreed();
+  }
+  function drawBreed() {
+    const awake = S.cats.filter(c => c.awake).sort((a, b) => b.id - a.id);
+    const A = S.cats.find(c => c.id === picked[0]), B = S.cats.find(c => c.id === picked[1]);
+    const can = A && B && S.ofrendas >= COST.breed;
+    openSheet(`<div class="sheet-head"><h2>Elige a los padres</h2><button class="x" id="x" type="button" aria-label="Cerrar">×</button></div>
+      <div class="pair">
+        <div>${A ? catSVG(A.genes) : '<div class="ph"></div>'}${A ? esc(A.name) : 'Papá o mamá'}</div>
+        <span class="plus">+</span>
+        <div>${B ? catSVG(B.genes) : '<div class="ph"></div>'}${B ? esc(B.name) : 'Papá o mamá'}</div>
+      </div>
+      <div class="pick">${awake.map(c => {
+        const i = picked.indexOf(c.id), r = rarityOf(c.genes);
+        return `<button class="card" data-pick="${c.id}" type="button" aria-pressed="${i >= 0}">${i >= 0 ? `<span class="tag">${i + 1}</span>` : ''}
+          <div class="art">${catSVG(c.genes)}</div><span class="name">${esc(c.name)}</span><span class="meta">${badge(r)}</span></button>`;
+      }).join('')}</div>
+      <p class="note">El gatito hereda rasgos de los dos y puede salir con mutaciones nuevas.</p>
+      <button class="btn turq" id="do-breed" type="button" ${can ? '' : 'disabled'}>${!A || !B ? 'Elige 2 gatos' : S.ofrendas < COST.breed ? `Te faltan ${COST.breed - S.ofrendas} ofrendas` : `Meter al sarcófago · ${COST.breed}`}</button>`);
+    $('x').addEventListener('click', closeSheet);
+    document.querySelectorAll('[data-pick]').forEach(b => b.addEventListener('click', () => {
+      const id = Number(b.dataset.pick), i = picked.indexOf(id);
+      if (i >= 0) picked.splice(i, 1); else { if (picked.length >= 2) picked.shift(); picked.push(id); }
+      const sc = $('sheet-card').scrollTop; drawBreed(); $('sheet-card').scrollTop = sc;
+    }));
+    $('do-breed').addEventListener('click', () => {
+      const free = S.slots.findIndex(s => !s);
+      if (free < 0 || !A || !B || S.ofrendas < COST.breed) return;
+      setOfrendas(-COST.breed);
+      const genes = breedGenes(A, B, S.births === 0 && !S.slots.some(Boolean));
+      const rarity = rarityOf(genes);
+      S.slots[free] = { genes, rarity, parents: [A.id, B.id], names: [A.name, B.name], gen: Math.max(A.gen, B.gen) + 1, readyAt: Date.now() + INCUBATE[rarity] * 1000 };
+      picked = [];
+      save(); closeSheet(); showTab('templo');
+      sfx.rumble();
+      toast(rarity === 'comun' ? 'El sarcófago se cerró. A esperar…' : 'El sarcófago brilla… ¡viene algo especial!');
+    });
+  }
+
+  function openSlot(i) {
+    ensureAudio();
+    const s = S.slots[i]; if (!s) return;
+    const left = Math.ceil((s.readyAt - Date.now()) / 1000);
+    if (left > 0) { toast(`Faltan ${fmt(left)} para que despierte.`); return; }
+    openSheet(`<div class="center"><div class="hero waking" style="width:140px">${sarcSVG()}</div><div class="big-name">Abriendo…</div></div>`);
+    sfx.rumble(); buzz([30, 50, 30, 50, 30]);
+    setTimeout(() => {
+      S.slots[i] = null;
+      const c = addCat(s.genes, { awake: true, gen: s.gen, parents: s.names });
+      S.births++; S.tip++;
+      const fresh = discover(c.genes);
+      save(); renderTemplo(); renderGatos();
+      showReveal(c, `¡Nació ${c.name}!`, fresh);
+    }, 1000);
+  }
+
+  // ================= Navegación y hoja =================
+  function openSheet(html) { $('sheet-card').innerHTML = html; $('sheet').hidden = false; $('sheet-card').scrollTop = 0; }
+  function closeSheet() { $('sheet').hidden = true; $('sheet-card').innerHTML = ''; }
+  $('sheet').addEventListener('click', e => { if (e.target.id === 'sheet') closeSheet(); });
+  addEventListener('keydown', e => { if (e.key === 'Escape' && !$('sheet').hidden) closeSheet(); });
+
+  function showTab(t) {
+    S.tab = t;
+    ['templo', 'gatos', 'juegos'].forEach(n => { $('tab-' + n).hidden = n !== t; });
+    document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
+    if (t === 'templo') renderTemplo();
+    if (t === 'gatos') renderGatos();
+    window.scrollTo(0, 0);
+    save();
+  }
+  document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => { ensureAudio(); showTab(b.dataset.tab); }));
+
+  function renderAll() {
+    $('ofr').textContent = S.ofrendas;
+    $('tabs').hidden = !S.sphinxAwake;
+    renderTemplo(); renderGatos();
+    showTab(S.sphinxAwake ? S.tab : 'templo');
+  }
+
+  // ================= Arranque =================
+  function start(data) {
+    const d = data && data.v === 1 && Array.isArray(data.cats) ? data : load();
+    if (d) S = { ...freshState(), ...d };
+    renderAll();
+    setInterval(tickTemplo, 1000);
+    setInterval(() => { if (S.births) { S.tip++; } }, 12000);
+  }
+  const hot = window.claude && window.claude.hot;
+  if (hot && typeof hot.snapshot === 'function') hot.snapshot(() => S);
+  if (hot && typeof hot.ready === 'function') hot.ready(start);
+  else start((hot && hot.data) || null);
+})();
+</script>
+</body>
+</html>
