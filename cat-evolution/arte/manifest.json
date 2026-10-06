@@ -340,6 +340,286 @@
    "file": "gato_dormido_cascabel.png",
    "w": 473,
    "h": 327
+  },
+  "gato_frente_mono": {
+   "file": "gato_frente_mono.png",
+   "w": 197,
+   "h": 247
+  },
+  "gato_lado_1_mono": {
+   "file": "gato_lado_1_mono.png",
+   "w": 276,
+   "h": 229
+  },
+  "gato_estira_mono": {
+   "file": "gato_estira_mono.png",
+   "w": 234,
+   "h": 250
+  },
+  "gato_acostado_mono": {
+   "file": "gato_acostado_mono.png",
+   "w": 272,
+   "h": 208
+  },
+  "gato_sentado_lado_mono": {
+   "file": "gato_sentado_lado_mono.png",
+   "w": 197,
+   "h": 251
+  },
+  "gato_agazapado_mono": {
+   "file": "gato_agazapado_mono.png",
+   "w": 239,
+   "h": 237
+  },
+  "gato_caminar_1_mono": {
+   "file": "gato_caminar_1_mono.png",
+   "w": 288,
+   "h": 244
+  },
+  "gato_caminar_2_mono": {
+   "file": "gato_caminar_2_mono.png",
+   "w": 288,
+   "h": 244
+  },
+  "gato_caminar_3_mono": {
+   "file": "gato_caminar_3_mono.png",
+   "w": 288,
+   "h": 244
+  },
+  "gato_caminar_4_mono": {
+   "file": "gato_caminar_4_mono.png",
+   "w": 288,
+   "h": 244
+  },
+  "gato_caminar_5_mono": {
+   "file": "gato_caminar_5_mono.png",
+   "w": 288,
+   "h": 244
+  },
+  "gato_caminar_6_mono": {
+   "file": "gato_caminar_6_mono.png",
+   "w": 288,
+   "h": 244
+  },
+  "gato_colgado_mono": {
+   "file": "gato_colgado_mono.png",
+   "w": 205,
+   "h": 486
+  },
+  "gato_dormido_mono": {
+   "file": "gato_dormido_mono.png",
+   "w": 473,
+   "h": 330
+  },
+  "gato_frente_usekh": {
+   "file": "gato_frente_usekh.png",
+   "w": 197,
+   "h": 247
+  },
+  "gato_lado_1_usekh": {
+   "file": "gato_lado_1_usekh.png",
+   "w": 275,
+   "h": 229
+  },
+  "gato_estira_usekh": {
+   "file": "gato_estira_usekh.png",
+   "w": 233,
+   "h": 250
+  },
+  "gato_acostado_usekh": {
+   "file": "gato_acostado_usekh.png",
+   "w": 272,
+   "h": 208
+  },
+  "gato_sentado_lado_usekh": {
+   "file": "gato_sentado_lado_usekh.png",
+   "w": 197,
+   "h": 251
+  },
+  "gato_agazapado_usekh": {
+   "file": "gato_agazapado_usekh.png",
+   "w": 239,
+   "h": 238
+  },
+  "gato_caminar_1_usekh": {
+   "file": "gato_caminar_1_usekh.png",
+   "w": 288,
+   "h": 230
+  },
+  "gato_caminar_2_usekh": {
+   "file": "gato_caminar_2_usekh.png",
+   "w": 288,
+   "h": 230
+  },
+  "gato_caminar_3_usekh": {
+   "file": "gato_caminar_3_usekh.png",
+   "w": 288,
+   "h": 230
+  },
+  "gato_caminar_4_usekh": {
+   "file": "gato_caminar_4_usekh.png",
+   "w": 288,
+   "h": 230
+  },
+  "gato_caminar_5_usekh": {
+   "file": "gato_caminar_5_usekh.png",
+   "w": 288,
+   "h": 230
+  },
+  "gato_caminar_6_usekh": {
+   "file": "gato_caminar_6_usekh.png",
+   "w": 288,
+   "h": 230
+  },
+  "gato_colgado_usekh": {
+   "file": "gato_colgado_usekh.png",
+   "w": 204,
+   "h": 479
+  },
+  "gato_dormido_usekh": {
+   "file": "gato_dormido_usekh.png",
+   "w": 473,
+   "h": 333
+  },
+  "gato_frente_luna": {
+   "file": "gato_frente_luna.png",
+   "w": 199,
+   "h": 263
+  },
+  "gato_lado_1_luna": {
+   "file": "gato_lado_1_luna.png",
+   "w": 276,
+   "h": 242
+  },
+  "gato_estira_luna": {
+   "file": "gato_estira_luna.png",
+   "w": 233,
+   "h": 250
+  },
+  "gato_acostado_luna": {
+   "file": "gato_acostado_luna.png",
+   "w": 272,
+   "h": 225
+  },
+  "gato_sentado_lado_luna": {
+   "file": "gato_sentado_lado_luna.png",
+   "w": 199,
+   "h": 265
+  },
+  "gato_agazapado_luna": {
+   "file": "gato_agazapado_luna.png",
+   "w": 239,
+   "h": 238
+  },
+  "gato_caminar_1_luna": {
+   "file": "gato_caminar_1_luna.png",
+   "w": 288,
+   "h": 231
+  },
+  "gato_caminar_2_luna": {
+   "file": "gato_caminar_2_luna.png",
+   "w": 288,
+   "h": 231
+  },
+  "gato_caminar_3_luna": {
+   "file": "gato_caminar_3_luna.png",
+   "w": 288,
+   "h": 231
+  },
+  "gato_caminar_4_luna": {
+   "file": "gato_caminar_4_luna.png",
+   "w": 288,
+   "h": 231
+  },
+  "gato_caminar_5_luna": {
+   "file": "gato_caminar_5_luna.png",
+   "w": 288,
+   "h": 231
+  },
+  "gato_caminar_6_luna": {
+   "file": "gato_caminar_6_luna.png",
+   "w": 288,
+   "h": 231
+  },
+  "gato_colgado_luna": {
+   "file": "gato_colgado_luna.png",
+   "w": 204,
+   "h": 479
+  },
+  "gato_dormido_luna": {
+   "file": "gato_dormido_luna.png",
+   "w": 473,
+   "h": 326
+  },
+  "gato_frente_bufanda": {
+   "file": "gato_frente_bufanda.png",
+   "w": 197,
+   "h": 247
+  },
+  "gato_lado_1_bufanda": {
+   "file": "gato_lado_1_bufanda.png",
+   "w": 276,
+   "h": 229
+  },
+  "gato_estira_bufanda": {
+   "file": "gato_estira_bufanda.png",
+   "w": 233,
+   "h": 250
+  },
+  "gato_acostado_bufanda": {
+   "file": "gato_acostado_bufanda.png",
+   "w": 272,
+   "h": 208
+  },
+  "gato_sentado_lado_bufanda": {
+   "file": "gato_sentado_lado_bufanda.png",
+   "w": 197,
+   "h": 251
+  },
+  "gato_agazapado_bufanda": {
+   "file": "gato_agazapado_bufanda.png",
+   "w": 239,
+   "h": 238
+  },
+  "gato_caminar_1_bufanda": {
+   "file": "gato_caminar_1_bufanda.png",
+   "w": 288,
+   "h": 230
+  },
+  "gato_caminar_2_bufanda": {
+   "file": "gato_caminar_2_bufanda.png",
+   "w": 288,
+   "h": 230
+  },
+  "gato_caminar_3_bufanda": {
+   "file": "gato_caminar_3_bufanda.png",
+   "w": 288,
+   "h": 230
+  },
+  "gato_caminar_4_bufanda": {
+   "file": "gato_caminar_4_bufanda.png",
+   "w": 288,
+   "h": 230
+  },
+  "gato_caminar_5_bufanda": {
+   "file": "gato_caminar_5_bufanda.png",
+   "w": 288,
+   "h": 230
+  },
+  "gato_caminar_6_bufanda": {
+   "file": "gato_caminar_6_bufanda.png",
+   "w": 288,
+   "h": 230
+  },
+  "gato_colgado_bufanda": {
+   "file": "gato_colgado_bufanda.png",
+   "w": 204,
+   "h": 479
+  },
+  "gato_dormido_bufanda": {
+   "file": "gato_dormido_bufanda.png",
+   "w": 487,
+   "h": 343
   }
  }
 }
