@@ -66,6 +66,11 @@
    "w": 341,
    "h": 384
   },
+  "abuelo": {
+   "file": "abuelo.png",
+   "w": 487,
+   "h": 512
+  },
   "abuelo_brillo": {
    "file": "abuelo_brillo.png",
    "w": 487,
