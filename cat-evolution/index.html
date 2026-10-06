@@ -1133,12 +1133,13 @@ img.catimg{display:block;width:100%;height:auto}
   const IDLE_POSES = ['sentado', 'acostado', 'dormido', 'estira'];
   const CAT_CACHE = new Map();
   const hexRGB = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
-  function seeded(str) { let a = 0; for (const ch of str) a = (a * 31 + ch.charCodeAt(0)) | 0; return mulberry32(a); }
 
+  // Solo se pinta el pelaje sobre el gato blanco de Gemini. Patrones, ojos y accesorios vendrán
+  // dibujados por Gemini; aquí no se dibuja nada encima del gato.
   function catArtURL(g, pose, statue) {
     const P = POSES[pose], a = P && ART[P.art];
     if (!a || !a.ready) return null;
-    const key = [pose, g.fur, g.pat, g.eyes, g.acc, statue ? 1 : 0].join('|');
+    const key = [pose, g.fur, statue ? 1 : 0].join('|');
     if (CAT_CACHE.has(key)) return CAT_CACHE.get(key);
     const img = a.img, sc = Math.min(1, 320 / Math.max(img.naturalWidth, img.naturalHeight));
     const w = Math.round(img.naturalWidth * sc), h = Math.round(img.naturalHeight * sc);
@@ -1146,99 +1147,32 @@ img.catimg{display:block;width:100%;height:auto}
     const ctx = cv.getContext('2d');
     ctx.drawImage(img, 0, 0, w, h);
     const id = ctx.getImageData(0, 0, w, h), d = id.data;
-    const S = Math.min(w, h);
-    // caja del gato (para colocar patrones en proporción a su cuerpo)
-    let x0 = w, y0 = h, x1 = 0, y1 = 0;
-    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (d[(y * w + x) * 4 + 3] > 0) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; }
-    const bw = Math.max(1, x1 - x0), bh = Math.max(1, y1 - y0);
-    const rnd = seeded(key);
-    const spots = Array.from({ length: 7 }, () => [rnd(), .25 + rnd() * .7, .05 + rnd() * .06]);
-    const stars = Array.from({ length: 6 }, () => [.15 + rnd() * .7, .5 + rnd() * .42]); // en el cuerpo, no en la cara
+    let y0 = h, y1 = 0;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (d[(y * w + x) * 4 + 3] > 0) { if (y < y0) y0 = y; if (y > y1) y1 = y; }
+    const bh = Math.max(1, y1 - y0);
     const F = FUR[g.fur] || FUR.blanco;
     const top = hexRGB(F.g ? F.g[0] : F.b), bot = hexRGB(F.g ? F.g[1] : F.b);
-    const dark = hexRGB(lum(F.b) < .3 ? shade(F.b, .35) : shade(F.b, -.35));
-    const smoking = g.pat === 'smoking', twoTone = g.pat === 'bicolor' || smoking;
     const stoneC = [205, 182, 136];
     for (let y = 0; y < h; y++) {
-      const v = (y - y0) / bh;
+      const v = Math.max(0, Math.min(1, (y - y0) / bh));
+      const c = [top[0] + (bot[0] - top[0]) * v, top[1] + (bot[1] - top[1]) * v, top[2] + (bot[2] - top[2]) * v];
+      const darkFur = (c[0] + c[1] + c[2]) / 3 < 110;
       for (let x = 0; x < w; x++) {
         const i = (y * w + x) * 4; if (!d[i + 3]) continue;
         const r = d[i], gg = d[i + 1], b = d[i + 2];
-        const mx = Math.max(r, gg, b), mn = Math.min(r, gg, b), sat = (mx - mn) / Math.max(mx, 1);
         if (statue) {
           const l = (.3 * r + .59 * gg + .11 * b) / 255;
           d[i] = stoneC[0] * (.35 + .65 * l); d[i + 1] = stoneC[1] * (.35 + .65 * l); d[i + 2] = stoneC[2] * (.35 + .65 * l);
           continue;
         }
-        if (!(mx > 140 && sat < .28)) continue;          // solo el pelaje: ojos, rubor y orejas se quedan igual
-        const u = (x - x0) / bw;
-        let c = [top[0] + (bot[0] - top[0]) * v, top[1] + (bot[1] - top[1]) * v, top[2] + (bot[2] - top[2]) * v];
-        if (smoking) c = [58, 52, 66];
-        // zona blanca (pecho y panza) para bicolor y esmoquin
-        if (twoTone && ((u - .5) / .26) ** 2 + ((v - .72) / .3) ** 2 < 1) c = [252, 249, 244];
-        if (g.pat === 'atigrado' && Math.sin((v * 13 + Math.sin(u * 8) * .5) * Math.PI) > .55) c = dark;
-        if (g.pat === 'manchas' && spots.some(([sx, sy, sr]) => ((u - sx) / sr) ** 2 + ((v - sy) / (sr * bw / bh)) ** 2 < 1)) c = dark;
-        let k = [c[0] / 255, c[1] / 255, c[2] / 255];
-        let nr = r * k[0], ng = gg * k[1], nb = b * k[2];
-        if ((c[0] + c[1] + c[2]) / 3 < 110) { nr = nr * .85 + c[0] * .25; ng = ng * .85 + c[1] * .25; nb = nb * .85 + c[2] * .25; }
+        const mx = Math.max(r, gg, b), mn = Math.min(r, gg, b);
+        if (!(mx > 140 && (mx - mn) / Math.max(mx, 1) < .28)) continue;   // solo el pelaje
+        let nr = r * c[0] / 255, ng = gg * c[1] / 255, nb = b * c[2] / 255;
+        if (darkFur) { nr = nr * .85 + c[0] * .25; ng = ng * .85 + c[1] * .25; nb = nb * .85 + c[2] * .25; }
         d[i] = nr; d[i + 1] = ng; d[i + 2] = nb;
       }
     }
-    // ojos: el color tiñe el iris y deja la pupila oscura
-    if (!statue && P.eyes) {
-      P.eyes.forEach(([ex, ey], n) => {
-        let col = IRIS[g.eyes] || IRIS.verde;
-        if (g.eyes === 'heterocromia') col = n ? IRIS.ambar : IRIS.azul;
-        if (g.eyes === 'galaxia') col = '#8a5cff';
-        const ic = hexRGB(col), cx = ex * w, cy = ey * h, R = P.eyeR * S;
-        for (let y = Math.max(0, Math.floor(cy - R)); y < Math.min(h, cy + R); y++) for (let x = Math.max(0, Math.floor(cx - R)); x < Math.min(w, cx + R); x++) {
-          const dist = Math.hypot(x - cx, y - cy) / R; if (dist > 1 || dist < .38) continue;
-          const i = (y * w + x) * 4, br = (d[i] + d[i + 1] + d[i + 2]) / 3;
-          if (br > 95) continue;
-          d[i] = ic[0] * .75 + d[i] * .25; d[i + 1] = ic[1] * .75 + d[i + 1] * .25; d[i + 2] = ic[2] * .75 + d[i + 2] * .25;
-        }
-      });
-    }
     ctx.putImageData(id, 0, 0);
-    // detalles dibujados encima
-    const X = fx => fx * w, Y = fy => fy * h;
-    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    const ink = '#2a1f35';
-    if (!statue) {
-      if (g.pat === 'jeroglificos') { ctx.strokeStyle = '#f4c24f'; ctx.lineWidth = S * .018; spots.slice(0, 4).forEach(([sx, sy]) => { const px = x0 + sx * bw, py = y0 + (.45 + sy * .45) * bh; ctx.beginPath(); ctx.ellipse(px, py - S * .02, S * .015, S * .02, 0, 0, 7); ctx.moveTo(px, py); ctx.lineTo(px, py + S * .05); ctx.moveTo(px - S * .02, py + S * .015); ctx.lineTo(px + S * .02, py + S * .015); ctx.stroke(); }); }
-      if (g.pat === 'constelacion' || g.fur === 'cosmico') {
-        ctx.strokeStyle = 'rgba(255,246,196,.7)'; ctx.lineWidth = S * .006; ctx.beginPath();
-        stars.forEach(([sx, sy], n) => { const px = x0 + sx * bw, py = y0 + sy * bh; n ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }); if (g.pat === 'constelacion') ctx.stroke();
-        ctx.fillStyle = '#fff6c4'; stars.forEach(([sx, sy], n) => { const px = x0 + sx * bw, py = y0 + sy * bh, rr = S * (n % 2 ? .014 : .022); ctx.beginPath(); ctx.moveTo(px, py - rr); ctx.quadraticCurveTo(px, py, px + rr, py); ctx.quadraticCurveTo(px, py, px, py + rr); ctx.quadraticCurveTo(px, py, px - rr, py); ctx.quadraticCurveTo(px, py, px, py - rr); ctx.fill(); });
-      }
-      if (g.pat === 'escarcha') { ctx.strokeStyle = '#4fa9e0'; ctx.lineWidth = S * .008; spots.slice(0, 5).forEach(([sx, sy]) => { const px = x0 + sx * bw, py = y0 + sy * bh, rr = S * .028; for (let a = 0; a < 3; a++) { const t = a * Math.PI / 3; ctx.beginPath(); ctx.moveTo(px - Math.cos(t) * rr, py - Math.sin(t) * rr); ctx.lineTo(px + Math.cos(t) * rr, py + Math.sin(t) * rr); ctx.stroke(); } }); }
-      if (g.eyes === 'galaxia' && P.eyes) { ctx.fillStyle = '#fff'; P.eyes.forEach(([ex, ey]) => { ctx.beginPath(); ctx.arc(X(ex) + S * .015, Y(ey) - S * .015, S * .01, 0, 7); ctx.fill(); }); }
-      if (g.eyes === 'hielo' && P.eyes) { P.eyes.forEach(([ex, ey]) => { const gr = ctx.createRadialGradient(X(ex), Y(ey), 0, X(ex), Y(ey), P.eyeR * S * 1.8); gr.addColorStop(0, 'rgba(160,230,255,.45)'); gr.addColorStop(1, 'rgba(160,230,255,0)'); ctx.fillStyle = gr; ctx.beginPath(); ctx.arc(X(ex), Y(ey), P.eyeR * S * 1.8, 0, 7); ctx.fill(); }); }
-      if (g.eyes === 'kohl' && P.eyes && P.wing) { ctx.strokeStyle = ink; ctx.lineWidth = S * .014; const [[lx, ly], [rx, ry]] = P.eyes, R = P.eyeR * S; ctx.beginPath(); ctx.moveTo(X(lx) - R * .9, Y(ly) - R * .1); ctx.lineTo(X(lx) - R * 1.7, Y(ly) - R * .6); ctx.moveTo(X(rx) + R * .9, Y(ry) - R * .1); ctx.lineTo(X(rx) + R * 1.7, Y(ry) - R * .6); ctx.stroke(); }
-    }
-    // accesorios en el cuello o la cabeza
-    if (P.neck && g.acc && g.acc !== 'ninguno') {
-      const [nx, ny, nw, ang] = P.neck, cx = X(nx), cy = Y(ny), half = nw * w / 2;
-      ctx.save(); ctx.translate(cx, cy); ctx.rotate(ang);
-      const band = (col, wd, dy) => { ctx.strokeStyle = col; ctx.lineWidth = wd; ctx.beginPath(); ctx.moveTo(-half, dy - half * .1); ctx.quadraticCurveTo(0, dy + half * .35, half, dy - half * .1); ctx.stroke(); };
-      const stone = c => (statue ? '#b39a6c' : c);
-      if (g.acc === 'cascabel') { band(ink, S * .05, 0); band(stone('#d94848'), S * .032, 0); ctx.fillStyle = stone('#f4c24f'); ctx.strokeStyle = ink; ctx.lineWidth = S * .008; ctx.beginPath(); ctx.arc(0, half * .3, S * .035, 0, 7); ctx.fill(); ctx.stroke(); }
-      if (g.acc === 'usekh') { [['#2a1f35', .075], ['#1f5fbf', .062], ['#36cbb9', .044], ['#f4c24f', .026], ['#d94848', .01]].forEach(([c, wd]) => band(stone(c), S * wd, half * .08)); }
-      if (g.acc === 'bufanda') { band(ink, S * .085, 0); band(stone('#d94848'), S * .065, 0); ctx.fillStyle = stone('#d94848'); ctx.strokeStyle = ink; ctx.lineWidth = S * .008; ctx.beginPath(); ctx.moveTo(half * .35, half * .2); ctx.lineTo(half * .6, half * 1.1); ctx.lineTo(half * .2, half * 1.15); ctx.lineTo(half * .1, half * .25); ctx.closePath(); ctx.fill(); ctx.stroke(); }
-      if (g.acc === 'mono') { const s = S * .06; ctx.fillStyle = stone('#b8325f'); ctx.strokeStyle = ink; ctx.lineWidth = S * .008; ctx.beginPath(); ctx.moveTo(0, half * .28); ctx.lineTo(-s * 1.4, half * .28 - s * .7); ctx.lineTo(-s * 1.4, half * .28 + s * .7); ctx.closePath(); ctx.moveTo(0, half * .28); ctx.lineTo(s * 1.4, half * .28 - s * .7); ctx.lineTo(s * 1.4, half * .28 + s * .7); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.fillStyle = stone('#8e2148'); ctx.beginPath(); ctx.arc(0, half * .28, s * .45, 0, 7); ctx.fill(); ctx.stroke(); }
-      ctx.restore();
-    }
-    if (P.crown && g.acc === 'luna') {
-      const cx = X(P.crown[0]), cy = Y(P.crown[1]) + S * .02, rr = S * .06;
-      if (!statue) { ctx.fillStyle = 'rgba(255,240,168,.3)'; ctx.beginPath(); ctx.arc(cx, cy, rr * 1.6, 0, 7); ctx.fill(); }
-      ctx.fillStyle = statue ? '#b39a6c' : '#fff0a8'; ctx.strokeStyle = ink; ctx.lineWidth = S * .008;
-      ctx.beginPath(); ctx.arc(cx, cy, rr, 0, 7); ctx.arc(cx + rr * .45, cy - rr * .25, rr * .8, 0, 7, true); ctx.fill('evenodd'); ctx.stroke();
-    }
-    if (statue) {
-      ctx.strokeStyle = 'rgba(110,88,52,.8)'; ctx.lineWidth = S * .008;
-      ctx.beginPath(); ctx.moveTo(x0 + bw * .3, y0 + bh * .2); ctx.lineTo(x0 + bw * .36, y0 + bh * .32); ctx.lineTo(x0 + bw * .32, y0 + bh * .4);
-      ctx.moveTo(x0 + bw * .7, y0 + bh * .6); ctx.lineTo(x0 + bw * .62, y0 + bh * .7); ctx.lineTo(x0 + bw * .66, y0 + bh * .8); ctx.stroke();
-    }
     const url = cv.toDataURL('image/png');
     CAT_CACHE.set(key, url);
     return url;
@@ -1272,6 +1206,22 @@ img.catimg{display:block;width:100%;height:auto}
       statues: [{ x: .58, y: .88 }, { x: .36, y: .77 }, { x: .64, y: .77 }, { x: .42, y: .93 }, { x: .28, y: .85 }, { x: .72, y: .82 }],
       floor: { x0: .2, x1: .8, y0: .66, y1: .94 },
       deco: { ob: { xs: [.05, .95], y: .66, w: .1 }, ban: { xs: [.36, .64], y: .5, w: .06 }, pond: { x: .78, y: .995, w: .28 } },
+    },
+    casa: {
+      sphinx: { x: .5, y: .62, w: .24 },
+      sarc: [{ x: .12, y: .72, w: .16 }, { x: .88, y: .8, w: .16 }, { x: .14, y: .9, w: .15 }, { x: .86, y: .95, w: .15 }],
+      altar: { x: .5, y: .975, w: .17 },
+      statues: [{ x: .66, y: .88 }, { x: .34, y: .76 }, { x: .66, y: .74 }, { x: .36, y: .9 }, { x: .26, y: .83 }, { x: .74, y: .83 }],
+      floor: { x0: .2, x1: .8, y0: .66, y1: .94 },
+      deco: LAYOUT_BASE.deco,
+    },
+    nieve: {
+      sphinx: { x: .5, y: .64, w: .26 },
+      sarc: [{ x: .13, y: .72, w: .17 }, { x: .87, y: .72, w: .17 }, { x: .14, y: .9, w: .16 }, { x: .86, y: .9, w: .16 }],
+      altar: { x: .5, y: .975, w: .15 },
+      statues: [{ x: .66, y: .88 }, { x: .34, y: .77 }, { x: .66, y: .77 }, { x: .36, y: .9 }, { x: .27, y: .84 }, { x: .73, y: .84 }],
+      floor: { x0: .22, x1: .78, y0: .68, y1: .94 },
+      deco: LAYOUT_BASE.deco,
     },
   };
   let DECO = LAYOUT_BASE.deco;

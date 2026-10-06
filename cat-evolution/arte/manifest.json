@@ -6,6 +6,26 @@
    "w": 800,
    "h": 1120
   },
+  "fondo_egipto_atardecer": {
+   "file": "fondo_egipto_atardecer.jpg",
+   "w": 800,
+   "h": 1120
+  },
+  "fondo_egipto_noche": {
+   "file": "fondo_egipto_noche.jpg",
+   "w": 800,
+   "h": 1120
+  },
+  "fondo_casa_dia": {
+   "file": "fondo_casa_dia.jpg",
+   "w": 800,
+   "h": 1120
+  },
+  "fondo_nieve_dia": {
+   "file": "fondo_nieve_dia.jpg",
+   "w": 800,
+   "h": 1120
+  },
   "esfinge": {
    "file": "esfinge.png",
    "w": 470,
