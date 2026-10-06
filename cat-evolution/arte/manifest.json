@@ -300,6 +300,46 @@
    "file": "gato_agazapado_cascabel.png",
    "w": 239,
    "h": 237
+  },
+  "gato_caminar_1_cascabel": {
+   "file": "gato_caminar_1_cascabel.png",
+   "w": 288,
+   "h": 230
+  },
+  "gato_caminar_2_cascabel": {
+   "file": "gato_caminar_2_cascabel.png",
+   "w": 288,
+   "h": 230
+  },
+  "gato_caminar_3_cascabel": {
+   "file": "gato_caminar_3_cascabel.png",
+   "w": 288,
+   "h": 230
+  },
+  "gato_caminar_4_cascabel": {
+   "file": "gato_caminar_4_cascabel.png",
+   "w": 288,
+   "h": 230
+  },
+  "gato_caminar_5_cascabel": {
+   "file": "gato_caminar_5_cascabel.png",
+   "w": 288,
+   "h": 230
+  },
+  "gato_caminar_6_cascabel": {
+   "file": "gato_caminar_6_cascabel.png",
+   "w": 288,
+   "h": 230
+  },
+  "gato_colgado_cascabel": {
+   "file": "gato_colgado_cascabel.png",
+   "w": 204,
+   "h": 480
+  },
+  "gato_dormido_cascabel": {
+   "file": "gato_dormido_cascabel.png",
+   "w": 473,
+   "h": 327
   }
  }
 }

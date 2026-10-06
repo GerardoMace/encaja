@@ -1212,7 +1212,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     estira:    { art: 'gato_estira',       eyes: [[.19, .64], [.39, .64]], eyeR: .05 },
     agazapado: { art: 'gato_agazapado',    eyes: [[.13, .5], [.33, .5]], eyeR: .05 },
     dormido:   { art: 'gato_dormido', size: .85 },
-    colgado:   { art: 'gato_colgado' },
+    colgado:   { art: 'gato_colgado', noTint: .18 },   // arriba está la mano que lo sostiene: no se pinta
     // cuadros de la caminata (todos del mismo tamaño, alineados por la nariz)
     caminar1: { art: 'gato_caminar_1', acc: 'caminar' }, caminar2: { art: 'gato_caminar_2', acc: 'caminar' },
     caminar3: { art: 'gato_caminar_3', acc: 'caminar' }, caminar4: { art: 'gato_caminar_4', acc: 'caminar' },
@@ -1283,6 +1283,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     const tone = g.eyes || 'normal';
     const stoneC = [205, 182, 136];
     for (let y = 0; y < h; y++) {
+      if (P.noTint && y < P.noTint * h) continue;
       const v = Math.max(0, Math.min(1, (y - y0) / bh));
       const t = Math.max(0, Math.min(1, (v - .3) / .6)), m = t * t * (3 - 2 * t);   // el degradado empieza a media panza
       const c0 = [top[0] + (bot[0] - top[0]) * m, top[1] + (bot[1] - top[1]) * m, top[2] + (bot[2] - top[2]) * m];
