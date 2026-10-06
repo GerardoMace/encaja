@@ -1205,20 +1205,26 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
   // Posiciones en fracción de la imagen: neck = [x, y, ancho, giro] del collar, crown = punto sobre la cabeza,
   // eyes = centros de los ojos, eyeR = radio del ojo (fracción del lado menor)
   const POSES = {
-    frente:    { art: 'gato_frente', acc: 'frente',       neck: [.5, .6, .46, 0],      crown: [.5, .04],  eyes: [[.32, .4], [.72, .4]], eyeR: .07, wing: 1 },
+    frente:    { art: 'gato_frente', acc: 'frente', size: .68,       neck: [.5, .6, .46, 0],      crown: [.5, .04],  eyes: [[.32, .4], [.72, .4]], eyeR: .07, wing: 1 },
     lado:      { art: 'gato_lado_1',       neck: [.79, .47, .22, -.55], crown: [.84, .03], eyes: [[.86, .32]], eyeR: .05 },
-    acostado:  { art: 'gato_acostado', acc: 'acostado',     neck: [.73, .6, .3, 0],      crown: [.73, .04], eyes: [[.62, .37], [.83, .37]], eyeR: .055, wing: 1 },
-    sentado:   { art: 'gato_sentado_lado', acc: 'sentado', neck: [.68, .43, .26, -.45], crown: [.74, .03], eyes: [[.79, .29]], eyeR: .05 },
+    acostado:  { art: 'gato_acostado', acc: 'acostado', size: .9,     neck: [.73, .6, .3, 0],      crown: [.73, .04], eyes: [[.62, .37], [.83, .37]], eyeR: .055, wing: 1 },
+    sentado:   { art: 'gato_sentado_lado', acc: 'sentado', size: .8, neck: [.68, .43, .26, -.45], crown: [.74, .03], eyes: [[.79, .29]], eyeR: .05 },
     estira:    { art: 'gato_estira',       eyes: [[.19, .64], [.39, .64]], eyeR: .05 },
     agazapado: { art: 'gato_agazapado',    eyes: [[.13, .5], [.33, .5]], eyeR: .05 },
-    dormido:   { art: 'gato_dormido' },
+    dormido:   { art: 'gato_dormido', size: .85 },
     colgado:   { art: 'gato_colgado' },
     // cuadros de la caminata (todos del mismo tamaño, alineados por la nariz)
     caminar1: { art: 'gato_caminar_1', acc: 'caminar' }, caminar2: { art: 'gato_caminar_2', acc: 'caminar' },
     caminar3: { art: 'gato_caminar_3', acc: 'caminar' }, caminar4: { art: 'gato_caminar_4', acc: 'caminar' },
     caminar5: { art: 'gato_caminar_5', acc: 'caminar' }, caminar6: { art: 'gato_caminar_6', acc: 'caminar' },
   };
-  const WALK_FRAMES = 6, WALK_MS = 125;
+  const WALK_FRAMES = 6, WALK_MS = 175;
+  // las poses de Gemini no vienen a la misma escala: se achican para que la cabeza mida lo mismo que al caminar
+  function sizeFront(w, pose) {
+    const im = w.el && w.el.querySelector('.front img.catimg'); if (!im) return;
+    const k = (POSES[pose] && POSES[pose].size) || 1;
+    im.style.width = (k * 100) + '%'; im.style.left = ((1 - k) * 50) + '%';
+  }
   // Accesorios de Gemini puestos sobre cada pose: [x, y] del centro y ancho (fracciones de la imagen del gato), giro en grados.
   // Las poses que no aparecen aquí (dormido, colgado) se ven sin accesorio.
   const ACC_POS = {
@@ -1245,10 +1251,10 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     switch (tone) {
       case 'pastel': return mixC(c, '#ffffff', .32);
       case 'oscuro': return [c[0] * .7, c[1] * .7, c[2] * .72];
-      case 'satinado': return v < .5 ? mixC(c, '#ffffff', .45 * (1 - v / .5)) : c;
-      case 'bronceado': { const k = mixC(c, '#d8953f', .3); return [Math.min(255, k[0] * 1.06), Math.min(255, k[1] * 1.03), k[2]]; }
+      case 'satinado': return v < .6 ? mixC(c, '#ffffff', .6 * (1 - v / .6)) : c;
+      case 'bronceado': { const k = mixC(c, '#b9772a', .3); return v < .5 ? mixC(k, '#ffe08a', .5 * (1 - v / .5)) : k; }
       case 'iridiscente': { const r = hslRGB((u * 300 + v * 80) % 360, .85, .66); return [c[0] + (r[0] - c[0]) * .45, c[1] + (r[1] - c[1]) * .45, c[2] + (r[2] - c[2]) * .45]; }
-      case 'glaciar': return mixC(c, '#8fd0ff', .32);
+      case 'glaciar': return mixC(mixC(c, '#ffffff', .35), '#7cc8ff', .35);
       default: return c;
     }
   }
@@ -1533,7 +1539,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       b.innerHTML = `<div class="flip"><div class="side">${catSideSVG(c.genes)}</div><div class="front">${catSVG(c.genes)}</div></div><div class="hang">${catHangSVG(c.genes)}</div><span class="emote" aria-hidden="true"></span>`;
       b.addEventListener('pointerdown', e => { if (w.walking) setIdle(w, performance.now()); walkerDown(e, w, c); });
       b.addEventListener('click', e => { if (e.detail === 0) openCat(c.id); }); // con teclado, Enter abre la ficha
-      w.el = b; w.flip = b.firstChild; w.side = null; w.genes = c.genes;
+      w.el = b; w.flip = b.firstChild; w.side = null; w.genes = c.genes; sizeFront(w, 'frente');
       world.appendChild(b);
     });
     placeWalkers();
@@ -1738,7 +1744,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       pose = Math.random() < .45 ? 'frente' : pick(IDLE_POSES);
       const u = catArtURL(w.genes, pose, false) || catArtURL(w.genes, 'frente', false);
       const im = w.el && w.el.querySelector('.front img');
-      if (im && u) im.src = u;
+      if (im && u) { im.src = u; sizeFront(w, catArtURL(w.genes, pose, false) ? pose : 'frente'); }
       if (pose === 'dormido') { w.until += 4000; emote(w, 'z'); return; }
     }
     if (Math.random() < .3) emote(w, pick(['♥', 'z', '♪', '✦', '…']));
@@ -1770,7 +1776,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
         if (!w.el || !w.el.isConnected || w.lifted) continue;
         if (w.walking) {
           const dx = (w.tx - w.x) * W, dy = (w.ty - w.y) * H, d = Math.hypot(dx, dy);
-          const stepPx = W * .07 * depth(w.y) * dt;
+          const stepPx = W * .05 * depth(w.y) * dt;
           if (d <= stepPx) { w.x = w.tx; w.y = w.ty; setIdle(w, t); }
           else {
             w.x += dx / d * stepPx / W; w.y += dy / d * stepPx / H; if (Math.abs(dx) > 2) w.face = dx < 0 ? -1 : 1;
