@@ -1,0 +1,688 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0b2226">
+<meta name="description" content="Colonia: rompecabezas de células basado en el Juego de la Vida.">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}*,*::before,*::after{box-sizing:border-box}[hidden]{display:none!important}</style>
+<title>Colonia</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;800&family=Atkinson+Hyperlegible:wght@400;700&display=swap">
+<style>
+/* Layout: una columna tipo app; la caja de Petri (tablero) manda y los controles quedan al alcance del pulgar */
+:root{
+  --bg:#0b2226;
+  --panel:#11323a;
+  --agar:#143c43;
+  --line:#24575e;
+  --ink:#e8f5f1;
+  --muted:#8db2ac;
+  --life:#7cf0cf;
+  --amber:#ffc65a;
+  --amber-ink:#3b2600;
+  --poison:#ff7272;
+  --display:"Baloo 2","Arial Rounded MT Bold","Trebuchet MS",system-ui,sans-serif;
+  --body:"Atkinson Hyperlegible",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%}
+body{
+  margin:0;background:radial-gradient(90% 60% at 50% 0%,#123a40 0%,var(--bg) 70%) var(--bg);
+  background-attachment:fixed;color:var(--ink);font-family:var(--body);
+  padding-inline:16px;display:flex;justify-content:center;
+  -webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;overscroll-behavior:none;
+}
+.app{width:100%;max-width:480px;padding-block:14px 22px}
+button{font:inherit;color:inherit;cursor:pointer;border:0}
+button:focus-visible{outline:3px solid var(--amber);outline-offset:2px}
+button:disabled{cursor:default}
+
+/* Menú */
+.hero{display:grid;gap:6px;padding-block:18px 22px}
+.brand{font-family:var(--display);font-weight:800;font-size:2.6rem;line-height:1;letter-spacing:-.01em;margin:0}
+.brand i{font-style:normal;color:var(--life)}
+.tagline{margin:0;color:var(--muted);font-size:1rem;line-height:1.45;max-width:34ch}
+.menu-tools{display:flex;gap:8px;margin-top:8px}
+.levels{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.lvl{
+  display:grid;grid-template-columns:auto 1fr;align-items:center;gap:12px;text-align:left;
+  background:var(--panel);border-radius:18px;padding:12px;min-height:76px;
+}
+.dish{
+  width:48px;height:48px;border-radius:50%;display:grid;place-items:center;
+  background:radial-gradient(circle at 35% 30%,#1d4f56,var(--agar) 60%);
+  box-shadow:inset 0 0 0 2px var(--line);
+  font-family:var(--display);font-weight:800;font-size:1.3rem;
+}
+.lvl.done .dish{background:radial-gradient(circle at 35% 30%,#a5ffe6,var(--life) 70%);color:var(--bg);box-shadow:none}
+.lvl-name{font-weight:700;font-size:.98rem;line-height:1.2}
+.lvl-state{display:block;color:var(--muted);font-size:.8rem;margin-top:2px}
+.lvl:disabled{opacity:.42}
+
+/* Juego */
+.bar{display:flex;align-items:center;gap:10px}
+.back{background:var(--panel);border-radius:12px;height:40px;padding-inline:12px;font-weight:700;font-size:.9rem}
+.lvtitle{flex:1;min-width:0;line-height:1.1}
+.lvtitle small{display:block;color:var(--muted);font-size:.78rem;letter-spacing:.08em;text-transform:uppercase}
+.lvtitle strong{font-family:var(--display);font-weight:800;font-size:1.35rem}
+.icon-btn{width:40px;height:40px;border-radius:12px;background:var(--panel);display:grid;place-items:center}
+.icon-btn svg{width:22px;height:22px}
+.goal{margin:12px 0 0;font-size:.98rem;line-height:1.4}
+.goal b{color:var(--amber)}
+.stats{display:flex;gap:10px;margin-top:10px}
+.stat{flex:1;background:var(--panel);border-radius:14px;padding:8px 12px;display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.stat span{color:var(--muted);font-size:.8rem;letter-spacing:.06em;text-transform:uppercase}
+.stat b{font-family:var(--display);font-weight:800;font-size:1.25rem;font-variant-numeric:tabular-nums}
+.stat.bump{animation:bump .3s}
+@keyframes bump{30%{transform:translateX(-5px)}60%{transform:translateX(5px)}}
+.wrap{margin-top:12px;display:flex;justify-content:center}
+canvas{display:block;touch-action:none;max-width:100%}
+.msg{margin:12px 0 0;min-height:2.8em;font-size:.95rem;line-height:1.4;color:var(--muted);text-wrap:pretty}
+.msg.win{color:var(--life);font-weight:700}
+.msg.fail{color:var(--poison);font-weight:700}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.chip{background:var(--panel);border-radius:999px;padding:8px 14px;font-size:.88rem;font-weight:700;color:var(--muted)}
+.chip[aria-pressed="true"]{background:var(--line);color:var(--ink)}
+.actions{display:grid;grid-template-columns:1fr 2fr;gap:10px;margin-top:14px}
+.ghost{background:var(--panel);border-radius:16px;padding:14px;font-weight:700}
+.go{
+  border-radius:16px;padding:14px;font-family:var(--display);font-weight:800;font-size:1.25rem;
+  background:var(--life);color:var(--bg);box-shadow:0 5px 0 #3bb495;
+}
+.go:active{transform:translateY(3px);box-shadow:0 2px 0 #3bb495}
+.go.stop{background:var(--amber);color:var(--amber-ink);box-shadow:0 5px 0 #c9921a}
+
+/* Hoja de reglas */
+.sheet{position:fixed;inset:0;display:grid;place-items:end center;background:rgba(5,18,20,.72);padding:16px}
+.sheet-card{
+  width:100%;max-width:480px;background:var(--panel);border-radius:24px;padding:22px 20px 20px;
+  display:grid;gap:14px;animation:up .3s cubic-bezier(.2,1.2,.4,1);
+}
+.sheet-card h2{margin:0;font-family:var(--display);font-weight:800;font-size:1.5rem}
+.sheet-card p{margin:0;color:var(--muted);line-height:1.45}
+.rule{display:grid;grid-template-columns:auto auto auto 1fr;align-items:center;gap:10px}
+.rule b{color:var(--ink)}
+.mini{display:grid;grid-template-columns:repeat(3,14px);gap:3px;padding:6px;border-radius:10px;background:var(--agar)}
+.mini i{width:14px;height:14px;border-radius:50%;background:#1b4a51}
+.mini i.on{background:var(--life)}
+.mini i.c{box-shadow:0 0 0 2px var(--amber)}
+.arrow{color:var(--muted)}
+.legend{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;font-size:.88rem;color:var(--muted)}
+.legend span{display:flex;align-items:center;gap:8px}
+.sw{width:16px;height:16px;border-radius:50%;flex:none}
+@keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
+@media (prefers-reduced-motion:reduce){.sheet-card,.stat.bump{animation:none}}
+</style>
+</head>
+<body>
+<div class="app">
+  <section id="menu">
+    <div class="hero">
+      <h1 class="brand">Colon<i>i</i>a</h1>
+      <p class="tagline">Siembra unas cuantas células, dale a Crecer y mira cómo se reproducen solas. Tu misión: que la colonia llegue a la meta.</p>
+      <div class="menu-tools"><button class="chip" id="btn-rules-menu" type="button">Cómo funciona</button></div>
+    </div>
+    <div class="levels" id="levels"></div>
+  </section>
+
+  <section id="play" hidden>
+    <header class="bar">
+      <button class="back" id="btn-back" type="button">‹ Niveles</button>
+      <div class="lvtitle"><small id="lv-num">Nivel 1</small><strong id="lv-name">Primer brote</strong></div>
+      <button id="btn-sound" class="icon-btn" type="button" aria-label="Silenciar sonido" aria-pressed="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
+          <path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor" stroke="none"/>
+          <path id="snd-on" d="M16.5 8.5a5 5 0 0 1 0 7M19 6a8.5 8.5 0 0 1 0 12"/>
+          <path id="snd-off" d="M17 9l5 6M22 9l-5 6" hidden/>
+        </svg>
+      </button>
+    </header>
+    <p class="goal" id="goal"></p>
+    <div class="stats">
+      <div class="stat" id="stat-seeds"><span>Semillas</span><b id="seeds">0/3</b></div>
+      <div class="stat"><span>Generación</span><b id="gen">0/4</b></div>
+    </div>
+    <div class="wrap" id="wrap"><canvas id="board" aria-label="Caja de Petri: toca las casillas marcadas para sembrar células"></canvas></div>
+    <p class="msg" id="msg"></p>
+    <div class="chips">
+      <button class="chip" id="btn-preview" type="button" aria-pressed="false">Ver siguiente paso</button>
+      <button class="chip" id="btn-hint" type="button">Pista</button>
+      <button class="chip" id="btn-rules" type="button">Reglas</button>
+    </div>
+    <div class="actions">
+      <button class="ghost" id="btn-clear" type="button">Borrar</button>
+      <button class="go" id="btn-go" type="button">Crecer</button>
+    </div>
+  </section>
+</div>
+
+<div class="sheet" id="rules" hidden>
+  <div class="sheet-card" role="dialog" aria-modal="true" aria-labelledby="rules-title">
+    <h2 id="rules-title">Cómo crece la colonia</h2>
+    <p>Cada generación, todas las casillas cuentan cuántas vecinas vivas tienen (las 8 de alrededor) y cambian al mismo tiempo:</p>
+    <div class="rule"><div class="mini" data-p="o.o/.c./..o"></div><span class="arrow">→</span><div class="mini" data-p="..../.C./...."></div><span><b>Nace</b> si una casilla vacía tiene exactamente 3 vecinas.</span></div>
+    <div class="rule"><div class="mini" data-p="o../.C./..o"></div><span class="arrow">→</span><div class="mini" data-p="..../.C./...."></div><span><b>Sigue viva</b> si tiene 2 o 3 vecinas.</span></div>
+    <div class="rule"><div class="mini" data-p="o../.C./..."></div><span class="arrow">→</span><div class="mini" data-p="..../.c./...."></div><span><b>Muere</b> con 0 o 1 (soledad) o con 4 o más (aglomeración).</span></div>
+    <div class="legend">
+      <span><i class="sw" style="background:var(--life)"></i>Célula viva</span>
+      <span><i class="sw" style="background:var(--line);border-radius:4px"></i>Donde puedes sembrar</span>
+      <span><i class="sw" style="background:var(--amber)"></i>Meta</span>
+      <span><i class="sw" style="background:var(--poison)"></i>Veneno: si lo toca, pierdes</span>
+    </div>
+    <button class="go" id="btn-rules-close" type="button">Entendido</button>
+  </div>
+</div>
+
+<script>
+(() => {
+  'use strict';
+  // ---------- Niveles (cada uno verificado con un solucionador que prueba todas las siembras) ----------
+  // . vacío   + zona de siembra   # roca   * meta   x veneno   o célula que ya estaba ahí
+  const LEVELS = [
+    { name:'Primer brote', goal:'reach', seeds:3, gens:4, preview:true,
+      text:'Siembra 3 células en línea, justo debajo de la meta, y toca Crecer.',
+      hint:[[3,2],[3,3],[3,4]], map:`
+.......
+.......
+...*...
+..+++..
+.......
+.......` },
+    { name:'Nacer de tres', goal:'reach', seeds:4, gens:1, preview:true,
+      text:'Una casilla vacía con exactamente 3 vecinas vivas, nace. Haz que nazca una célula sobre la meta. Ojo: con 4 vecinas no nace.',
+      hint:[[2,2],[2,3],[2,4]], map:`
+.......
+.......
+..+++..
+..+*+..
+..+.+..
+.......
+.......` },
+    { name:'Quedarse quieto', goal:'survive', seeds:4, gens:12, preview:true,
+      text:'Una célula con 2 o 3 vecinas sobrevive. Arma una colonia que no se muera ni toque el veneno.',
+      hint:[[3,2],[3,3],[3,4]], map:`
+.......
+.x...x.
+.......
+..+++..
+..+.+..
+..+++..
+.......
+.x...x.` },
+    { name:'Planeador', goal:'reach', seeds:5, gens:24, preview:false,
+      text:'Existe una figura de 5 células que camina en diagonal: el planeador. Encuéntrala y mándala a la meta.',
+      hint:[[0,0],[0,2],[1,2],[2,1],[2,2]], map:`
++++......
++++......
++++......
+.........
+.........
+.........
+.........
+........*` },
+    { name:'Despertar', goal:'reach', seeds:1, gens:40, preview:false,
+      text:'Esta colonia está dormida. Una sola semilla en el lugar correcto la despierta.',
+      hint:[[7,4]], map:`
+......*.
+........
+........
+........
+........
+........
+..+o+...
+..oo+...
+...o....
+........` },
+    { name:'Puerta', goal:'reach', seeds:5, gens:44, preview:false,
+      text:'Las rocas no dejan crecer nada. Manda un planeador por la abertura del muro.',
+      hint:[[0,1],[1,4],[2,2],[2,3],[2,4]], map:`
++++++.......
++++++.......
++++++.......
+............
+............
+#####....###
+............
+............
+............
+...........*` },
+    { name:'Cuidado', goal:'reach', seeds:5, gens:30, preview:false,
+      text:'El planeador puede caminar hacia 4 lados. Elige bien: el veneno mata a la colonia.',
+      hint:[[3,3],[3,4],[3,5],[4,3],[5,4]], map:`
+*.........
+..........
+..........
+...+++....
+...+++....
+...+++....
+..........
+..........
+x........x` },
+    { name:'Dos metas', goal:'reach', seeds:10, gens:36, preview:false,
+      text:'Dos metas lejanas y dos zonas de siembra. Probablemente necesites dos colonias.',
+      hint:[[0,5],[0,7],[1,6],[2,5],[2,6],[2,7]], map:`
++++..+++.....
++++..+++.....
++++..+++.....
+.............
+.............
+.............
+.............
+............*
+........*....` },
+  ];
+
+  // ---------- Simulación (Juego de la Vida B3/S23; las rocas nunca viven) ----------
+  function parseLevel(L) {
+    const rows = L.map.trim().split('\n').map(r => r.trim());
+    const h = rows.length, w = rows[0].length;
+    const lv = { ...L, w, h, rock: [], zone: [], stars: [], poison: [], init: [] };
+    rows.forEach((row, r) => [...row].forEach((ch, c) => {
+      const k = r * w + c;
+      if (ch === '#') lv.rock.push(k);
+      else if (ch === '+') lv.zone.push(k);
+      else if (ch === '*') lv.stars.push(k);
+      else if (ch === 'x') lv.poison.push(k);
+      else if (ch === 'o') lv.init.push(k);
+    }));
+    lv.rockSet = new Set(lv.rock);
+    lv.zoneSet = new Set(lv.zone);
+    return lv;
+  }
+  function step(lv, alive) {
+    const { w, h, rockSet } = lv;
+    const next = new Uint8Array(w * h);
+    for (let r = 0; r < h; r++) for (let c = 0; c < w; c++) {
+      const k = r * w + c;
+      if (rockSet.has(k)) continue;
+      let n = 0;
+      for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+        if (!dr && !dc) continue;
+        const rr = r + dr, cc = c + dc;
+        if (rr < 0 || cc < 0 || rr >= h || cc >= w) continue;
+        n += alive[rr * w + cc];
+      }
+      next[k] = alive[k] ? (n === 2 || n === 3 ? 1 : 0) : (n === 3 ? 1 : 0);
+    }
+    return next;
+  }
+  function startState(lv, seeds) {
+    const a = new Uint8Array(lv.w * lv.h);
+    for (const k of lv.init) a[k] = 1;
+    for (const k of seeds) a[k] = 1;
+    return a;
+  }
+  function simulate(lv, seeds) {
+    let alive = startState(lv, seeds);
+    const frames = [alive];
+    const reached = new Set();
+    for (let g = 0; g <= lv.gens; g++) {
+      if (g > 0) { alive = step(lv, alive); frames.push(alive); }
+      for (const k of lv.poison) if (alive[k]) return { win: false, gen: g, reason: 'poison', at: k, frames };
+      for (const k of lv.stars) if (alive[k]) reached.add(k);
+      let pop = 0; for (let i = 0; i < alive.length; i++) pop += alive[i];
+      if (lv.goal === 'reach' && reached.size === lv.stars.length) return { win: true, gen: g, frames };
+      if (pop === 0) return { win: false, gen: g, reason: 'extinct', frames };
+    }
+    if (lv.goal === 'survive') return { win: true, gen: lv.gens, frames };
+    return { win: false, gen: lv.gens, reason: 'time', frames };
+  }
+
+  // ---------- Progreso guardado ----------
+  const KEY = 'colonia.v1';
+  let saved = { done: [], muted: false, seenRules: false };
+  try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && Array.isArray(d.done)) saved = { ...saved, ...d }; } catch (e) {}
+  function persist() { try { localStorage.setItem(KEY, JSON.stringify(saved)); } catch (e) {} }
+
+  // ---------- Sonido ----------
+  let actx = null;
+  function ensureAudio() {
+    if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { actx = null; } }
+    if (actx && actx.state === 'suspended') actx.resume().catch(() => {});
+  }
+  function tone(freq, at, dur, type, vol) {
+    if (!actx || saved.muted) return;
+    const t = actx.currentTime + at, o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.setValueAtTime(freq, t);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(vol, t + 0.015);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+    o.connect(g).connect(actx.destination); o.start(t); o.stop(t + dur + 0.03);
+  }
+  const sfx = {
+    plant() { tone(740, 0, .09, 'sine', .12); tone(1110, .03, .06, 'sine', .05); },
+    unplant() { tone(440, 0, .08, 'sine', .08); },
+    deny() { tone(150, 0, .14, 'square', .05); },
+    gen(pop) { tone(220 + Math.min(pop, 40) * 14, 0, .07, 'sine', .035); },
+    star() { [880, 1175, 1568].forEach((f, i) => tone(f, i * .05, .2, 'triangle', .09)); },
+    win() { [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, i * .08, .3, 'triangle', .09)); },
+    fail() { [330, 262, 196].forEach((f, i) => tone(f, i * .12, .28, 'sawtooth', .04)); },
+  };
+
+  // ---------- Elementos ----------
+  const $ = id => document.getElementById(id);
+  const menuEl = $('menu'), playEl = $('play'), canvas = $('board'), ctx = canvas.getContext('2d');
+  const msgEl = $('msg'), goBtn = $('btn-go'), clearBtn = $('btn-clear'), previewBtn = $('btn-preview');
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const GEN_MS = reduceMotion ? 140 : 260;
+
+  // ---------- Estado de juego ----------
+  let idx = 0, lv = null, seeds = new Set(), mode = 'plant', preview = false, hintShown = 0;
+  let sim = null;            // { res, t0, lastGen, reached:Set }
+  let cell = 30;
+  let flashZoneUntil = 0;
+
+  function renderMenu() {
+    const box = $('levels');
+    box.innerHTML = '';
+    LEVELS.forEach((L, i) => {
+      const done = saved.done.includes(i);
+      const open = i === 0 || saved.done.includes(i - 1) || done;
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'lvl' + (done ? ' done' : '');
+      b.disabled = !open;
+      b.innerHTML = `<span class="dish">${done ? '✓' : i + 1}</span><span><span class="lvl-name">${L.name}</span><span class="lvl-state">${done ? 'Superado' : open ? 'Disponible' : 'Supera el anterior'}</span></span>`;
+      b.addEventListener('click', () => { ensureAudio(); openLevel(i); });
+      box.appendChild(b);
+    });
+  }
+
+  function openLevel(i, keepSeeds) {
+    idx = i; lv = parseLevel(LEVELS[i]);
+    seeds = new Set(keepSeeds || []);
+    mode = 'plant'; sim = null; hintShown = 0;
+    preview = !!lv.preview;
+    $('lv-num').textContent = `Nivel ${i + 1} de ${LEVELS.length}`;
+    $('lv-name').textContent = lv.name;
+    const poisonTxt = lv.poison.length ? ' sin tocar el <b>veneno</b>' : '';
+    $('goal').innerHTML = lv.goal === 'survive'
+      ? `Mantén viva la colonia <b>${lv.gens} generaciones</b>${poisonTxt}.`
+      : `Llega a ${lv.stars.length > 1 ? `las <b>${lv.stars.length} metas</b>` : 'la <b>meta</b>'} en <b>${lv.gens} generaciones</b> o menos${poisonTxt}.`;
+    menuEl.hidden = true; playEl.hidden = false;
+    setMsg(lv.text);
+    layout(); updateUi();
+    window.scrollTo(0, 0);
+    if (!saved.seenRules) openRules();
+  }
+  function backToMenu() { sim = null; mode = 'plant'; playEl.hidden = true; menuEl.hidden = false; renderMenu(); }
+
+  function setMsg(text, kind) { msgEl.textContent = text; msgEl.className = 'msg' + (kind ? ' ' + kind : ''); }
+  function updateUi() {
+    $('seeds').textContent = `${seeds.size}/${lv.seeds}`;
+    const g = sim ? sim.shownGen : 0;
+    $('gen').textContent = `${g}/${lv.gens}`;
+    previewBtn.setAttribute('aria-pressed', String(preview));
+    $('btn-hint').textContent = hintShown >= lv.hint.length ? 'Pista completa' : hintShown ? `Pista (${hintShown}/${lv.hint.length})` : 'Pista';
+    clearBtn.disabled = mode === 'running';
+    goBtn.classList.toggle('stop', mode === 'running');
+    if (mode === 'running') goBtn.textContent = 'Detener';
+    else if (mode === 'won') goBtn.textContent = idx < LEVELS.length - 1 ? 'Siguiente nivel' : 'Volver a niveles';
+    else if (mode === 'lost') goBtn.textContent = 'Reintentar';
+    else goBtn.textContent = 'Crecer';
+    clearBtn.textContent = mode === 'won' ? 'Repetir' : 'Borrar';
+  }
+
+  // ---------- Tamaño del tablero ----------
+  function layout() {
+    if (!lv || playEl.hidden) return;
+    const wrap = $('wrap');
+    const availW = wrap.clientWidth;
+    const top = wrap.getBoundingClientRect().top + window.scrollY;
+    const availH = Math.max(220, window.innerHeight - top - 190);
+    cell = Math.floor(Math.min(availW / lv.w, availH / lv.h, 54));
+    const W = cell * lv.w, H = cell * lv.h;
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    canvas.style.width = W + 'px'; canvas.style.height = H + 'px';
+    canvas.width = Math.round(W * dpr); canvas.height = Math.round(H * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  // ---------- Dibujo ----------
+  const C = {
+    agar:'#143c43', dot:'#1f4d54', zone:'#1d5158', zoneLine:'#3f8b8d', life:'#7cf0cf', lifeGlow:'rgba(124,240,207,.55)',
+    nucleus:'#e9fff8', stone:'#4f6468', stoneHi:'#6c8488', amber:'#ffc65a', poison:'#ff7272', bg:'#0b2226',
+  };
+  function rr(x, y, w, h, r) {
+    ctx.beginPath(); ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+  function starPath(cx, cy, R) {
+    ctx.beginPath();
+    for (let i = 0; i < 10; i++) {
+      const a = -Math.PI / 2 + i * Math.PI / 5, rad = i % 2 ? R * .45 : R;
+      ctx.lineTo(cx + Math.cos(a) * rad, cy + Math.sin(a) * rad);
+    }
+    ctx.closePath();
+  }
+  function drawColony(scale) {
+    const { w, h } = lv, R = cell * .4;
+    ctx.beginPath();
+    for (let k = 0; k < scale.length; k++) {
+      const s = scale[k]; if (s < .02) continue;
+      const r = Math.floor(k / w), c = k % w, x = (c + .5) * cell, y = (r + .5) * cell;
+      ctx.moveTo(x + R * s, y); ctx.arc(x, y, R * s, 0, Math.PI * 2);
+      if (c + 1 < w && scale[k + 1] > .02) { const t = cell * .48 * Math.min(s, scale[k + 1]); ctx.rect(x, y - t / 2, cell, t); }
+      if (r + 1 < h && scale[k + w] > .02) { const t = cell * .48 * Math.min(s, scale[k + w]); ctx.rect(x - t / 2, y, t, cell); }
+    }
+    ctx.fillStyle = C.life; ctx.shadowColor = C.lifeGlow; ctx.shadowBlur = cell * .35;
+    ctx.fill(); ctx.shadowBlur = 0; ctx.shadowColor = 'transparent';
+  }
+
+  function render(now) {
+    if (!lv || playEl.hidden) return;
+    const { w, h } = lv, W = w * cell, H = h * cell;
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = C.agar; rr(0, 0, W, H, cell * .35); ctx.fill();
+
+    // puntos del agar
+    ctx.fillStyle = C.dot;
+    for (let r = 0; r < h; r++) for (let c = 0; c < w; c++) { ctx.beginPath(); ctx.arc((c + .5) * cell, (r + .5) * cell, cell * .06, 0, 7); ctx.fill(); }
+
+    // zona de siembra
+    const flash = now < flashZoneUntil ? .5 + .5 * Math.sin(now / 60) : 0;
+    for (const k of lv.zone) {
+      const r = Math.floor(k / w), c = k % w, g = cell * .06;
+      ctx.fillStyle = C.zone; rr(c * cell + g, r * cell + g, cell - 2 * g, cell - 2 * g, cell * .22); ctx.fill();
+      ctx.strokeStyle = flash ? C.amber : C.zoneLine; ctx.lineWidth = Math.max(1, cell * .04);
+      ctx.setLineDash([cell * .12, cell * .1]); ctx.stroke(); ctx.setLineDash([]);
+    }
+    // rocas
+    for (const k of lv.rock) {
+      const r = Math.floor(k / w), c = k % w, g = cell * .04;
+      ctx.fillStyle = C.stone; rr(c * cell + g, r * cell + g, cell - 2 * g, cell - 2 * g, cell * .3); ctx.fill();
+      ctx.fillStyle = C.stoneHi; rr(c * cell + cell * .22, r * cell + cell * .18, cell * .34, cell * .12, cell * .06); ctx.fill();
+    }
+    // veneno
+    for (const k of lv.poison) {
+      const r = Math.floor(k / w), c = k % w, x = (c + .5) * cell, y = (r + .5) * cell;
+      const hit = sim && sim.done && sim.res.reason === 'poison' && sim.res.at === k;
+      ctx.fillStyle = C.poison; ctx.globalAlpha = hit ? .6 + .4 * Math.sin(now / 80) : .9;
+      ctx.beginPath();
+      for (let i = 0; i < 16; i++) { const a = i * Math.PI / 8, rad = i % 2 ? cell * .2 : cell * .36; ctx.lineTo(x + Math.cos(a) * rad, y + Math.sin(a) * rad); }
+      ctx.closePath(); ctx.fill(); ctx.globalAlpha = 1;
+      ctx.fillStyle = C.bg; ctx.beginPath(); ctx.arc(x, y, cell * .09, 0, 7); ctx.fill();
+    }
+    // metas
+    for (const k of lv.stars) {
+      const r = Math.floor(k / w), c = k % w, x = (c + .5) * cell, y = (r + .5) * cell;
+      const got = sim && sim.reached.has(k);
+      const pulse = got ? 1 + .08 * Math.sin(now / 120) : 1;
+      starPath(x, y, cell * .4 * pulse);
+      if (got) { ctx.shadowColor = C.amber; ctx.shadowBlur = cell * .6; ctx.fillStyle = C.amber; ctx.fill(); ctx.shadowBlur = 0; }
+      else { ctx.fillStyle = 'rgba(255,198,90,.18)'; ctx.fill(); ctx.strokeStyle = C.amber; ctx.lineWidth = Math.max(1.5, cell * .05); ctx.stroke(); }
+    }
+
+    // colonia
+    const scale = new Float32Array(w * h);
+    if (sim) {
+      const f = sim.res.frames, n = f.length;
+      const e = now - sim.t0;
+      let i = Math.floor(e / GEN_MS) + 1, t = (e % GEN_MS) / GEN_MS;
+      if (i > n - 1 || n === 1) { i = n - 1; t = 1; finish(); }
+      const prev = f[Math.max(0, i - 1)], cur = f[i];
+      const ease = reduceMotion ? 1 : 1 - Math.pow(1 - t, 3);
+      for (let k = 0; k < scale.length; k++) scale[k] = prev[k] + (cur[k] - prev[k]) * ease;
+      const shown = t >= .5 ? i : i - 1;
+      if (shown !== sim.shownGen) onGen(shown);
+    } else {
+      for (const k of lv.init) scale[k] = 1;
+      for (const k of seeds) scale[k] = 1;
+    }
+    drawColony(scale);
+
+    // núcleos de tus semillas (solo antes de crecer)
+    if (!sim) {
+      for (const k of seeds) {
+        const r = Math.floor(k / w), c = k % w;
+        ctx.fillStyle = C.nucleus; ctx.beginPath(); ctx.arc((c + .5) * cell, (r + .5) * cell, cell * .1, 0, 7); ctx.fill();
+      }
+      // vista previa del siguiente paso
+      if (preview) {
+        const nxt = step(lv, startState(lv, seeds));
+        ctx.strokeStyle = 'rgba(232,245,241,.7)'; ctx.lineWidth = Math.max(1.2, cell * .045);
+        ctx.setLineDash([cell * .08, cell * .08]);
+        for (let k = 0; k < nxt.length; k++) if (nxt[k]) {
+          const r = Math.floor(k / w), c = k % w;
+          ctx.beginPath(); ctx.arc((c + .5) * cell, (r + .5) * cell, cell * .3, 0, 7); ctx.stroke();
+        }
+        ctx.setLineDash([]);
+      }
+    }
+    // pista
+    for (let i = 0; i < hintShown; i++) {
+      const [r, c] = lv.hint[i];
+      ctx.strokeStyle = C.amber; ctx.lineWidth = Math.max(2, cell * .07);
+      ctx.beginPath(); ctx.arc((c + .5) * cell, (r + .5) * cell, cell * .44, 0, 7); ctx.stroke();
+    }
+  }
+
+  function onGen(g) {
+    sim.shownGen = g;
+    const cur = sim.res.frames[g];
+    let pop = 0; for (let k = 0; k < cur.length; k++) pop += cur[k];
+    if (g > 0) sfx.gen(pop);
+    for (const k of lv.stars) if (cur[k] && !sim.reached.has(k)) { sim.reached.add(k); sfx.star(); }
+    $('gen').textContent = `${g}/${lv.gens}`;
+  }
+
+  function finish() {
+    if (sim.done) return;
+    sim.done = true;
+    const res = sim.res;
+    if (res.win) {
+      mode = 'won';
+      if (!saved.done.includes(idx)) { saved.done.push(idx); persist(); }
+      setMsg(lv.goal === 'survive'
+        ? `¡La colonia sobrevivió las ${lv.gens} generaciones!`
+        : `¡Llegaste a la meta en la generación ${res.gen}${seeds.size < lv.seeds ? `, y con solo ${seeds.size} semilla${seeds.size === 1 ? '' : 's'}` : ''}!`, 'win');
+      sfx.win(); buzz([20, 40, 30]);
+    } else {
+      mode = 'lost';
+      const why = res.reason === 'poison' ? `La colonia tocó el veneno en la generación ${res.gen}.`
+        : res.reason === 'extinct' ? `La colonia se extinguió en la generación ${res.gen}.`
+        : `Se acabaron las ${lv.gens} generaciones y ${lv.stars.length > 1 ? 'faltó alguna meta' : 'no llegó a la meta'}.`;
+      setMsg(why + ' Ajusta tus semillas y vuelve a intentar.', 'fail');
+      sfx.fail(); buzz(40);
+    }
+    updateUi();
+  }
+  function buzz(p) { try { navigator.vibrate && navigator.vibrate(p); } catch (e) {} }
+
+  function loop(now) { render(now); requestAnimationFrame(loop); }
+
+  // ---------- Interacción ----------
+  function resetToPlant() { sim = null; mode = 'plant'; setMsg(lv.text); updateUi(); }
+
+  canvas.addEventListener('pointerdown', e => {
+    ensureAudio();
+    if (!lv || mode === 'running') return;
+    if (mode !== 'plant') resetToPlant();
+    const b = canvas.getBoundingClientRect();
+    const c = Math.floor((e.clientX - b.left) / b.width * lv.w);
+    const r = Math.floor((e.clientY - b.top) / b.height * lv.h);
+    if (r < 0 || c < 0 || r >= lv.h || c >= lv.w) return;
+    const k = r * lv.w + c;
+    if (!lv.zoneSet.has(k)) {
+      flashZoneUntil = performance.now() + 500;
+      setMsg('Solo puedes sembrar en las casillas marcadas con línea punteada.');
+      return;
+    }
+    if (seeds.has(k)) { seeds.delete(k); sfx.unplant(); }
+    else if (seeds.size >= lv.seeds) {
+      const s = $('stat-seeds'); s.classList.remove('bump'); void s.offsetWidth; s.classList.add('bump');
+      setMsg(`Ya usaste tus ${lv.seeds} semillas. Toca una para quitarla.`);
+      sfx.deny(); return;
+    } else { seeds.add(k); sfx.plant(); buzz(6); }
+    if (msgEl.className !== 'msg') setMsg(lv.text);
+    updateUi();
+  });
+
+  goBtn.addEventListener('click', () => {
+    ensureAudio();
+    if (mode === 'running') { resetToPlant(); return; }
+    if (mode === 'won') { if (idx < LEVELS.length - 1) openLevel(idx + 1); else backToMenu(); return; }
+    if (mode === 'lost') { resetToPlant(); return; }
+    if (!seeds.size && !lv.init.length) { setMsg('Primero siembra al menos una célula en la zona punteada.'); flashZoneUntil = performance.now() + 600; return; }
+    sim = { res: simulate(lv, [...seeds]), t0: performance.now(), shownGen: -1, reached: new Set(), done: false };
+    mode = 'running';
+    setMsg('Creciendo…');
+    updateUi();
+  });
+  clearBtn.addEventListener('click', () => {
+    if (mode === 'won') { resetToPlant(); return; }
+    seeds.clear(); resetToPlant();
+  });
+  previewBtn.addEventListener('click', () => { preview = !preview; updateUi(); });
+  $('btn-hint').addEventListener('click', () => {
+    if (hintShown < lv.hint.length) hintShown++;
+    if (mode !== 'plant' && mode !== 'running') resetToPlant();
+    setMsg(hintShown >= lv.hint.length
+      ? 'Los círculos amarillos son una solución completa. Siembra ahí y toca Crecer.'
+      : `Una solución usa la casilla marcada en amarillo. Toca Pista otra vez para ver otra.`);
+    updateUi();
+  });
+  $('btn-back').addEventListener('click', backToMenu);
+
+  // Reglas
+  document.querySelectorAll('.mini').forEach(m => {
+    const p = m.dataset.p.split('/').map(r => r.padEnd(3, '.').slice(0, 3)).join('');
+    m.innerHTML = [...p].map(ch => `<i class="${ch === 'o' || ch === 'C' ? 'on' : ''}${ch === 'c' || ch === 'C' ? ' c' : ''}"></i>`).join('');
+  });
+  function openRules() { $('rules').hidden = false; $('btn-rules-close').focus(); }
+  function closeRules() { $('rules').hidden = true; saved.seenRules = true; persist(); }
+  $('btn-rules').addEventListener('click', openRules);
+  $('btn-rules-menu').addEventListener('click', openRules);
+  $('btn-rules-close').addEventListener('click', closeRules);
+  $('rules').addEventListener('click', e => { if (e.target.id === 'rules') closeRules(); });
+  addEventListener('keydown', e => { if (e.key === 'Escape' && !$('rules').hidden) closeRules(); });
+
+  // Sonido
+  function applyMute() {
+    $('btn-sound').setAttribute('aria-pressed', String(saved.muted));
+    $('btn-sound').setAttribute('aria-label', saved.muted ? 'Activar sonido' : 'Silenciar sonido');
+    $('snd-on').toggleAttribute('hidden', saved.muted);
+    $('snd-off').toggleAttribute('hidden', !saved.muted);
+  }
+  $('btn-sound').addEventListener('click', () => { saved.muted = !saved.muted; persist(); applyMute(); ensureAudio(); sfx.plant(); });
+
+  // ---------- Arranque ----------
+  function start(data) {
+    applyMute();
+    renderMenu();
+    if (data && typeof data.idx === 'number' && data.screen === 'play' && LEVELS[data.idx]) openLevel(data.idx, data.seeds);
+    if (window.ResizeObserver) new ResizeObserver(layout).observe($('wrap'));
+    addEventListener('resize', layout);
+    requestAnimationFrame(loop);
+  }
+  const hot = window.claude && window.claude.hot;
+  if (hot && typeof hot.snapshot === 'function') hot.snapshot(() => ({ screen: playEl.hidden ? 'menu' : 'play', idx, seeds: [...seeds] }));
+  if (hot && typeof hot.ready === 'function') hot.ready(start);
+  else start((hot && hot.data) || {});
+})();
+</script>
+</body>
+</html>
