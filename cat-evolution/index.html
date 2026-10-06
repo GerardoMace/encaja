@@ -337,7 +337,35 @@ img.catimg{display:block;width:100%;height:auto}
 .abuelo.art.glow img:first-child{animation:aura 2.6s ease-in-out}
 @keyframes aura{0%,100%{filter:none}20%,75%{filter:drop-shadow(0 0 6px #e9ff6a) drop-shadow(0 0 16px #9dff2a) brightness(1.08)}}
 @media (prefers-reduced-motion:reduce){.abuelo.art.glow img:first-child{animation:none}}
-/* Navegación */
+/* Hábitat a pantalla completa: el escenario llena la pantalla y los controles flotan encima, transparentes */
+body.in-hab .app{padding-block:0}
+body.in-hab .topbar{position:fixed;top:0;left:50%;transform:translateX(-50%);width:min(100%,520px);z-index:8;padding:calc(10px + env(safe-area-inset-top,0px)) 14px 8px;background:linear-gradient(rgba(12,16,48,.5),transparent)}
+body.in-hab .logo{font-size:1.25rem;text-shadow:0 2px 6px rgba(0,0,0,.45)}
+body.in-hab .scene{position:fixed;top:0;left:50%;transform:translateX(-50%);z-index:1;width:min(100vw,520px);height:100vh;height:100dvh;aspect-ratio:auto;margin:0;border-radius:0;box-shadow:none;container-type:size}
+body.in-hab .toast{bottom:calc(24px + env(safe-area-inset-bottom,0px))}
+.stage{position:absolute;left:50%;bottom:0;transform:translateX(-50%);width:100%;aspect-ratio:400/560}
+/* el fondo se recorta a lo mucho un 13% por lado; lo que sobra arriba se llena con el mismo fondo desenfocado */
+body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
+.bg-blur{position:absolute;inset:-24px;background-size:cover;background-position:center top;filter:blur(14px) brightness(.85)}
+.hud{position:absolute;left:0;right:0;top:calc(60px + env(safe-area-inset-top,0px));z-index:2500;display:flex;justify-content:space-between;align-items:flex-start;padding:0 12px;pointer-events:none}
+.hud>*{pointer-events:auto}
+.hud-btn{background:rgba(18,24,66,.32);-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);border:1.5px solid rgba(255,255,255,.4);color:#fff;border-radius:999px;font-weight:900;box-shadow:0 4px 14px rgba(0,0,0,.22);text-shadow:0 1px 3px rgba(0,0,0,.5)}
+.hab-cur{display:flex;align-items:center;gap:6px;padding:8px 14px}
+.hab-cur svg{width:14px;height:14px;transition:transform .2s}
+.habsel.open .hab-cur svg{transform:rotate(180deg)}
+.hab-menu{display:none;margin-top:6px;flex-direction:column;gap:4px;padding:6px;border-radius:16px;background:rgba(18,24,66,.8);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);min-width:170px;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+.habsel.open .hab-menu{display:flex}
+.hab-item{display:flex;gap:6px;align-items:center;padding:10px 12px;border-radius:10px;font-weight:900;text-align:left;color:#fff}
+.hab-item[aria-current="true"]{background:var(--gold);color:var(--sand-ink)}
+.hab-item.locked{color:var(--muted)}
+.hab-item svg{width:14px;height:14px;flex:none}
+.hud-nav{display:flex;flex-direction:column;gap:10px}
+.hud-btn.ico{width:50px;height:50px;display:grid;place-items:center;position:relative;padding:0}
+.hud-btn.ico svg{width:26px;height:26px;filter:drop-shadow(0 1px 2px rgba(0,0,0,.5))}
+.hud-btn .dot{position:absolute;top:3px;right:3px;width:11px;height:11px;border-radius:50%;background:var(--gold);border:2px solid rgba(18,24,66,.6)}
+.back{font-weight:900;background:var(--panel);border-radius:999px;padding:8px 14px}
+/* Navegación (ya no se muestra: la reemplazan los botones flotantes del hábitat) */
+.tabs{display:none!important}
 .tabs{
   position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;justify-content:center;
   padding:8px 16px calc(8px + env(safe-area-inset-bottom,0px));background:rgba(15,21,60,.94);backdrop-filter:blur(8px);
@@ -396,7 +424,8 @@ img.catimg{display:block;width:100%;height:auto}
 
 <div class="app">
   <header class="topbar">
-    <div class="logo">Cat <em>Evolution</em></div>
+    <button class="back" id="back" type="button" hidden>‹ Hábitat</button>
+    <div class="logo" id="logo">Cat <em>Evolution</em></div>
     <div class="wallet">
     <div class="purse" id="purse" title="Ofrendas">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#f4c24f" stroke="#7a5410" stroke-width="1.2" d="M12 2.5c-2.6 0-4.3 2-4.3 4.4 0 1.7.9 3.1 2.2 4.1H5.5v2.6h5.2V21.5h2.6V13.6h5.2V11h-4.4c1.3-1 2.2-2.4 2.2-4.1 0-2.4-1.7-4.4-4.3-4.4zm0 2.4c1.1 0 1.8.9 1.8 2s-.8 2.4-1.8 3.3c-1-.9-1.8-2.2-1.8-3.3s.7-2 1.8-2z"/></svg>
@@ -423,7 +452,7 @@ img.catimg{display:block;width:100%;height:auto}
     <button class="tab" role="tab" data-tab="templo" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3L2 21h20L12 3z"/><path d="M7 21l5-9 5 9"/></svg>Hábitat</button>
     <button class="tab" role="tab" data-tab="gatos" type="button">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M5 20c0-6 2-8 2-8L5 4l5 3h4l5-3-2 8s2 2 2 8H5z"/></svg>Gatos<span class="dot" id="dot-gatos" hidden></span></button>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M5 20c0-6 2-8 2-8L5 4l5 3h4l5-3-2 8s2 2 2 8H5z"/></svg>Gatos</button>
     <button class="tab" role="tab" data-tab="juegos" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>Juegos</button>
   </div>
@@ -849,14 +878,14 @@ img.catimg{display:block;width:100%;height:auto}
     const busy = slotsOf().filter(Boolean);
     if (slotsOf().some(s => s && Date.now() >= s.readyAt)) return `¡Un ${H.nest.toLowerCase()} está listo! Tócalo para ver al gatito que nació.`;
     const elsewhere = HAB_ORDER.find(h => h !== S.hab && S.habs[h].slots.some(s => s && Date.now() >= s.readyAt));
-    if (elsewhere) return `¡Nació un gatito en ${HABITATS[elsewhere].short}! Cambia de hábitat arriba para verlo.`;
-    if (!awake.length && !statues.length) return `Aquí no vive ningún gato todavía. Muda gatos desde su ficha (pestaña Gatos) o excava una estatua.`;
+    if (elsewhere) return `¡Nació un gatito en ${HABITATS[elsewhere].short}! Cámbiate de hábitat con el menú de arriba.`;
+    if (!awake.length && !statues.length) return `Aquí no vive ningún gato todavía. Levanta un gato y suéltalo en este hábitat en el menú de arriba, o excava una estatua (botón de Gatos).`;
     if (awake.length < 2 && statues.length) return `Toca las estatuas para despertarlas. Cuesta ${COST.awaken} ofrendas cada una.`;
-    if (statues.length > SPOTS.statues.length) return `Tienes ${statues.length - SPOTS.statues.length} estatuas más guardadas en la pestaña Gatos.`;
+    if (statues.length > SPOTS.statues.length) return `Tienes ${statues.length - SPOTS.statues.length} estatuas más guardadas: búscalas con el botón de Gatos.`;
     if (S.ofrendas < COST.breed && altarAmount() < COST.breed) return '¿Te faltan ofrendas? Juega Ofrendas: cada nivel da ofrendas y los niveles pares regalan una estatua.';
-    if ((S.stone || 0) >= 10 && !Object.keys(S.up || {}).length) return 'Ya tienes piedra para una mejora. Toca "Mejoras".';
-    if (!S.habs.casa.open && (S.stone || 0) >= HABITATS.casa.cost) return '¡Ya tienes piedra para abrir La Casa! Tócala en la barra de hábitats.';
-    if (!S.births && !busy.length) return '¡Ya tienes dos gatos despiertos! Toca "Criar gatitos" y elige a los dos padres.';
+    if ((S.stone || 0) >= 10 && !Object.keys(S.up || {}).length) return 'Ya tienes piedra para una mejora. Toca el botón de la pirámide con flecha.';
+    if (!S.habs.casa.open && (S.stone || 0) >= HABITATS.casa.cost) return '¡Ya tienes piedra para abrir La Casa! Ábrela en el menú de hábitats, arriba.';
+    if (!S.births && !busy.length) return `¡Ya tienes dos gatos despiertos! Toca un ${H.nest.toLowerCase()} vacío y elige a los dos padres.`;
     if (!S.births && busy.length) return `Mientras más raro sea el bebé, más tarda en nacer. Si el ${H.nest.toLowerCase()} brilla, viene algo especial.`;
     const tips = [
       'Los gatitos heredan de sus padres el pelaje, el degradado, el tono y el accesorio.',
@@ -1089,6 +1118,45 @@ img.catimg{display:block;width:100%;height:auto}
       <circle cx="70" cy="114" r="4" fill="#2a1f35"/><circle cx="70" cy="130" r="4" fill="#2a1f35"/></svg>`;
   }
 
+  // Controles flotantes del hábitat: menú desplegable de hábitats (izquierda) y Gatos / Juegos / Mejoras (derecha)
+  const ICON = {
+    gatos: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M5 20c0-6 2-8 2-8L5 4l5 3h4l5-3-2 8s2 2 2 8H5z"/></svg>',
+    juegos: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="8" height="8" rx="2"/><rect x="13" y="3" width="8" height="8" rx="2"/><rect x="3" y="13" width="8" height="8" rx="2"/><rect x="13" y="13" width="8" height="8" rx="2"/></svg>',
+    mejoras: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" stroke-linecap="round" aria-hidden="true"><path d="M3 21h18L12 9z"/><path d="M12 2v5M9.5 4.5L12 2l2.5 2.5"/></svg>',
+  };
+  function hudHTML() {
+    const lock = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" fill="currentColor"/><path d="M8 11V8a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="2.5" fill="none"/></svg>';
+    const chev = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+    return `<div class="hud">
+      <div class="habsel">
+        <button class="hud-btn hab-cur" id="hab-cur" type="button" aria-haspopup="true" aria-expanded="false">${HABITATS[S.hab].short}${chev}</button>
+        <div class="hab-menu" role="menu" aria-label="Hábitats">${HAB_ORDER.map(h => {
+          const Hh = HABITATS[h], open = S.habs[h].open;
+          return `<button class="hab-item${open ? '' : ' locked'}" role="menuitem" type="button" data-hab="${h}" aria-current="${S.hab === h}">${open ? Hh.name : `${lock}${Hh.short} · ${Hh.cost} de piedra`}</button>`;
+        }).join('')}</div>
+      </div>
+      <div class="hud-nav">
+        <button class="hud-btn ico" type="button" data-go="gatos" aria-label="Gatos">${ICON.gatos}<span class="dot" id="dot-gatos" ${S.cats.some(c => !c.awake) ? '' : 'hidden'}></span></button>
+        <button class="hud-btn ico" type="button" data-go="juegos" aria-label="Juegos">${ICON.juegos}</button>
+        <button class="hud-btn ico" type="button" id="hud-up" aria-label="Mejoras">${ICON.mejoras}</button>
+      </div>
+    </div>`;
+  }
+  function habMenu(open) {
+    const m = document.querySelector('.habsel'); if (!m) return;
+    m.classList.toggle('open', open);
+    $('hab-cur').setAttribute('aria-expanded', String(open));
+  }
+  document.addEventListener('pointerdown', e => { if (!lift.lifted && !e.target.closest('.habsel')) habMenu(false); });
+  // Los objetos de la orilla se recorren hacia adentro si el fondo quedó recortado a los lados
+  function fitObjects() {
+    const sc = $('scene'), st = $('stage'), world = $('world'); if (!sc || !st || !world || !st.clientWidth) return;
+    const lo = Math.max(0, (1 - sc.clientWidth / st.clientWidth) / 2), hi = 1 - lo;
+    world.querySelectorAll('.obj[data-fx]').forEach(o => {
+      const x = +o.dataset.fx, w = +o.dataset.fw;
+      o.style.left = (Math.max(lo + w / 2 + .01, Math.min(hi - w / 2 - .01, x)) * 100) + '%';
+    });
+  }
   function habBarHTML() {
     const lock = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" fill="currentColor"/><path d="M8 11V8a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="2.5" fill="none"/></svg>';
     return `<div class="habbar" role="tablist" aria-label="Hábitats">${HAB_ORDER.map(h => {
@@ -1381,30 +1449,29 @@ img.catimg{display:block;width:100%;height:auto}
       ? Array.from({ length: 16 }, (_, i) => `<i class="snow" style="left:${(i * 61) % 100}%;animation-delay:${(i * .7).toFixed(1)}s;animation-duration:${(6 + (i % 5)).toFixed(0)}s"></i>`).join('')
       : Array.from({ length: 7 }, (_, i) => `<i class="mote" style="left:${12 + i * 12}%;top:${60 + (i * 37) % 32}%;animation-delay:${(i * 1.4).toFixed(1)}s"></i>`).join('');
     el.innerHTML = `
-      ${S.sphinxAwake ? habBarHTML() : ''}
       <div class="scene ${mode} hab-${H}" id="scene">
-        <div class="bg">${bgArt ? `<img src="${bgArt}" alt="">` : H === 'casa' ? sceneCasa(mode) : H === 'nieve' ? sceneNieve(mode) : sceneBG(P)}</div>
-        <div class="world" id="world"></div>
-        <div class="fx" aria-hidden="true">${motes}</div>
-        ${bgArt || H !== 'egipto' ? '' : `<div class="fg">${sceneFG(P)}</div>`}
-        <button class="say" id="say" type="button"><span class="say-av">${abueloSVG()}</span><span class="say-txt"><small id="say-who">Abuelo Colmillo</small><span id="guide-text"></span></span></button>
-      </div>
-      ${S.sphinxAwake ? `<div class="actions temple-actions">
-        <button class="btn turq" id="btn-breed" type="button">Criar gatitos · ${COST.breed}</button>
-        <button class="btn" id="btn-up" type="button">Mejoras</button>
-        <button class="btn gold" id="btn-play" type="button">Jugar Ofrendas</button>
-        <button class="btn gold" id="btn-pyr" type="button">Jugar Pirámide</button>
-        <button class="dig-link" id="btn-dig" type="button" style="grid-column:1/-1">Excavar una estatua por ${COST.dig} ofrendas</button>
-      </div>` : ''}`;
-    if (S.sphinxAwake) { $('btn-breed').addEventListener('click', openBreed); $('btn-dig').addEventListener('click', dig); $('btn-play').addEventListener('click', () => pickTeam('match', t => openMatch(S.match.level, t))); $('btn-pyr').addEventListener('click', () => pickTeam('pyr', openPyramid)); $('btn-up').addEventListener('click', openUpgrades); }
-    el.querySelectorAll('[data-hab]').forEach(b => b.addEventListener('click', () => openHabitat(b.dataset.hab)));
-    $('say').addEventListener('click', () => { if (S.sphinxAwake) { S.tip++; tickTemplo(); } });
+        ${bgArt ? `<div class="bg-blur" style="background-image:url('${bgArt}')" aria-hidden="true"></div>` : ''}
+        <div class="stage" id="stage">
+          <div class="bg">${bgArt ? `<img src="${bgArt}" alt="">` : H === 'casa' ? sceneCasa(mode) : H === 'nieve' ? sceneNieve(mode) : sceneBG(P)}</div>
+          <div class="world" id="world"></div>
+          <div class="fx" aria-hidden="true">${motes}</div>
+          ${bgArt || H !== 'egipto' ? '' : `<div class="fg">${sceneFG(P)}</div>`}
+        </div>
+        ${S.sphinxAwake ? hudHTML() : ''}
+      </div>`;
+    if (S.sphinxAwake) {
+      $('hab-cur').addEventListener('click', () => habMenu(!document.querySelector('.habsel').classList.contains('open')));
+      el.querySelectorAll('[data-hab]').forEach(b => b.addEventListener('click', () => { habMenu(false); openHabitat(b.dataset.hab); }));
+      el.querySelectorAll('[data-go]').forEach(b => b.addEventListener('click', () => { ensureAudio(); showTab(b.dataset.go); }));
+      $('hud-up').addEventListener('click', openUpgrades);
+    }
     buildWorld();
+    fitObjects();
     tickTemplo();
   }
 
   function objHTML(cls, spot, inner, label, attrs) {
-    return `<button class="obj ${cls}" type="button" aria-label="${esc(label)}" ${attrs || ''} style="left:${spot.x * 100}%;top:${spot.y * 100}%;width:${spot.w * 100}%;z-index:${Math.round(spot.y * 1000)}">${inner}</button>`;
+    return `<button class="obj ${cls}" type="button" aria-label="${esc(label)}" ${attrs || ''} data-fx="${spot.x}" data-fw="${spot.w}" style="left:${spot.x * 100}%;top:${spot.y * 100}%;width:${spot.w * 100}%;z-index:${Math.round(spot.y * 1000)}">${inner}</button>`;
   }
   function buildWorld() {
     const world = $('world');
@@ -1430,7 +1497,7 @@ img.catimg{display:block;width:100%;height:auto}
     $('obj-sphinx').addEventListener('click', () => {
       ensureAudio();
       if (!S.sphinxAwake) { wakeSphinx(); return; }
-      S.tip++; sfx.meow(); tickTemplo();
+      elderSay(guideText()); S.tip++;
     });
     if (S.sphinxAwake) {
       world.querySelectorAll('[data-slot]').forEach(b => b.addEventListener('click', () => {
@@ -1538,6 +1605,7 @@ img.catimg{display:block;width:100%;height:auto}
     const w = lift.w, world = $('world');
     lift.lifted = true;
     w.lifted = true; w.walking = false;
+    habMenu(true);
     w.el.classList.remove('walking', 'land'); w.el.classList.add('lifted');
     const chip = w.el.querySelector('.namechip'); if (chip) chip.remove();
     w.liftW = world.clientWidth * .22;
@@ -1559,6 +1627,7 @@ img.catimg{display:block;width:100%;height:auto}
     const slotBtn = under && under.closest('[data-slot]');
     const feeder = under && under.closest('#obj-altar');
     const otherEl = under && under.closest('.walker');
+    habMenu(false);
     w.lifted = false;
     w.el.classList.remove('lifted');
     if (!world) return;
@@ -1717,12 +1786,7 @@ img.catimg{display:block;width:100%;height:auto}
   }
 
   function tickTemplo() {
-    const gt = $('guide-text'); if (!gt || $('tab-templo').hidden) return;
-    if (!S.sphinxAwake) {
-      gt.textContent = 'Soy el Abuelo Colmillo. Este templo lleva siglos dormido: toca la esfinge para despertarla.';
-      return;
-    }
-    const t = guideText(); if (gt.textContent !== t) gt.textContent = t;
+    if ($('tab-templo').hidden || !$('world') || !S.sphinxAwake) return;
     const a = altarAmount();
     const at = $('altar-tag'); if (at) at.textContent = a ? `+${a}${a >= ALTAR.cap ? ' · lleno' : ''}` : '';
     const fl = $('altar-flame'); if (fl) fl.style.transform = `scale(${(.55 + .6 * a / ALTAR.cap).toFixed(2)})`;
@@ -1751,6 +1815,7 @@ img.catimg{display:block;width:100%;height:auto}
     }).join('');
     el.innerHTML = `
       <div class="block"><h2>Tus gatos <span style="color:var(--muted);font-size:1rem">(${S.cats.filter(c => c.awake).length} despiertos)</span></h2>
+        ${S.sphinxAwake ? `<div class="actions" style="margin:4px 0 12px"><button class="btn turq" id="g-breed" type="button">Criar gatitos · ${COST.breed}</button><button class="btn gold" id="g-dig" type="button">Excavar estatua · ${COST.dig}</button></div>` : ''}
         <div class="grid">${cats.map(cardHTML).join('') || '<p class="note">Aún no tienes gatos.</p>'}</div>
       </div>
       <div class="block"><h2>Libro de mutaciones</h2><div class="book">${fams}</div></div>
@@ -1761,7 +1826,8 @@ img.catimg{display:block;width:100%;height:auto}
       if (!armed) { armed = true; e.currentTarget.classList.add('confirm'); e.currentTarget.textContent = 'Toca otra vez para borrar todo'; return; }
       S = freshState(); save(); $('ofr').textContent = 0; $('stone').textContent = 0; showTab('templo'); renderAll();
     });
-    $('dot-gatos').hidden = !S.cats.some(c => !c.awake);
+    if ($('g-breed')) { $('g-breed').addEventListener('click', openBreed); $('g-dig').addEventListener('click', dig); }
+    const dg = $('dot-gatos'); if (dg) dg.hidden = !S.cats.some(c => !c.awake);
   }
   function cardHTML(c) {
     if (!c.awake) return `<button class="card stone" data-cat="${c.id}" type="button">
@@ -2325,7 +2391,7 @@ img.catimg{display:block;width:100%;height:auto}
     M.moves += bonus; M.total = def.moves + bonus;
     M.baseNote = def.goal === 'sand' ? 'Haz combinaciones encima de la arena para limpiarla toda.' : 'Desliza una pieza hacia su vecina para cambiarlas de lugar. Junta 3 o más iguales.';
     ['templo', 'gatos', 'juegos'].forEach(t => { $('tab-' + t).hidden = true; });
-    $('tabs').hidden = true;
+    $('tabs').hidden = true; document.body.classList.remove('in-hab'); $('back').hidden = true; $('logo').hidden = false;
     const el = $('tab-match');
     el.hidden = false;
     el.innerHTML = `
@@ -2675,7 +2741,7 @@ img.catimg{display:block;width:100%;height:auto}
     PG.team = Array.isArray(team) ? team : []; PG.powers = teamPowers(PG.team, 'pyr');
     pDeal();
     ['templo', 'gatos', 'juegos'].forEach(t => { $('tab-' + t).hidden = true; });
-    $('tabs').hidden = true;
+    $('tabs').hidden = true; document.body.classList.remove('in-hab'); $('back').hidden = true; $('logo').hidden = false;
     const el = $('tab-pyr');
     el.hidden = false;
     el.innerHTML = `
@@ -3021,6 +3087,8 @@ img.catimg{display:block;width:100%;height:auto}
   function showTab(t) {
     S.tab = t;
     ['templo', 'gatos', 'juegos'].forEach(n => { $('tab-' + n).hidden = n !== t; });
+    document.body.classList.toggle('in-hab', t === 'templo');
+    $('back').hidden = t === 'templo'; $('logo').hidden = t !== 'templo';
     document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
     if (t === 'templo') renderTemplo();
     if (t === 'gatos') renderGatos();
@@ -3028,7 +3096,7 @@ img.catimg{display:block;width:100%;height:auto}
     window.scrollTo(0, 0);
     save();
   }
-  document.querySelectorAll('.tab').forEach(b => b.addEventListener('click', () => { ensureAudio(); showTab(b.dataset.tab); }));
+  $('back').addEventListener('click', () => { ensureAudio(); showTab('templo'); });
 
   function renderAll() {
     $('ofr').textContent = S.ofrendas;
@@ -3055,7 +3123,7 @@ img.catimg{display:block;width:100%;height:auto}
     renderAll();
     setInterval(tickTemplo, 1000);
     setInterval(() => { if (skyMode() !== mode && !$('tab-templo').hidden) renderTemplo(); }, 60000);
-    if (window.ResizeObserver) new ResizeObserver(placeWalkers).observe(document.body);
+    if (window.ResizeObserver) new ResizeObserver(() => { placeWalkers(); fitObjects(); }).observe(document.body);
     requestAnimationFrame(walkLoop);
     addEventListener('resize', () => { if (PG) pLayout(); });
     setInterval(() => { if (S.births) { S.tip++; } }, 12000);
