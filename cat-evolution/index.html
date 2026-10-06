@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#131b4a">
-<meta name="description" content="Cat Evolution: despierta estatuas de gatos egipcios, crúzalos y descubre mutaciones.">
+<meta name="description" content="Cat Evolution: despierta estatuas de gatos, crúzalos en distintos hábitats y descubre mutaciones.">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}*,*::before,*::after{box-sizing:border-box}[hidden]{display:none!important}</style>
 <title>Cat Evolution</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -256,6 +256,37 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
 .purse img{width:22px;height:22px;display:block}
 .art-img{display:block;width:100%;height:auto}
 .art-img.cracked{filter:contrast(1.15) brightness(.92)}
+/* Hábitats y Abuelo Colmillo */
+.habbar{display:flex;gap:6px;margin:4px 0 8px}
+.hab{flex:1;min-width:0;display:flex;align-items:center;justify-content:center;gap:5px;border-radius:12px;padding:9px 6px;background:var(--panel);font-weight:900;font-size:.84rem;white-space:nowrap}
+.hab svg{width:14px;height:14px;flex:none}
+.hab[aria-selected="true"]{background:var(--gold);color:var(--sand-ink)}
+.hab.locked{color:var(--muted)}
+.say{display:flex;gap:10px;align-items:center;text-align:left;font:inherit}
+.say-av{width:44px;flex:none}
+.say-txt{min-width:0}
+.say::after{left:30px}
+.abuelo{display:block;width:100%;height:auto}
+.abuelo .eyeglow{opacity:0}
+.abuelo.glow .eyeglow{animation:eyeglow 2.6s ease-in-out}
+.abuelo.art{position:relative;display:block}
+.abuelo.art img{display:block;width:100%;height:auto}
+.abuelo.art img.eyeglow{position:absolute;inset:0}
+@keyframes eyeglow{0%{opacity:0}20%{opacity:1}75%{opacity:1}100%{opacity:0}}
+.elder{position:fixed;left:50%;top:calc(66px + env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:40;display:flex;align-items:center;gap:10px;width:max-content;max-width:min(480px,calc(100vw - 32px));background:var(--sand);color:var(--sand-ink);border-radius:18px;padding:8px 14px 8px 8px;box-shadow:0 12px 32px rgba(0,0,0,.4)}
+.elder.show{animation:elderIn .45s cubic-bezier(.2,1.4,.4,1)}
+.elder-av{width:62px;flex:none}
+.elder p{margin:0;font-weight:800;font-size:.92rem;line-height:1.35}
+@keyframes elderIn{from{transform:translate(-50%,-20px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
+.snow{position:absolute;top:-3%;width:6px;height:6px;border-radius:50%;background:#fff;opacity:.9;animation:snowfall 7s linear infinite}
+@keyframes snowfall{from{top:-3%;transform:translateX(0)}50%{transform:translateX(14px)}to{top:103%;transform:translateX(-6px)}}
+.movebar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:var(--panel);border-radius:12px;padding:10px 12px}
+.movebar span{flex:1;min-width:140px;color:var(--muted);font-weight:700}
+.movebar b{color:var(--ink)}
+.movebar .btn{padding:8px 12px}
+.hab-preview{display:grid;grid-template-columns:1.4fr 1fr;gap:12px;align-items:end;width:min(70vw,280px);justify-self:center}
+.hab-preview svg,.hab-preview img{display:block;width:100%;height:auto}
+@media (prefers-reduced-motion:reduce){.snow{display:none}.abuelo.glow .eyeglow{animation:none;opacity:1}.elder.show{animation:none}}
 /* Navegación */
 .tabs{
   position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;justify-content:center;
@@ -341,7 +372,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
 <nav class="tabs" id="tabs" hidden>
   <div role="tablist">
     <button class="tab" role="tab" data-tab="templo" type="button">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3L2 21h20L12 3z"/><path d="M7 21l5-9 5 9"/></svg>Templo</button>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M12 3L2 21h20L12 3z"/><path d="M7 21l5-9 5 9"/></svg>Hábitat</button>
     <button class="tab" role="tab" data-tab="gatos" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round" aria-hidden="true"><path d="M5 20c0-6 2-8 2-8L5 4l5 3h4l5-3-2 8s2 2 2 8H5z"/></svg>Gatos<span class="dot" id="dot-gatos" hidden></span></button>
     <button class="tab" role="tab" data-tab="juegos" type="button">
@@ -351,6 +382,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
 
 <div class="sheet" id="sheet" hidden><div class="sheet-card" id="sheet-card" role="dialog" aria-modal="true"></div></div>
 <div class="toast" id="toast" hidden></div>
+<div class="elder" id="elder" hidden role="status"><div class="elder-av" id="elder-av"></div><p id="elder-msg"></p></div>
 
 <script>
 (() => {
@@ -360,7 +392,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
   const ALTAR = { get everyMs() { return S.up && S.up.altar ? 3000 : 4000; }, get cap() { return S.up && S.up.altar ? 80 : 40; } }; // el Altar mayor lo mejora
   const INCUBATE = { comun: 15, raro: 40, epico: 90, legend: 180 }; // segundos (en el juego final serían horas)
   const MUT_RATE = 0.14;                                // probabilidad de mutación por gen
-  const FAM_WEIGHT = { elegante: .55, egipcio: .30, mistico: .15 };
+  const FAM_WEIGHT = { elegante: .55, egipcio: .30, mistico: .15, artico: 0 }; // la Ártica solo sale en la Nieve o por herencia
 
   const RARITY = {
     comun: { label: 'Común', cls: 'b-comun', halo: '#fff3d6' },
@@ -372,12 +404,13 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     elegante: { label: 'Elegante', color: '#dfe5f2' },
     egipcio: { label: 'Egipcia', color: '#f4c24f' },
     mistico: { label: 'Mística', color: '#b48cff' },
+    artico: { label: 'Ártica', color: '#9fe3ff' },
   };
   const GENES = {
-    fur:  { label: 'Pelaje',    common: ['naranja', 'gris', 'negro', 'blanco', 'crema', 'cafe'], mut: { elegante: 'plateado', egipcio: 'dorado', mistico: 'cosmico' } },
-    pat:  { label: 'Patrón',    common: ['liso', 'atigrado', 'manchas', 'bicolor'],              mut: { elegante: 'smoking', egipcio: 'jeroglificos', mistico: 'constelacion' } },
-    eyes: { label: 'Ojos',      common: ['verde', 'ambar', 'azul'],                               mut: { elegante: 'heterocromia', egipcio: 'kohl', mistico: 'galaxia' } },
-    acc:  { label: 'Accesorio', common: ['ninguno', 'cascabel'],                                  mut: { elegante: 'mono', egipcio: 'usekh', mistico: 'luna' } },
+    fur:  { label: 'Pelaje',    common: ['naranja', 'gris', 'negro', 'blanco', 'crema', 'cafe'], mut: { elegante: 'plateado', egipcio: 'dorado', mistico: 'cosmico', artico: 'nevado' } },
+    pat:  { label: 'Patrón',    common: ['liso', 'atigrado', 'manchas', 'bicolor'],              mut: { elegante: 'smoking', egipcio: 'jeroglificos', mistico: 'constelacion', artico: 'escarcha' } },
+    eyes: { label: 'Ojos',      common: ['verde', 'ambar', 'azul'],                               mut: { elegante: 'heterocromia', egipcio: 'kohl', mistico: 'galaxia', artico: 'hielo' } },
+    acc:  { label: 'Accesorio', common: ['ninguno', 'cascabel'],                                  mut: { elegante: 'mono', egipcio: 'usekh', mistico: 'luna', artico: 'bufanda' } },
   };
   const GENE_KEYS = Object.keys(GENES);
   const NAMES_OF = {
@@ -387,6 +420,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     smoking: 'Esmoquin', jeroglificos: 'Jeroglíficos', constelacion: 'Constelación',
     verde: 'Verdes', ambar: 'Ámbar', azul: 'Azules', heterocromia: 'Heterocromía', kohl: 'Delineado de Horus', galaxia: 'Galaxia',
     ninguno: 'Ninguno', cascabel: 'Cascabel', mono: 'Moño de gala', usekh: 'Collar usekh', luna: 'Tiara lunar', nemes: 'Tocado nemes',
+    nevado: 'Nevado', escarcha: 'Escarcha', hielo: 'Ojos de hielo', bufanda: 'Bufanda',
   };
   const MUT_FAMILY = {};
   GENE_KEYS.forEach(k => Object.entries(GENES[k].mut).forEach(([fam, v]) => { MUT_FAMILY[v] = fam; }));
@@ -396,7 +430,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
   function styleOf(g) {
     const c = {};
     GENE_KEYS.forEach(k => { const f = MUT_FAMILY[g[k]]; if (f) c[f] = (c[f] || 0) + 1; });
-    const order = ['mistico', 'egipcio', 'elegante'];
+    const order = ['mistico', 'artico', 'egipcio', 'elegante'];
     let best = null;
     order.forEach(f => { if (c[f] && (!best || c[f] > c[best])) best = f; });
     return best ? FAMILY[best].label : 'Caricatura';
@@ -409,8 +443,9 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     for (const [f, v] of Object.entries(w)) { x -= v; if (x < 0) return f; }
     return 'elegante';
   }
-  function breedGenes(a, b, forceMutation) {
+  function breedGenes(a, b, forceMutation, fav) {
     const bias = {};
+    if (fav) bias[fav] = 2.4; // el hábitat favorece a su familia
     [a, b].forEach(p => GENE_KEYS.forEach(k => { const f = MUT_FAMILY[p.genes[k]]; if (f) bias[f] = (bias[f] || 0) + 1; }));
     const g = {};
     GENE_KEYS.forEach(k => {
@@ -423,10 +458,10 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     }
     return g;
   }
-  function randomStatueGenes() {
+  function randomStatueGenes(fav) {
     const g = {};
     GENE_KEYS.forEach(k => { g[k] = pick(GENES[k].common); });
-    if (Math.random() < .12) { const k = pick(GENE_KEYS); g[k] = GENES[k].mut[pickFamily()]; }
+    if (Math.random() < .12) { const k = pick(GENE_KEYS); g[k] = GENES[k].mut[pickFamily(fav ? { [fav]: 2.4 } : null)]; }
     return g;
   }
 
@@ -436,8 +471,9 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     naranja: { b: '#f39a4a' }, gris: { b: '#9aa4b2' }, negro: { b: '#3d3846' }, blanco: { b: '#f6f1e9' }, crema: { b: '#f1d9ab' }, cafe: { b: '#9c6b45' },
     plateado: { b: '#d3dae6', g: ['#f7f9fc', '#a9b5ca'] }, dorado: { b: '#f2c14e', g: ['#ffe48d', '#d68e17'] },
     cosmico: { b: '#5a48d6', g: ['#8a67ff', '#1f6fd1'] }, arena: { b: '#e2bf7e', g: ['#f2d79f', '#c7954c'] },
+    nevado: { b: '#eef6fb', g: ['#ffffff', '#bcdcf0'] },
   };
-  const IRIS = { verde: '#69c34d', ambar: '#f0a32e', azul: '#4aa9ec', kohl: '#e8b33a' };
+  const IRIS = { verde: '#69c34d', ambar: '#f0a32e', azul: '#4aa9ec', kohl: '#e8b33a', hielo: '#7fdcff' };
   function shade(hex, f) {
     const n = parseInt(hex.slice(1), 16);
     let r = n >> 16, g = (n >> 8) & 255, b = n & 255;
@@ -446,6 +482,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     return '#' + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
   }
   const lum = hex => { const n = parseInt(hex.slice(1), 16); return (.3 * (n >> 16) + .59 * ((n >> 8) & 255) + .11 * (n & 255)) / 255; };
+  const flake = (x, y, r, c) => `<path d="M${x - r} ${y}h${2 * r}M${x - r / 2} ${y - r * .87}l${r} ${r * 1.73}M${x + r / 2} ${y - r * .87}l${-r} ${r * 1.73}" stroke="${c}" stroke-width="2.4" stroke-linecap="round"/>`;
   function star4(x, y, r, fill) {
     return `<path d="M${x} ${y - r} Q${x + r * .22} ${y - r * .22} ${x + r} ${y} Q${x + r * .22} ${y + r * .22} ${x} ${y + r} Q${x - r * .22} ${y + r * .22} ${x - r} ${y} Q${x - r * .22} ${y - r * .22} ${x} ${y - r}Z" fill="${fill}"/>`;
   }
@@ -454,8 +491,8 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     const id = 'k' + (++uid), st = !!o.statue;
     const F = FUR[g.fur] || FUR.naranja;
     const P = st
-      ? { fur: '#cdb488', body: '#cdb488', dark: '#a98f62', white: '#dcc8a0', ink: '#6b5634', ear: '#b89c6c', nose: '#a98f62', gold: '#b39a6c', star: '#a98f62', red: '#a98f62', blue: '#b39a6c', turq: '#c2a878' }
-      : { fur: F.g ? `url(#${id}f)` : F.b, body: F.g ? `url(#${id}f)` : F.b, dark: lum(F.b) < .3 ? shade(F.b, .3) : shade(F.b, -.3), white: '#fbf6ee', ink: '#2a1f35', ear: '#f6a5b6', nose: '#ef7f98', gold: '#f4c24f', star: '#fff6c4', red: '#d94848', blue: '#1f5fbf', turq: '#36cbb9' };
+      ? { fur: '#cdb488', body: '#cdb488', dark: '#a98f62', white: '#dcc8a0', ink: '#6b5634', ear: '#b89c6c', nose: '#a98f62', gold: '#b39a6c', star: '#a98f62', red: '#a98f62', blue: '#b39a6c', turq: '#c2a878', frost: '#a98f62' }
+      : { fur: F.g ? `url(#${id}f)` : F.b, body: F.g ? `url(#${id}f)` : F.b, dark: lum(F.b) < .3 ? shade(F.b, .3) : shade(F.b, -.3), white: '#fbf6ee', ink: '#2a1f35', ear: '#f6a5b6', nose: '#ef7f98', gold: '#f4c24f', star: '#fff6c4', red: '#d94848', blue: '#1f5fbf', turq: '#36cbb9', frost: '#4fa9e0' };
     let defs = '';
     if (!st && F.g) defs += `<linearGradient id="${id}f" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${F.g[0]}"/><stop offset="1" stop-color="${F.g[1]}"/></linearGradient>`;
     const S = `stroke="${P.ink}" stroke-width="3" stroke-linejoin="round"`;
@@ -471,6 +508,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     if (pat === 'manchas') o2 += [[74, 142, 9], [128, 160, 11], [112, 130, 6], [86, 170, 7]].map(([x, y, r]) => `<circle cx="${x}" cy="${y}" r="${r}" fill="${P.dark}"/>`).join('');
     if (pat === 'bicolor') o2 += `<ellipse cx="100" cy="152" rx="26" ry="32" fill="${P.white}"/>`;
     if (smoking) o2 += `<path d="M100 118L80 162Q100 178 120 162Z" fill="${P.white}"/>`;
+    if (pat === 'escarcha') o2 += [[72, 146, 7], [124, 164, 8], [108, 130, 5], [86, 172, 5]].map(([x, y, r]) => flake(x, y, r, P.frost)).join('');
     if (pat === 'jeroglificos') o2 += `<path d="M58 158q42 16 84 0" stroke="${P.gold}" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M95 146a5 6 0 1 0 10 0a5 6 0 1 0-10 0M100 152v18M92 158h16" stroke="${P.gold}" stroke-width="3.5" fill="none" stroke-linecap="round"/>`;
     if (pat === 'constelacion') {
       const pts = [[70, 150], [88, 134], [112, 146], [128, 170], [96, 172]];
@@ -491,6 +529,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     if (pat === 'manchas') o2 += `<circle cx="122" cy="60" r="8" fill="${P.dark}"/><circle cx="70" cy="70" r="6" fill="${P.dark}"/>`;
     if (pat === 'jeroglificos') o2 += `<path d="M86 58q14-9 28 0M100 50v-7" stroke="${P.gold}" stroke-width="4" fill="none" stroke-linecap="round"/><circle cx="62" cy="66" r="3" fill="${P.gold}"/><circle cx="138" cy="66" r="3" fill="${P.gold}"/>`;
     if (pat === 'constelacion') o2 += star4(80, 58, 6, P.star) + star4(120, 54, 4, P.star) + star4(132, 72, 3, P.star);
+    if (pat === 'escarcha') o2 += flake(78, 60, 6, P.frost) + flake(124, 58, 5, P.frost);
     if (pat === 'bicolor' || smoking) o2 += `<ellipse cx="100" cy="109" rx="22" ry="15" fill="${P.white}"/>`;
     // ojos
     if (st) {
@@ -520,6 +559,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     if (g.acc === 'cascabel') o2 += `<path d="M66 128Q100 146 134 128" stroke="${P.red}" stroke-width="7" fill="none" stroke-linecap="round"/><circle cx="100" cy="139" r="7" fill="${P.gold}" stroke="${P.ink}" stroke-width="2"/><path d="M96 141h8" stroke="${P.ink}" stroke-width="1.5"/>`;
     if (g.acc === 'mono') o2 += `<path d="M100 137L80 126L80 148ZM100 137L120 126L120 148Z" fill="${st ? P.dark : '#b8325f'}" stroke="${P.ink}" stroke-width="2.5" stroke-linejoin="round"/><circle cx="100" cy="137" r="5.5" fill="${st ? P.gold : '#8e2148'}" stroke="${P.ink}" stroke-width="2"/>`;
     if (g.acc === 'usekh') o2 += usekh();
+    if (g.acc === 'bufanda') o2 += `<path d="M62 122Q100 146 138 122L136 138Q100 160 64 138Z" fill="${P.red}" stroke="${P.ink}" stroke-width="2.5" stroke-linejoin="round"/><path d="M118 140L128 176L112 176L106 142Z" fill="${P.red}" stroke="${P.ink}" stroke-width="2.5" stroke-linejoin="round"/><path d="M80 136q20 8 40 0M114 158h12M112 168h14" stroke="${st ? P.gold : '#fff'}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
     if (g.acc === 'luna') o2 += (st ? '' : `<circle cx="100" cy="30" r="20" fill="#fff0a8" opacity=".22"/>`) + `<path d="M106 16a15 15 0 1 0 0 28a12 12 0 1 1 0-28Z" fill="${st ? P.gold : '#fff0a8'}" stroke="${P.ink}" stroke-width="2"/>` + (st ? '' : star4(118, 22, 4, '#fff6c4'));
     if (g.acc === 'nemes') {
       defs += `<pattern id="${id}n" width="200" height="10" patternUnits="userSpaceOnUse"><rect width="200" height="10" fill="${P.gold}"/><rect width="200" height="5" fill="${P.blue}"/></pattern>`;
@@ -561,7 +601,9 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
       o += `<path d="M${pts.map(p => p.join(' ')).join('L')}" stroke="${starC}" stroke-opacity=".7" stroke-width="1.5" fill="none"/>` + pts.map(([x, y], i) => star4(x, y, i % 2 ? 4 : 6, starC)).join('');
     }
     if (g.fur === 'cosmico') o += star4(70, 104, 3, starC) + star4(120, 76, 3, starC);
+    if (pat === 'escarcha') o += [[80, 84, 7], [112, 102, 6], [98, 72, 5]].map(([x, y, r]) => flake(x, y, r, '#4fa9e0')).join('');
     // collares al cuello, antes de la cabeza para que la cara quede encima
+    if (g.acc === 'bufanda') o += `<path d="M122 62Q122 94 154 102" stroke="${ink}" stroke-width="17" fill="none" stroke-linecap="round"/><path d="M122 62Q122 94 154 102" stroke="#d94848" stroke-width="12" fill="none" stroke-linecap="round"/><path d="M128 92l-6 34h13l3-32z" fill="#d94848" stroke="${ink}" stroke-width="2.5" stroke-linejoin="round"/>`;
     if (g.acc === 'cascabel') o += `<path d="M124 66Q126 90 148 98" stroke="${ink}" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M124 66Q126 90 148 98" stroke="#d94848" stroke-width="5.5" fill="none" stroke-linecap="round"/><circle cx="146" cy="101" r="5.5" fill="${gold}" stroke="${ink}" stroke-width="1.8"/>`;
     if (g.acc === 'usekh') o += [['#2a1f35', 19], ['#1f5fbf', 16], ['#36cbb9', 11], ['#f4c24f', 6], ['#d94848', 2]].map(([c, w]) => `<path d="M122 62Q122 92 152 100" stroke="${c}" stroke-width="${w}" fill="none" stroke-linecap="round"/>`).join('');
     o += `<path d="M160 42L173 10Q176 6 179 10L184 48Z" fill="${fur}" ${S}/>`;
@@ -571,6 +613,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     if (pat === 'manchas') o += `<circle cx="148" cy="50" r="5" fill="${dark}"/>`;
     if (pat === 'jeroglificos') o += `<path d="M146 45q10-6 20 0" stroke="${gold}" stroke-width="3.5" fill="none" stroke-linecap="round"/>`;
     if (pat === 'constelacion') o += star4(150, 46, 4, starC);
+    if (pat === 'escarcha') o += flake(150, 46, 5, '#4fa9e0');
     if (pat === 'bicolor' || smoking) o += `<ellipse cx="179" cy="73" rx="13" ry="10" fill="${white}"/>`;
     let iris = IRIS[g.eyes] || IRIS.verde;
     if (g.eyes === 'heterocromia') iris = IRIS.azul;
@@ -609,7 +652,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
   const KEY = 'catevolution.v1';
   const SPHINX = { fur: 'arena', pat: 'liso', eyes: 'kohl', acc: 'nemes' };
   function freshState() {
-    return { v: 1, sphinxAwake: false, ofrendas: 0, altarAt: Date.now(), cats: [], slots: [null, null], found: [], births: 0, nextId: 1, tab: 'templo', tip: 0, match: { level: 1, best: {} }, stone: 0, up: {}, pyrBest: 0 };
+    return { v: 1, sphinxAwake: false, ofrendas: 0, altarAt: Date.now(), cats: [], hab: 'egipto', habs: freshHabs(), found: [], births: 0, nextId: 1, tab: 'templo', tip: 0, match: { level: 1, best: {} }, stone: 0, up: {}, pyrBest: 0 };
   }
   let S = freshState();
   function load() { try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && d.v === 1 && Array.isArray(d.cats)) return d; } catch (e) {} return null; }
@@ -624,7 +667,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     return `${base} ${i}`;
   }
   function addCat(genes, extra) {
-    const cat = { id: S.nextId++, name: uniqueName(), genes, awake: false, gen: 1, parents: null, ...extra };
+    const cat = { id: S.nextId++, name: uniqueName(), genes, awake: false, gen: 1, parents: null, hab: S.hab || 'egipto', ...extra };
     S.cats.push(cat);
     return cat;
   }
@@ -673,36 +716,44 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     pop(casc, fired) { const f = 520 + Math.min(casc, 8) * 90; tone(f, 0, .09, 'triangle', .08); tone(f * 1.5, .04, .08, 'sine', .05); if (fired) { tone(160, 0, .25, 'sawtooth', .06); tone(1200, .02, .2, 'square', .03); } },
     deny() { tone(150, 0, .14, 'square', .05); },
     fail() { [330, 262, 196].forEach((f, i) => tone(f, i * .12, .28, 'sawtooth', .04)); },
+    elder() { if (!actx) return; for (let i = 0; i < 8; i++) tone(62 + (i % 2) * 6, i * .07, .1, 'sawtooth', .035); [784, 1047, 1319].forEach((f, i) => tone(f, .3 + i * .09, .4, 'sine', .07)); },
     legend() { [523, 659, 784, 1047, 1319, 1568].forEach((f, i) => tone(f, i * .08, .35, 'triangle', .08)); },
   };
 
   // ================= Pantallas =================
   function guideText() {
-    const awake = S.cats.filter(c => c.awake), statues = S.cats.filter(c => !c.awake);
-    const busy = S.slots.filter(Boolean);
-    if (S.slots.some(s => s && Date.now() >= s.readyAt)) return '¡Un sarcófago está listo! Tócalo para ver al gatito que nació.';
-    if (awake.length < 2 && statues.length) return `Toca las estatuas del templo para despertarlas. Cuesta ${COST.awaken} ofrendas cada una.`;
+    const here = S.cats.filter(c => c.hab === S.hab), H = HABITATS[S.hab];
+    const awake = here.filter(c => c.awake), statues = here.filter(c => !c.awake);
+    const busy = slotsOf().filter(Boolean);
+    if (slotsOf().some(s => s && Date.now() >= s.readyAt)) return `¡Un ${H.nest.toLowerCase()} está listo! Tócalo para ver al gatito que nació.`;
+    const elsewhere = HAB_ORDER.find(h => h !== S.hab && S.habs[h].slots.some(s => s && Date.now() >= s.readyAt));
+    if (elsewhere) return `¡Nació un gatito en ${HABITATS[elsewhere].short}! Cambia de hábitat arriba para verlo.`;
+    if (!awake.length && !statues.length) return `Aquí no vive ningún gato todavía. Muda gatos desde su ficha (pestaña Gatos) o excava una estatua.`;
+    if (awake.length < 2 && statues.length) return `Toca las estatuas para despertarlas. Cuesta ${COST.awaken} ofrendas cada una.`;
     if (statues.length > SPOTS.statues.length) return `Tienes ${statues.length - SPOTS.statues.length} estatuas más guardadas en la pestaña Gatos.`;
     if (S.ofrendas < COST.breed && altarAmount() < COST.breed) return '¿Te faltan ofrendas? Juega Ofrendas: cada nivel da ofrendas y los niveles pares regalan una estatua.';
-    if ((S.stone || 0) >= 10 && !Object.keys(S.up || {}).length) return 'Ya tienes piedra para mejorar el templo. Toca "Mejorar templo".';
+    if ((S.stone || 0) >= 10 && !Object.keys(S.up || {}).length) return 'Ya tienes piedra para una mejora. Toca "Mejoras".';
+    if (!S.habs.casa.open && (S.stone || 0) >= HABITATS.casa.cost) return '¡Ya tienes piedra para abrir La Casa! Tócala en la barra de hábitats.';
     if (!S.births && !busy.length) return '¡Ya tienes dos gatos despiertos! Toca "Criar gatitos" y elige a los dos padres.';
-    if (!S.births && busy.length) return 'Mientras más raro sea el bebé, más tarda en despertar. Si el sarcófago brilla, viene algo especial.';
+    if (!S.births && busy.length) return `Mientras más raro sea el bebé, más tarda en nacer. Si el ${H.nest.toLowerCase()} brilla, viene algo especial.`;
     const tips = [
       'Los gatitos heredan pelaje, patrón, ojos y accesorio de sus padres.',
       'Si cruzas dos gatos con mutaciones de la misma familia, es más fácil que salga otra de esa familia.',
-      `Hay ${Object.keys(MUT_FAMILY).length} mutaciones en 3 familias: Elegante, Egipcia y Mística. ¿Las encontrarás todas?`,
+      `Hay ${Object.keys(MUT_FAMILY).length} mutaciones en 4 familias: Elegante, Egipcia, Mística y Ártica. ¿Las encontrarás todas?`,
+      'Cada hábitat favorece una familia: en Egipto salen más Egipcias, en la Casa más Elegantes y en la Nieve nacen los Árticos.',
+      'Las Místicas son las más raras: salen en cualquier hábitat, pero muy de vez en cuando.',
       'Un gato con 3 o más mutaciones es Legendario.',
       'Si se te acaban las ofrendas, juega Ofrendas o espera a que el altar junte más.',
-      'Juega Pirámide para ganar piedra y mejorar el templo: más sarcófagos, un altar mayor y decoraciones.',
+      'Juega Pirámide para ganar piedra: abre hábitats nuevos y compra mejoras.',
       'Lleva hasta 3 gatos a los minijuegos: cada uno te da un poder, y los que tienen más mutaciones traen más cargas.',
-      'En Ofrendas, 5 piezas en línea crean al Gato de Bastet: borra todas las piezas de un tipo.',
+      'En Ofrendas, 5 piezas en línea crean hierba gatera: borra todas las piezas de un tipo.',
     ];
     return tips[S.tip % tips.length];
   }
 
   // ================= Arte final (imágenes de Gemini; si falta una, se usa el dibujo con código) =================
   const ART = {};
-  const PIECE_ART = ['escarabajo', 'ojo_horus', 'pescado', 'ankh', 'loto'];
+  const PIECE_ART = ['pescado', 'esqueleto', 'raton', 'pollo', 'estambre'];
   const BLOCK_ART = ['bloque_caliza', 'bloque_granito', 'bloque_lapislazuli', 'bloque_turquesa', 'bloque_oro', 'bloque_basalto'];
   const artURL = n => (ART[n] && ART[n].ready ? ART[n].src : null);
   function loadArt() {
@@ -741,6 +792,220 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
   function bannerArt() {
     const u = artURL('estandarte');
     return u ? `<img src="${u}" alt="">` : `<svg viewBox="0 0 30 60" aria-hidden="true"><path d="M3 2h24v54l-12-10-12 10z" fill="#1f5fbf" stroke="#2a1f35" stroke-width="2.5" stroke-linejoin="round"/><path d="M3 12h24M3 24h24" stroke="#f4c24f" stroke-width="4"/></svg>`;
+  }
+
+  // ================= Abuelo Colmillo: el dientes de sable guía; le brillan los ojos en los momentos importantes =================
+  function abueloSVG() {
+    const art = artURL('abuelo');
+    if (art) {
+      const glow = artURL('abuelo_brillo');
+      return `<span class="abuelo art"><img src="${art}" alt="">${glow ? `<img class="eyeglow" src="${glow}" alt="">` : ''}</span>`;
+    }
+    const id = 'ab' + (++uid), ink = '#2a1f35', fur = '#d9a35b', dark = '#a8743a', white = '#fbf4e8', bone = '#fffdf3';
+    return `<svg class="abuelo" viewBox="0 0 200 200" aria-hidden="true"><defs>
+      <radialGradient id="${id}g"><stop offset="0" stop-color="#ffffff" stop-opacity="1"/><stop offset=".28" stop-color="#eaff3a" stop-opacity="1"/><stop offset=".6" stop-color="#9dff2a" stop-opacity=".6"/><stop offset="1" stop-color="#9dff2a" stop-opacity="0"/></radialGradient></defs>
+      <circle cx="50" cy="56" r="20" fill="${fur}" stroke="${ink}" stroke-width="4"/><circle cx="50" cy="56" r="10" fill="#f2c9a0"/>
+      <circle cx="150" cy="56" r="20" fill="${fur}" stroke="${ink}" stroke-width="4"/><circle cx="150" cy="56" r="10" fill="#f2c9a0"/>
+      <path d="M24 120L10 132L28 136L16 150L38 148M176 120L190 132L172 136L184 150L162 148" fill="${white}" stroke="${ink}" stroke-width="3.5" stroke-linejoin="round"/>
+      <ellipse cx="100" cy="112" rx="80" ry="70" fill="${fur}" stroke="${ink}" stroke-width="4"/>
+      <path d="M100 46v16M86 50l4 13M114 50l-4 13M28 100h16M30 114h14M172 100h-16M170 114h-14" stroke="${dark}" stroke-width="6" stroke-linecap="round"/>
+      <path d="M52 78q22-14 40 0M108 78q18-14 40 0" stroke="#f1eee9" stroke-width="9" fill="none" stroke-linecap="round"/>
+      <ellipse cx="74" cy="100" rx="13" ry="11" fill="${white}" stroke="${ink}" stroke-width="2.5"/><ellipse cx="126" cy="100" rx="13" ry="11" fill="${white}" stroke="${ink}" stroke-width="2.5"/>
+      <circle cx="74" cy="102" r="7" fill="#e8b33a"/><circle cx="126" cy="102" r="7" fill="#e8b33a"/>
+      <ellipse cx="74" cy="102" rx="2" ry="6" fill="${ink}"/><ellipse cx="126" cy="102" rx="2" ry="6" fill="${ink}"/>
+      <path d="M60 96Q74 86 88 96V90Q74 82 60 90ZM112 96Q126 86 140 96V90Q126 82 112 90Z" fill="${fur}" stroke="${ink}" stroke-width="2.5" stroke-linejoin="round"/>
+      <g class="eyeglow">
+        <circle cx="74" cy="101" r="42" fill="url(#${id}g)"/><circle cx="126" cy="101" r="42" fill="url(#${id}g)"/>
+        <ellipse cx="74" cy="101" rx="13" ry="11" fill="#f2ff5c"/><ellipse cx="126" cy="101" rx="13" ry="11" fill="#f2ff5c"/>
+        <ellipse cx="74" cy="101" rx="2" ry="7" fill="${ink}"/><ellipse cx="126" cy="101" rx="2" ry="7" fill="${ink}"/>
+      </g>
+      <circle cx="74" cy="100" r="19" fill="#ffffff" fill-opacity=".1" stroke="#5b4a3a" stroke-width="3.5"/><circle cx="126" cy="100" r="19" fill="#ffffff" fill-opacity=".1" stroke="#5b4a3a" stroke-width="3.5"/>
+      <path d="M93 98q7-5 14 0M55 96L36 90M145 96l19-6" stroke="#5b4a3a" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <ellipse cx="100" cy="146" rx="42" ry="27" fill="${white}" stroke="${ink}" stroke-width="3"/>
+      <path d="M88 164C86 176 84 186 80 196C90 190 94 178 95 165ZM112 164C114 176 116 186 120 196C110 190 106 178 105 165Z" fill="${bone}" stroke="${ink}" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M90 128L110 128L100 139Z" fill="#c9786b" stroke="${ink}" stroke-width="2.5" stroke-linejoin="round"/>
+      <path d="M100 139Q100 150 88 152M100 139Q100 150 112 152" stroke="${ink}" stroke-width="3" fill="none" stroke-linecap="round"/>
+      <path d="M62 146L22 140M62 154L24 162M138 146L178 140M138 154L176 162" stroke="#f1eee9" stroke-width="2.5" stroke-linecap="round"/>
+      <path d="M92 172q8 12 16 0" stroke="#f1eee9" stroke-width="5" fill="none" stroke-linecap="round"/>
+    </svg>`;
+  }
+  let elderTimer = 0;
+  function elderSay(msg) {
+    const el = $('elder');
+    $('elder-av').innerHTML = abueloSVG();
+    $('elder-msg').textContent = msg;
+    el.hidden = false;
+    const av = $('elder-av').firstElementChild;
+    if (av) { av.classList.remove('glow'); void av.offsetWidth; av.classList.add('glow'); }
+    el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+    sfx.elder(); buzz([30, 40, 30]);
+    clearTimeout(elderTimer);
+    elderTimer = setTimeout(() => { el.hidden = true; }, 4200);
+  }
+
+  // ================= Hábitats: cada uno con su escenario, sus gatos, sus nidos y una familia favorita =================
+  const HABITATS = {
+    egipto: { name: 'Templo de Egipto', short: 'Egipto', fam: 'egipcio', cost: 0, nest: 'Sarcófago', feeder: 'Altar de ofrendas', center: 'La Esfinge',
+      desc: 'El templo donde empezó todo. Aquí salen más mutaciones Egipcias.' },
+    casa: { name: 'La Casa', short: 'Casa', fam: 'elegante', cost: 60, nest: 'Canasta', feeder: 'Plato de croquetas', center: 'El rascador',
+      desc: 'Una casa acogedora con sofá, tapete y ventana. Aquí los gatos se ponen Elegantes.' },
+    nieve: { name: 'Montaña nevada', short: 'Nieve', fam: 'artico', cost: 120, nest: 'Iglú', feeder: 'Fogata', center: 'El gato de nieve',
+      desc: 'Una montaña con lago congelado. Es el único lugar donde nacen gatos Árticos.' },
+  };
+  const HAB_ORDER = ['egipto', 'casa', 'nieve'];
+  function freshHabs() { return { egipto: { open: true, slots: [null, null] }, casa: { open: false, slots: [null, null] }, nieve: { open: false, slots: [null, null] } }; }
+  const slotsOf = () => S.habs[S.hab].slots;
+  const allSlots = () => HAB_ORDER.flatMap(h => S.habs[h].slots);
+  const habFam = () => HABITATS[S.hab].fam;
+  const famPlural = f => FAMILY[f].label + 's';
+
+  const CASA_P = {
+    day: { wall: '#b9e0d4', wallS: '#a6d3c5', floor1: '#d49a62', floor2: '#b07a45', line: '#8f5f33', sofa: '#e0736a', sofaS: '#bf5a52', rug: '#6b74c9', rugS: '#8a92dd', trim: '#f6efe2', plant: '#3f9b5a', lamp: .12 },
+    dusk: { wall: '#d9a993', wallS: '#cc9884', floor1: '#c08455', floor2: '#9a653a', line: '#7a4f2c', sofa: '#c95f5a', sofaS: '#a84c48', rug: '#5a5fae', rugS: '#7a80c8', trim: '#ecd9c6', plant: '#2f7a48', lamp: .45 },
+    night: { wall: '#3f4a86', wallS: '#38427b', floor1: '#6f5a6e', floor2: '#4e3f57', line: '#3a2f45', sofa: '#7a4a6a', sofaS: '#633b57', rug: '#3d4590', rugS: '#5560b0', trim: '#8e93c2', plant: '#24524a', lamp: .9 },
+  };
+  const NIEVE_P = {
+    day: { mtn: '#9fb7d6', mtnS: '#7f9cc2', cap: '#ffffff', pine: '#2f6b55', lake: '#bfe3f5', floor1: '#ffffff', floor2: '#d8e8f6', drift: '#b7d3ec' },
+    dusk: { mtn: '#a98ab8', mtnS: '#8c6fa0', cap: '#fbe8f0', pine: '#2b4f4a', lake: '#d9b8d9', floor1: '#f6e6ee', floor2: '#d9c3dc', drift: '#c6a8c9' },
+    night: { mtn: '#3a4a86', mtnS: '#2c3a72', cap: '#c9d6f2', pine: '#1a3340', lake: '#4a5fa0', floor1: '#8a9ad0', floor2: '#6676b0', drift: '#7484c0' },
+  };
+  function skyDefs(P) {
+    let rnd = 11; const r = () => (rnd = (rnd * 16807) % 2147483647) / 2147483647;
+    return {
+      defs: `<linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${P.sky1}"/><stop offset="1" stop-color="${P.sky2}"/></linearGradient>`,
+      stars: P.stars ? Array.from({ length: 22 }, () => `<circle class="twinkle" cx="${(r() * 400).toFixed(0)}" cy="${(r() * 180).toFixed(0)}" r="${(r() * 1.4 + .6).toFixed(1)}" fill="#fff" style="animation-delay:${(r() * 2).toFixed(2)}s"/>`).join('') : '',
+    };
+  }
+  function sceneCasa(m) {
+    const P = PALETTES[m], C = CASA_P[m], sk = skyDefs(P);
+    const planks = [];
+    for (let i = -8; i <= 8; i++) planks.push(`<path d="M${200 + i * 18} 290L${200 + i * 64} 560"/>`);
+    [318, 360, 420, 500].forEach(y => planks.push(`<path d="M0 ${y}H400"/>`));
+    return `<svg viewBox="0 0 400 560" preserveAspectRatio="none" aria-hidden="true"><defs>${sk.defs}
+      <linearGradient id="cfloor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${C.floor1}"/><stop offset="1" stop-color="${C.floor2}"/></linearGradient>
+      <radialGradient id="lampglow"><stop offset="0" stop-color="#ffd27a" stop-opacity="${C.lamp}"/><stop offset="1" stop-color="#ffd27a" stop-opacity="0"/></radialGradient></defs>
+      <rect width="400" height="292" fill="${C.wall}"/>
+      <g fill="${C.wallS}">${Array.from({ length: 17 }, (_, i) => `<rect x="${i * 24}" y="0" width="10" height="292"/>`).join('')}</g>
+      <rect x="40" y="70" width="116" height="134" rx="6" fill="url(#sky)"/>${P.stars ? [[56, 90], [82, 118], [112, 84], [68, 172], [140, 152], [122, 186]].map(([x, y]) => `<circle class="twinkle" cx="${x}" cy="${y}" r="1.4" fill="#fff"/>`).join('') : ''}
+      <circle cx="128" cy="100" r="13" fill="${P.orb}"/>${P.stars ? `<circle cx="133" cy="96" r="11" fill="${P.sky1}" opacity=".85"/>` : ''}
+      <path d="M40 70h116v134H40zM98 70v134M40 136h116" stroke="${C.trim}" stroke-width="7" fill="none"/>
+      <path d="M30 60Q44 120 34 214H54Q48 140 62 64ZM166 60Q152 120 162 214H142Q148 140 134 64Z" fill="#e9858a" stroke="#2a1f35" stroke-width="2.5" stroke-linejoin="round"/>
+      <rect x="22" y="56" width="152" height="8" rx="4" fill="#8a5a34"/>
+      <rect x="244" y="86" width="84" height="64" rx="4" fill="#f4c24f" stroke="#2a1f35" stroke-width="2.5"/><rect x="252" y="94" width="68" height="48" fill="${C.rug}"/>
+      <path d="M272 140L274 112L282 122L290 122L298 112L300 140Z" fill="#2a1f35"/>
+      <rect y="282" width="400" height="10" fill="${C.trim}"/>
+      <rect y="292" width="400" height="268" fill="url(#cfloor)"/>
+      <g stroke="${C.line}" stroke-width="1.2" opacity=".4" fill="none">${planks.join('')}</g>
+      <ellipse cx="200" cy="420" rx="160" ry="62" fill="${C.rug}"/><ellipse cx="200" cy="420" rx="132" ry="48" fill="none" stroke="${C.rugS}" stroke-width="6"/>
+      <path d="M254 290V236Q254 220 270 220H372Q388 220 388 236V290Z" fill="${C.sofa}" stroke="#2a1f35" stroke-width="3"/>
+      <rect x="244" y="252" width="152" height="40" rx="12" fill="${C.sofaS}" stroke="#2a1f35" stroke-width="3"/>
+      <rect x="268" y="240" width="50" height="22" rx="8" fill="${C.sofa}" stroke="#2a1f35" stroke-width="2.5"/><rect x="324" y="240" width="50" height="22" rx="8" fill="${C.sofa}" stroke="#2a1f35" stroke-width="2.5"/>
+      <path d="M28 292L36 262H66L74 292Z" fill="#c9784a" stroke="#2a1f35" stroke-width="2.5"/>
+      <path d="M51 262C30 240 26 214 40 200C46 222 50 240 51 262ZM51 262C70 236 78 214 68 196C60 220 54 240 51 262ZM51 262C48 232 52 208 58 192" fill="${C.plant}" stroke="#2a1f35" stroke-width="2.5" stroke-linejoin="round"/>
+      <circle cx="372" cy="196" r="60" fill="url(#lampglow)"/>
+      <path d="M372 210V290M356 290H388" stroke="#2a1f35" stroke-width="4"/><path d="M354 210L360 176H384L390 210Z" fill="#f6dfa6" stroke="#2a1f35" stroke-width="2.5" stroke-linejoin="round"/>
+    </svg>`;
+  }
+  function sceneNieve(m) {
+    const P = PALETTES[m], N = NIEVE_P[m], sk = skyDefs(P);
+    const pine = (x, y, s) => `<g transform="translate(${x} ${y}) scale(${s})"><rect x="-3" y="-8" width="6" height="10" fill="#5b3b2a"/><path d="M0-70L22-30H12L28-6H-28L-12-30H-22Z" fill="${N.pine}"/><path d="M0-70L10-52Q0-46-10-52ZM-14-30Q0-24 14-30L18-24Q0-18-18-24Z" fill="${N.cap}"/></g>`;
+    return `<svg viewBox="0 0 400 560" preserveAspectRatio="none" aria-hidden="true"><defs>${sk.defs}
+      <linearGradient id="snowfloor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${N.floor1}"/><stop offset="1" stop-color="${N.floor2}"/></linearGradient></defs>
+      <rect width="400" height="300" fill="url(#sky)"/>${sk.stars}
+      <circle cx="80" cy="80" r="22" fill="${P.orb}"/>${P.stars ? `<circle cx="88" cy="74" r="19" fill="${P.sky1}" opacity=".85"/>` : ''}
+      <path d="M-20 262L70 140L130 210L210 110L300 220L350 170L420 262Z" fill="${N.mtn}"/>
+      <path d="M210 110L300 220H250L230 160ZM70 140L130 210H100Z" fill="${N.mtnS}"/>
+      <path d="M210 110L234 142L222 138L210 150L198 136L188 140ZM70 140L88 164L76 160L66 170L58 158ZM350 170L366 190L354 188L346 196Z" fill="${N.cap}"/>
+      <rect y="258" width="400" height="28" fill="${N.lake}"/><path d="M60 270h40M180 276h60M300 268h34" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" opacity=".7"/>
+      ${pine(30, 262, 1)}${pine(70, 266, .75)}${pine(330, 262, .9)}${pine(370, 266, 1.1)}${pine(150, 262, .6)}
+      <rect y="284" width="400" height="276" fill="url(#snowfloor)"/>
+      <path d="M0 320Q80 304 160 322T320 316T400 324M0 410Q100 392 200 412T400 404M0 500Q90 484 180 502T400 494" stroke="${N.drift}" stroke-width="3" fill="none" opacity=".7"/>
+    </svg>`;
+  }
+  function basketSVG() {
+    const u = artURL('canasta'); if (u) return `<img class="sarc" src="${u}" alt="">`;
+    return `<svg class="sarc" viewBox="0 0 120 90" aria-hidden="true"><ellipse cx="60" cy="34" rx="52" ry="18" fill="#f2a6b8" stroke="#2a1f35" stroke-width="3"/>
+      <path d="M8 34Q12 80 60 84Q108 80 112 34Q100 50 60 52Q20 50 8 34Z" fill="#d9a35b" stroke="#2a1f35" stroke-width="3" stroke-linejoin="round"/>
+      <path d="M14 46Q60 62 106 46M18 60Q60 74 102 60M30 50v28M48 53v30M66 53v30M84 51v28" stroke="#a8743a" stroke-width="2.5" fill="none"/></svg>`;
+  }
+  function iglooSVG() {
+    const u = artURL('iglu'); if (u) return `<img class="sarc" src="${u}" alt="">`;
+    return `<svg class="sarc" viewBox="0 0 120 90" aria-hidden="true"><path d="M8 84Q8 14 60 14Q112 14 112 84Z" fill="#f4fbff" stroke="#2a1f35" stroke-width="3"/>
+      <path d="M14 64H106M22 44H98M36 28H84M40 84V64M70 64V44M50 44V28M90 84V64M30 64V44" stroke="#9fc8e8" stroke-width="2.5" fill="none"/>
+      <path d="M44 84V66Q44 52 60 52Q76 52 76 66V84Z" fill="#2c3a72" stroke="#2a1f35" stroke-width="3"/></svg>`;
+  }
+  function nestArt(h) { return h === 'casa' ? basketSVG() : h === 'nieve' ? iglooSVG() : sarcSVG(); }
+  function feederArt(h) {
+    if (h === 'egipto') return altarSceneSVG();
+    const u = artURL(h === 'casa' ? 'plato' : 'fogata'); if (u) return `<img src="${u}" alt="">`;
+    if (h === 'casa') return `<svg viewBox="0 0 100 70" aria-hidden="true"><ellipse cx="50" cy="56" rx="44" ry="10" fill="#2a1f35" opacity=".15"/>
+      <g id="altar-flame" style="transform-box:fill-box;transform-origin:50% 100%">${[[30, 36], [42, 30], [54, 32], [66, 36], [48, 40], [36, 42], [60, 42]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="7" fill="#c77d3a" stroke="#2a1f35" stroke-width="2"/>`).join('')}</g>
+      <path d="M8 44H92L84 62Q50 70 16 62Z" fill="#4a78ea" stroke="#2a1f35" stroke-width="3" stroke-linejoin="round"/><path d="M40 54l10-5v10zM50 54q8-6 14 0q-6 6-14 0" fill="#fff"/></svg>`;
+    return `<svg viewBox="0 0 100 80" aria-hidden="true"><path d="M14 72L86 56M14 56L86 72" stroke="#7a4a2a" stroke-width="10" stroke-linecap="round"/>
+      <path d="M14 72L86 56M14 56L86 72" stroke="#a8743a" stroke-width="5" stroke-linecap="round"/>
+      <g id="altar-flame" style="transform-box:fill-box;transform-origin:50% 100%"><g class="flame"><path d="M50 10c12 14 18 24 18 34a18 18 0 0 1-36 0c0-10 6-20 18-34z" fill="#ffb347"/><path d="M50 28c6 8 9 13 9 18a9 9 0 0 1-18 0c0-5 3-10 9-18z" fill="#fff0a8"/></g></g>
+      <path d="M70 66L94 30" stroke="#5b3b2a" stroke-width="3"/><path d="M84 40q8-6 12 2q-8 6-12-2z" fill="#4a9be8" stroke="#2a1f35" stroke-width="1.5"/></svg>`;
+  }
+  function centerArt(h) {
+    if (h === 'egipto') return sphinxArt(!S.sphinxAwake);
+    const u = artURL(h === 'casa' ? 'arbol_gato' : 'muneco_nieve'); if (u) return `<img class="art-img" src="${u}" alt="">`;
+    if (h === 'casa') return `<svg viewBox="0 0 140 170" aria-hidden="true">
+      <rect x="20" y="152" width="100" height="14" rx="6" fill="#9a7bc8" stroke="#2a1f35" stroke-width="3"/>
+      <rect x="62" y="40" width="16" height="114" fill="#e2bf7e" stroke="#2a1f35" stroke-width="3"/><path d="M62 52h16M62 64h16M62 76h16M62 88h16M62 100h16M62 112h16M62 124h16M62 136h16" stroke="#b8894c" stroke-width="2"/>
+      <rect x="14" y="100" width="64" height="12" rx="6" fill="#9a7bc8" stroke="#2a1f35" stroke-width="3"/>
+      <path d="M30 112v20" stroke="#2a1f35" stroke-width="2"/><circle cx="30" cy="138" r="7" fill="#ef5d8f" stroke="#2a1f35" stroke-width="2"/>
+      <rect x="52" y="12" width="76" height="40" rx="8" fill="#9a7bc8" stroke="#2a1f35" stroke-width="3"/><ellipse cx="90" cy="34" rx="12" ry="11" fill="#2a1f35"/>
+      <rect x="46" y="48" width="88" height="10" rx="5" fill="#b49ae0" stroke="#2a1f35" stroke-width="3"/></svg>`;
+    return `<svg viewBox="0 0 140 170" aria-hidden="true">
+      <path d="M38 22L44 2L58 18ZM102 22L96 2L82 18Z" fill="#f4fbff" stroke="#2a1f35" stroke-width="3" stroke-linejoin="round"/>
+      <circle cx="70" cy="122" r="44" fill="#f4fbff" stroke="#2a1f35" stroke-width="3"/>
+      <path d="M28 104L4 84M112 104L136 84" stroke="#6b4a2a" stroke-width="4" stroke-linecap="round"/>
+      <circle cx="70" cy="46" r="34" fill="#f4fbff" stroke="#2a1f35" stroke-width="3"/>
+      <circle cx="58" cy="42" r="4.5" fill="#2a1f35"/><circle cx="82" cy="42" r="4.5" fill="#2a1f35"/><path d="M65 52h10l-5 6z" fill="#ef7f98"/>
+      <path d="M54 56L30 52M54 60L32 64M86 56L110 52M86 60L108 64" stroke="#2a1f35" stroke-width="1.5" opacity=".5"/>
+      <path d="M38 76Q70 92 102 76L100 88Q70 102 40 88Z" fill="#d94848" stroke="#2a1f35" stroke-width="2.5"/><path d="M90 86l6 26-12 2-4-24z" fill="#d94848" stroke="#2a1f35" stroke-width="2.5"/>
+      <circle cx="70" cy="114" r="4" fill="#2a1f35"/><circle cx="70" cy="130" r="4" fill="#2a1f35"/></svg>`;
+  }
+
+  function habBarHTML() {
+    const lock = '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="11" width="14" height="10" rx="2" fill="currentColor"/><path d="M8 11V8a4 4 0 0 1 8 0v3" stroke="currentColor" stroke-width="2.5" fill="none"/></svg>';
+    return `<div class="habbar" role="tablist" aria-label="Hábitats">${HAB_ORDER.map(h => {
+      const H = HABITATS[h], open = S.habs[h].open;
+      return `<button class="hab${open ? '' : ' locked'}" role="tab" type="button" data-hab="${h}" aria-selected="${S.hab === h}">${open ? H.short : `${lock}${H.short} · ${H.cost}`}</button>`;
+    }).join('')}</div>`;
+  }
+  function openHabitat(id) {
+    ensureAudio();
+    const H = HABITATS[id];
+    if (S.habs[id].open) { if (S.hab !== id) { S.hab = id; save(); renderTemplo(); } return; }
+    const have = S.stone || 0;
+    openSheet(`<div class="sheet-head"><h2>${H.name}</h2><button class="x" id="x" type="button" aria-label="Cerrar">×</button></div>
+      <div class="hab-preview"><div>${centerArt(id)}</div><div>${nestArt(id)}</div></div>
+      <p class="note">${H.desc}</p>
+      <ul class="genes">
+        <li><span>Al criar aquí</span><b style="color:${FAMILY[H.fam].color}">más mutaciones ${famPlural(H.fam)}</b></li>
+        <li><span>Lugar de cría</span><b>${H.nest}</b></li>
+        <li><span>Regalo de bienvenida</span><b>1 estatua ${FAMILY[H.fam].label.toLowerCase()}</b></li>
+      </ul>
+      <button class="btn gold" id="hab-buy" type="button" ${have >= H.cost ? '' : 'disabled'}>${have >= H.cost ? `Abrir por ${H.cost} de piedra` : `Te faltan ${H.cost - have} de piedra (tienes ${have})`}</button>
+      <button class="btn turq" id="hab-pyr" type="button">Jugar Pirámide para ganar piedra</button>`);
+    $('x').addEventListener('click', closeSheet);
+    $('hab-pyr').addEventListener('click', () => { closeSheet(); pickTeam('pyr', openPyramid); });
+    $('hab-buy').addEventListener('click', () => {
+      if ((S.stone || 0) < H.cost || S.habs[id].open) return;
+      S.stone -= H.cost; $('stone').textContent = S.stone;
+      S.habs[id].open = true; S.hab = id;
+      const g = randomStatueGenes(H.fam), k = pick(GENE_KEYS);
+      g[k] = GENES[k].mut[H.fam];
+      addCat(g, { hab: id });
+      save(); closeSheet(); renderTemplo(); renderGatos();
+      elderSay(`¡Abriste ${H.name}! Te dejé una estatua de regalo. Aquí nacen más gatos ${famPlural(H.fam)}.`);
+    });
+  }
+  function moveCat(c, to) {
+    c.hab = to; walkers.delete(c.id);
+    save(); renderTemplo(); renderGatos(); openCat(c.id);
+    toast(`${c.name} se mudó a ${HABITATS[to].short}.`);
   }
 
   // ================= Templo vivo =================
@@ -835,25 +1100,30 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
   function renderTemplo() {
     const el = $('tab-templo');
     mode = skyMode();
-    const P = PALETTES[mode];
-    const bgArt = artURL('fondo_' + mode) || artURL('fondo_dia');
-    const motes = Array.from({ length: 7 }, (_, i) => `<i class="mote" style="left:${12 + i * 12}%;top:${60 + (i * 37) % 32}%;animation-delay:${(i * 1.4).toFixed(1)}s"></i>`).join('');
+    const P = PALETTES[mode], H = S.hab;
+    const bgArt = artURL(`fondo_${H}_${mode}`) || artURL(`fondo_${H}_dia`);
+    const motes = H === 'nieve'
+      ? Array.from({ length: 16 }, (_, i) => `<i class="snow" style="left:${(i * 61) % 100}%;animation-delay:${(i * .7).toFixed(1)}s;animation-duration:${(6 + (i % 5)).toFixed(0)}s"></i>`).join('')
+      : Array.from({ length: 7 }, (_, i) => `<i class="mote" style="left:${12 + i * 12}%;top:${60 + (i * 37) % 32}%;animation-delay:${(i * 1.4).toFixed(1)}s"></i>`).join('');
     el.innerHTML = `
-      <div class="scene ${mode}" id="scene">
-        <div class="bg">${bgArt ? `<img src="${bgArt}" alt="">` : sceneBG(P)}</div>
+      ${S.sphinxAwake ? habBarHTML() : ''}
+      <div class="scene ${mode} hab-${H}" id="scene">
+        <div class="bg">${bgArt ? `<img src="${bgArt}" alt="">` : H === 'casa' ? sceneCasa(mode) : H === 'nieve' ? sceneNieve(mode) : sceneBG(P)}</div>
         <div class="world" id="world"></div>
         <div class="fx" aria-hidden="true">${motes}</div>
-        ${bgArt ? '' : `<div class="fg">${sceneFG(P)}</div>`}
-        <p class="say"><small id="say-who">La Esfinge</small><span id="guide-text"></span></p>
+        ${bgArt || H !== 'egipto' ? '' : `<div class="fg">${sceneFG(P)}</div>`}
+        <button class="say" id="say" type="button"><span class="say-av">${abueloSVG()}</span><span class="say-txt"><small id="say-who">Abuelo Colmillo</small><span id="guide-text"></span></span></button>
       </div>
       ${S.sphinxAwake ? `<div class="actions temple-actions">
         <button class="btn turq" id="btn-breed" type="button">Criar gatitos · ${COST.breed}</button>
-        <button class="btn" id="btn-up" type="button">Mejorar templo</button>
+        <button class="btn" id="btn-up" type="button">Mejoras</button>
         <button class="btn gold" id="btn-play" type="button">Jugar Ofrendas</button>
         <button class="btn gold" id="btn-pyr" type="button">Jugar Pirámide</button>
         <button class="dig-link" id="btn-dig" type="button" style="grid-column:1/-1">Excavar una estatua por ${COST.dig} ofrendas</button>
       </div>` : ''}`;
     if (S.sphinxAwake) { $('btn-breed').addEventListener('click', openBreed); $('btn-dig').addEventListener('click', dig); $('btn-play').addEventListener('click', () => pickTeam('match', t => openMatch(S.match.level, t))); $('btn-pyr').addEventListener('click', () => pickTeam('pyr', openPyramid)); $('btn-up').addEventListener('click', openUpgrades); }
+    el.querySelectorAll('[data-hab]').forEach(b => b.addEventListener('click', () => openHabitat(b.dataset.hab)));
+    $('say').addEventListener('click', () => { if (S.sphinxAwake) { S.tip++; tickTemplo(); } });
     buildWorld();
     tickTemplo();
   }
@@ -863,23 +1133,24 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
   }
   function buildWorld() {
     const world = $('world');
+    const Hb = HABITATS[S.hab];
     let html = objHTML('sphinx' + (S.sphinxAwake ? '' : ' asleep'), SPOTS.sphinx,
-      `<span class="tag gold">${S.sphinxAwake ? '' : '¡Tócame!'}</span><div id="sphinx-art">${sphinxArt(!S.sphinxAwake)}</div>`,
-      S.sphinxAwake ? 'La Esfinge: toca para otro consejo' : 'Despertar a la esfinge', 'id="obj-sphinx"');
+      `<span class="tag gold">${S.sphinxAwake ? '' : '¡Tócame!'}</span><div id="sphinx-art">${centerArt(S.hab)}</div>`,
+      S.sphinxAwake ? `${Hb.center}: toca para otro consejo` : 'Despertar a la esfinge', 'id="obj-sphinx"');
     if (S.sphinxAwake) {
-      S.slots.forEach((s, i) => { html += objHTML('sarc-obj', SPOTS.sarc[i], `<span class="tag" id="sarc-tag-${i}"></span>${sarcSVG()}`, 'Sarcófago de cría', `data-slot="${i}"`); });
-      html += objHTML('altar-obj', SPOTS.altar, `<span class="tag gold" id="altar-tag"></span>${altarSceneSVG()}`, 'Altar de ofrendas: toca para recoger', 'id="obj-altar"');
-      S.cats.filter(c => !c.awake).slice(0, SPOTS.statues.length).forEach((c, i) => {
+      slotsOf().forEach((s, i) => { html += objHTML('sarc-obj', SPOTS.sarc[i], `<span class="tag" id="sarc-tag-${i}"></span>${nestArt(S.hab)}`, `${Hb.nest} de cría`, `data-slot="${i}"`); });
+      html += objHTML('altar-obj', SPOTS.altar, `<span class="tag gold" id="altar-tag"></span>${feederArt(S.hab)}`, `${Hb.feeder}: toca para recoger`, 'id="obj-altar"');
+      S.cats.filter(c => !c.awake && c.hab === S.hab).slice(0, SPOTS.statues.length).forEach((c, i) => {
         const sp = SPOTS.statues[i];
         statuePos[c.id] = { x: sp.x, y: sp.y };
         html += objHTML('statue', { ...sp, w: .16 }, `<span class="tag">Despertar · ${COST.awaken}</span>${catSVG(c.genes, { statue: true })}`, 'Estatua dormida: toca para despertarla', `data-statue="${c.id}"`);
       });
     }
-    if (artURL('fondo_' + mode) || artURL('fondo_dia')) {
+    if (S.hab === 'egipto' && (artURL('fondo_egipto_' + mode) || artURL('fondo_egipto_dia'))) {
       if (S.up && S.up.obeliscos) [.09, .91].forEach(x => { html += `<div class="obj" aria-hidden="true" style="left:${x * 100}%;top:52%;width:9%;z-index:2">${obeliskArt()}</div>`; });
       if (S.up && S.up.estandartes) [.27, .73].forEach(x => { html += `<div class="obj" aria-hidden="true" style="left:${x * 100}%;top:40%;width:6%;z-index:2">${bannerArt()}</div>`; });
     }
-    if (S.up && S.up.estanque) html += `<div class="obj pond" aria-hidden="true" style="left:64%;top:99.5%;width:32%;z-index:5">${artURL('estanque') ? `<img src="${artURL('estanque')}" alt="">` : `<svg viewBox="0 0 120 40"><ellipse cx="60" cy="22" rx="58" ry="17" fill="#c9a66b"/><ellipse cx="60" cy="21" rx="52" ry="14" fill="#3d93d6"/><path d="M26 18h14M70 26h18" stroke="#bfe6ff" stroke-width="2" stroke-linecap="round" opacity=".7"/><ellipse cx="44" cy="24" rx="9" ry="4" fill="#3f9b5a"/><ellipse cx="84" cy="16" rx="8" ry="3.5" fill="#3f9b5a"/><path d="M44 22c-4-2-5-7-3-10c2 2 3 5 3 10zm0 0c4-2 5-7 3-10c-2 2-3 5-3 10z" fill="#ec6fd8"/></svg>`}</div>`;
+    if (S.hab === 'egipto' && S.up && S.up.estanque) html += `<div class="obj pond" aria-hidden="true" style="left:64%;top:99.5%;width:32%;z-index:5">${artURL('estanque') ? `<img src="${artURL('estanque')}" alt="">` : `<svg viewBox="0 0 120 40"><ellipse cx="60" cy="22" rx="58" ry="17" fill="#c9a66b"/><ellipse cx="60" cy="21" rx="52" ry="14" fill="#3d93d6"/><path d="M26 18h14M70 26h18" stroke="#bfe6ff" stroke-width="2" stroke-linecap="round" opacity=".7"/><ellipse cx="44" cy="24" rx="9" ry="4" fill="#3f9b5a"/><ellipse cx="84" cy="16" rx="8" ry="3.5" fill="#3f9b5a"/><path d="M44 22c-4-2-5-7-3-10c2 2 3 5 3 10zm0 0c4-2 5-7 3-10c-2 2-3 5-3 10z" fill="#ec6fd8"/></svg>`}</div>`;
     world.innerHTML = html;
     $('obj-sphinx').addEventListener('click', () => {
       ensureAudio();
@@ -889,13 +1160,13 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     if (S.sphinxAwake) {
       world.querySelectorAll('[data-slot]').forEach(b => b.addEventListener('click', () => {
         const i = Number(b.dataset.slot);
-        if (S.slots[i]) openSlot(i); else openBreed();
+        if (slotsOf()[i]) openSlot(i); else openBreed();
       }));
       $('obj-altar').addEventListener('click', collectAltar);
       world.querySelectorAll('[data-statue]').forEach(b => b.addEventListener('click', () => openCat(Number(b.dataset.statue))));
     }
     // Gatos despiertos caminando
-    const awake = S.cats.filter(c => c.awake).slice(-maxWalkers());
+    const awake = S.cats.filter(c => c.awake && c.hab === S.hab).slice(-maxWalkers());
     const ids = new Set(awake.map(c => c.id));
     [...walkers.keys()].forEach(id => { if (!ids.has(id)) walkers.delete(id); });
     const now = performance.now();
@@ -969,22 +1240,19 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
       placeWalkers();
     }
     requestAnimationFrame(walkLoop);
-    addEventListener('resize', () => { if (PG) pLayout(); });
   }
 
   function tickTemplo() {
     const gt = $('guide-text'); if (!gt || $('tab-templo').hidden) return;
     if (!S.sphinxAwake) {
-      $('say-who').textContent = 'El templo dormido';
-      gt.textContent = 'Una esfinge de piedra custodia el templo de los gatos. Tócala para despertarla.';
+      gt.textContent = 'Soy el Abuelo Colmillo. Este templo lleva siglos dormido: toca la esfinge para despertarla.';
       return;
     }
-    $('say-who').textContent = 'La Esfinge';
     const t = guideText(); if (gt.textContent !== t) gt.textContent = t;
     const a = altarAmount();
     const at = $('altar-tag'); if (at) at.textContent = a ? `+${a}${a >= ALTAR.cap ? ' · lleno' : ''}` : '';
     const fl = $('altar-flame'); if (fl) fl.style.transform = `scale(${(.55 + .6 * a / ALTAR.cap).toFixed(2)})`;
-    S.slots.forEach((s, i) => {
+    slotsOf().forEach((s, i) => {
       const tag = $('sarc-tag-' + i), obj = document.querySelector(`[data-slot="${i}"]`);
       if (!tag || !obj) return;
       if (!s) { tag.textContent = '+ Criar'; tag.className = 'tag'; obj.className = 'obj sarc-obj empty'; obj.style.removeProperty('--glow'); return; }
@@ -1028,7 +1296,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     const r = rarityOf(c.genes);
     return `<button class="card ${r === 'legend' ? 'legend' : r === 'epico' ? 'epico' : ''}" data-cat="${c.id}" type="button" style="--halo:${RARITY[r].halo}">
       <div class="art">${catSVG(c.genes)}</div>
-      <span class="name">${esc(c.name)}</span><span class="meta">${badge(r)} ${styleOf(c.genes)} · Gen ${c.gen}</span></button>`;
+      <span class="name">${esc(c.name)}</span><span class="meta">${badge(r)} ${styleOf(c.genes)} · ${HABITATS[c.hab || 'egipto'].short}</span></button>`;
   }
 
   function genesHTML(g) {
@@ -1056,10 +1324,12 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
         addCat({ fur: 'negro', pat: 'liso', eyes: 'verde', acc: 'ninguno' });
         S.ofrendas = 40; S.altarAt = Date.now();
         save(); renderAll();
-        openSheet(`<div class="center"><div class="hero">${sphinxArt(false)}</div>
+        openSheet(`<div class="center"><div class="hero" id="intro-abuelo">${abueloSVG()}</div>
           <div class="big-name">¡Despertaste a la Esfinge!</div>
-          <p class="note">"Hace siglos que los gatos de este templo duermen convertidos en piedra. Te dejé 2 estatuas aquí en el templo y 40 ofrendas. Toca las estatuas para despertarlas, crúzalas… y descubre qué nace."</p>
+          <p class="note">"Soy el Abuelo Colmillo, el gato más viejo que vas a conocer. Hace siglos que los gatos de este templo duermen convertidos en piedra. Te dejé 2 estatuas aquí y 40 ofrendas. Despiértalas, crúzalas… y descubre qué nace. Cuando pase algo importante, me verás brillar los ojos."</p>
           <button class="btn gold" id="go-temple" type="button">¡Vamos!</button></div>`);
+        const ab = $('intro-abuelo').firstElementChild; if (ab) ab.classList.add('glow');
+        sfx.elder();
         $('go-temple').addEventListener('click', closeSheet);
       }, 700);
     }, 950);
@@ -1076,11 +1346,11 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     ensureAudio();
     if (S.ofrendas < COST.dig) { toast(`Te faltan ${COST.dig - S.ofrendas} ofrendas. El altar junta más con el tiempo.`); return; }
     setOfrendas(-COST.dig);
-    const c = addCat(randomStatueGenes());
+    const c = addCat(randomStatueGenes(habFam()));
     save(); sfx.rumble(); renderGatos(); renderTemplo();
     openSheet(`<div class="center"><div class="hero pop">${catSVG(c.genes, { statue: true })}</div>
       <div class="big-name">¡Encontraste una estatua!</div>
-      <p class="note">Ya está en el templo. Nadie sabe qué gato duerme adentro hasta despertarlo.</p>
+      <p class="note">Ya está en ${HABITATS[S.hab].short}. Nadie sabe qué gato duerme adentro hasta despertarlo.</p>
       <button class="btn gold" id="wake-now" type="button">Despertar · ${COST.awaken}</button></div>`);
     $('wake-now').addEventListener('click', () => openCat(c.id));
   }
@@ -1102,8 +1372,10 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
       <div class="hero halo" style="--halo:${RARITY[r].halo}55">${catSVG(c.genes)}</div>
       <div class="center">${badge(r)}<span class="note">Estilo ${styleOf(c.genes)} · Generación ${c.gen}${c.parents ? ` · Hijo de ${esc(c.parents[0])} y ${esc(c.parents[1])}` : ' · Despertado de una estatua'}</span></div>
       ${genesHTML(c.genes)}
-      <div class="powinfo">${['match', 'pyr'].map(gm => { const pw = powerOf(c, gm); return `<div><b>${gm === 'match' ? 'En Ofrendas' : 'En Pirámide'}: ${powerLabel(pw)}</b><small>${pw.desc}</small></div>`; }).join('')}</div>`);
+      <div class="powinfo">${['match', 'pyr'].map(gm => { const pw = powerOf(c, gm); return `<div><b>${gm === 'match' ? 'En Ofrendas' : 'En Pirámide'}: ${powerLabel(pw)}</b><small>${pw.desc}</small></div>`; }).join('')}</div>
+      <div class="movebar"><span>Vive en <b>${HABITATS[c.hab || 'egipto'].name}</b></span>${HAB_ORDER.filter(h => h !== c.hab && S.habs[h].open).map(h => `<button class="btn" data-move="${h}" type="button">Mudar a ${HABITATS[h].short}</button>`).join('')}</div>`);
     $('x').addEventListener('click', closeSheet);
+    document.querySelectorAll('[data-move]').forEach(b => b.addEventListener('click', () => moveCat(c, b.dataset.move)));
   }
 
   function wakeCat(c) {
@@ -1131,6 +1403,8 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
       <button class="btn gold" id="ok" type="button">¡Genial!</button>`);
     r === 'legend' ? sfx.legend() : sfx.awake();
     setTimeout(() => sfx.meow(), 450);
+    if (r === 'legend') setTimeout(() => elderSay(`¡Un legendario! Mis viejos ojos no lo pueden creer: ${c.name}.`), 700);
+    else if (fresh.length) setTimeout(() => elderSay(`¡Mutación nueva: ${NAMES_OF[fresh[0]]}! Esa no la veía desde la Era de Hielo.`), 700);
     buzz(r === 'comun' ? 20 : [20, 40, 20, 40, 60]);
     $('ok').addEventListener('click', closeSheet);
   }
@@ -1138,15 +1412,15 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
   let picked = [];
   function openBreed() {
     ensureAudio();
-    const awake = S.cats.filter(c => c.awake);
-    const free = S.slots.findIndex(s => !s);
-    if (awake.length < 2) { toast('Necesitas al menos 2 gatos despiertos. Despierta estatuas en la pestaña Gatos.'); return; }
-    if (free < 0) { toast('Los dos sarcófagos están ocupados. Espera a que nazcan los gatitos.'); return; }
+    const awake = S.cats.filter(c => c.awake && c.hab === S.hab);
+    const free = slotsOf().findIndex(s => !s);
+    if (awake.length < 2) { toast(`Necesitas 2 gatos despiertos en ${HABITATS[S.hab].short}. Despierta estatuas o muda gatos desde su ficha.`); return; }
+    if (free < 0) { toast(`Todos los ${HABITATS[S.hab].nest.toLowerCase()}s están ocupados. Espera a que nazcan los gatitos.`); return; }
     picked = picked.filter(id => awake.some(c => c.id === id)).slice(0, 2);
     drawBreed();
   }
   function drawBreed() {
-    const awake = S.cats.filter(c => c.awake).sort((a, b) => b.id - a.id);
+    const awake = S.cats.filter(c => c.awake && c.hab === S.hab).sort((a, b) => b.id - a.id);
     const A = S.cats.find(c => c.id === picked[0]), B = S.cats.find(c => c.id === picked[1]);
     const can = A && B && S.ofrendas >= COST.breed;
     openSheet(`<div class="sheet-head"><h2>Elige a los padres</h2><button class="x" id="x" type="button" aria-label="Cerrar">×</button></div>
@@ -1160,8 +1434,8 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
         return `<button class="card" data-pick="${c.id}" type="button" aria-pressed="${i >= 0}">${i >= 0 ? `<span class="tag">${i + 1}</span>` : ''}
           <div class="art">${catSVG(c.genes)}</div><span class="name">${esc(c.name)}</span><span class="meta">${badge(r)}</span></button>`;
       }).join('')}</div>
-      <p class="note">El gatito hereda rasgos de los dos y puede salir con mutaciones nuevas.</p>
-      <button class="btn turq" id="do-breed" type="button" ${can ? '' : 'disabled'}>${!A || !B ? 'Elige 2 gatos' : S.ofrendas < COST.breed ? `Te faltan ${COST.breed - S.ofrendas} ofrendas` : `Meter al sarcófago · ${COST.breed}`}</button>`);
+      <p class="note">El gatito hereda rasgos de los dos y puede salir con mutaciones nuevas. En ${HABITATS[S.hab].short} salen más mutaciones <b style="color:${FAMILY[habFam()].color}">${famPlural(habFam())}</b>.</p>
+      <button class="btn turq" id="do-breed" type="button" ${can ? '' : 'disabled'}>${!A || !B ? 'Elige 2 gatos' : S.ofrendas < COST.breed ? `Te faltan ${COST.breed - S.ofrendas} ofrendas` : `Al ${HABITATS[S.hab].nest.toLowerCase()} · ${COST.breed}`}</button>`);
     $('x').addEventListener('click', closeSheet);
     document.querySelectorAll('[data-pick]').forEach(b => b.addEventListener('click', () => {
       const id = Number(b.dataset.pick), i = picked.indexOf(id);
@@ -1169,29 +1443,29 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
       const sc = $('sheet-card').scrollTop; drawBreed(); $('sheet-card').scrollTop = sc;
     }));
     $('do-breed').addEventListener('click', () => {
-      const free = S.slots.findIndex(s => !s);
+      const free = slotsOf().findIndex(s => !s);
       if (free < 0 || !A || !B || S.ofrendas < COST.breed) return;
       setOfrendas(-COST.breed);
-      const genes = breedGenes(A, B, S.births === 0 && !S.slots.some(Boolean));
+      const genes = breedGenes(A, B, S.births === 0 && !allSlots().some(Boolean), habFam());
       const rarity = rarityOf(genes);
-      S.slots[free] = { genes, rarity, parents: [A.id, B.id], names: [A.name, B.name], gen: Math.max(A.gen, B.gen) + 1, readyAt: Date.now() + INCUBATE[rarity] * 1000 };
+      slotsOf()[free] = { genes, rarity, parents: [A.id, B.id], names: [A.name, B.name], gen: Math.max(A.gen, B.gen) + 1, readyAt: Date.now() + INCUBATE[rarity] * 1000 };
       picked = [];
       save(); closeSheet(); showTab('templo');
       sfx.rumble();
-      toast(rarity === 'comun' ? 'El sarcófago se cerró. A esperar…' : 'El sarcófago brilla… ¡viene algo especial!');
+      toast(rarity === 'comun' ? 'A esperar a que nazca…' : `El ${HABITATS[S.hab].nest.toLowerCase()} brilla… ¡viene algo especial!`);
     });
   }
 
   function openSlot(i) {
     ensureAudio();
-    const s = S.slots[i]; if (!s) return;
+    const s = slotsOf()[i]; if (!s) return;
     const left = Math.ceil((s.readyAt - Date.now()) / 1000);
     if (left > 0) { toast(`Faltan ${fmt(left)} para que despierte.`); return; }
-    openSheet(`<div class="center"><div class="hero waking" style="width:140px">${sarcSVG()}</div><div class="big-name">Abriendo…</div></div>`);
+    openSheet(`<div class="center"><div class="hero waking" style="width:140px">${nestArt(S.hab)}</div><div class="big-name">Abriendo…</div></div>`);
     sfx.rumble(); buzz([30, 50, 30, 50, 30]);
     setTimeout(() => {
-      S.slots[i] = null;
-      const c = addCat(s.genes, { awake: true, gen: s.gen, parents: s.names });
+      slotsOf()[i] = null;
+      const c = addCat(s.genes, { awake: true, gen: s.gen, parents: s.names, hab: S.hab });
       spawnAt[c.id] = { x: SPOTS.sarc[i].x, y: FLOOR.y0 + .02 };
       S.births++; S.tip++;
       const fresh = discover(c.genes);
@@ -1201,7 +1475,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
   }
 
   // ================= Motor de Ofrendas (match-3), sin DOM para poder probarlo =================
-  // Pieza = { k: tipo 0..4 (−1 = Gato de Bastet), sp: null | 'h' (fila) | 'v' (columna) | 'b' (explosión 3×3) | 'r' (Bastet) }
+  // Pieza = { k: tipo 0..4 (−1 = hierba gatera), sp: null | 'h' (fila) | 'v' (columna) | 'b' (explosión 3×3) | 'r' (hierba gatera) }
   const MN = 8, NK = 5;
   function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 
@@ -1404,13 +1678,15 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
       caricatura: { key: 'moves', name: 'Ronroneo', desc: '+2 movimientos al empezar' },
       elegante: { key: 'claw', name: 'Zarpazo', desc: 'Rompe la pieza que toques' },
       egipcio: { key: 'ra', name: 'Bendición de Ra', desc: 'Vuelve explosiva la pieza que toques' },
-      mistico: { key: 'bastet', name: 'Ojo de Bastet', desc: 'Convierte la pieza que toques en Gato de Bastet' },
+      mistico: { key: 'bastet', name: 'Hierba mágica', desc: 'Convierte la pieza que toques en hierba gatera' },
+      artico: { key: 'frost', name: 'Escarcha', desc: 'Congela la pieza que toques: al borrarse, borra su fila' },
     },
     pyr: {
       caricatura: { key: 'reroll', name: 'Cambio', desc: 'Cambia los 3 bloques de abajo' },
       elegante: { key: 'claw', name: 'Zarpazo', desc: 'Quita el bloque que toques' },
       egipcio: { key: 'small', name: 'Cincel', desc: 'Convierte un bloque de abajo en uno de 1×1' },
       mistico: { key: 'sweep', name: 'Barrido estelar', desc: 'Borra la fila y la columna que toques' },
+      artico: { key: 'avalanche', name: 'Avalancha', desc: 'Borra los bloques de un cuadro de 3×3 donde toques' },
     },
   };
   const TEAM_MAX = 3;
@@ -1418,13 +1694,13 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     const c = {};
     GENE_KEYS.forEach(k => { const f = MUT_FAMILY[g[k]]; if (f) c[f] = (c[f] || 0) + 1; });
     let best = null;
-    ['mistico', 'egipcio', 'elegante'].forEach(f => { if (c[f] && (!best || c[f] > c[best])) best = f; });
+    ['mistico', 'artico', 'egipcio', 'elegante'].forEach(f => { if (c[f] && (!best || c[f] > c[best])) best = f; });
     return best || 'caricatura';
   }
   function powerOf(cat, game) {
     const fam = famKey(cat.genes), base = POWERS[game][fam];
     const muts = GENE_KEYS.filter(k => MUT_FAMILY[cat.genes[k]]).length;
-    const charges = { moves: 2, reroll: 1, claw: 1 + muts, ra: muts, bastet: Math.ceil(muts / 2), small: muts, sweep: Math.ceil(muts / 2) }[base.key];
+    const charges = { moves: 2, reroll: 1, claw: 1 + muts, ra: muts, bastet: Math.ceil(muts / 2), small: muts, sweep: Math.ceil(muts / 2), frost: muts, avalanche: muts }[base.key];
     return { ...base, charges, catId: cat.id };
   }
   const powerLabel = p => (p.key === 'moves' ? `${p.name} +${p.charges}` : `${p.name} ×${p.charges}`);
@@ -1480,24 +1756,38 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
 
   // ================= Ofrendas: piezas, pantalla y animaciones =================
   const MK = [
-    { name: 'Escarabajo', plural: 'escarabajos' },
-    { name: 'Ojo de Horus', plural: 'ojos de Horus' },
     { name: 'Pescado', plural: 'pescados' },
-    { name: 'Ankh', plural: 'ankhs' },
-    { name: 'Loto', plural: 'lotos' },
+    { name: 'Esqueleto de pescado', plural: 'esqueletos' },
+    { name: 'Ratón', plural: 'ratones' },
+    { name: 'Pollo rostizado', plural: 'pollos' },
+    { name: 'Bola de estambre', plural: 'estambres' },
   ];
   function pieceArt(k) {
-    const ink = '#2a1f35';
-    if (k === 0) return `<path d="M30 34L16 24M70 34l14-10M28 56H10M72 56h18M30 76L16 88M70 76l14 12" stroke="${ink}" stroke-width="5" stroke-linecap="round"/><ellipse cx="50" cy="58" rx="27" ry="31" fill="#2fc6a0" stroke="${ink}" stroke-width="4"/><path d="M50 30v58" stroke="${ink}" stroke-width="3"/><circle cx="50" cy="24" r="11" fill="#1d8f74" stroke="${ink}" stroke-width="4"/><ellipse cx="39" cy="48" rx="6" ry="11" fill="#fff" opacity=".45"/>`;
-    if (k === 1) return `<path d="M42 70l-8 20M56 70q2 16 18 18" stroke="${ink}" stroke-width="12" fill="none" stroke-linecap="round"/><path d="M42 70l-8 20M56 70q2 16 18 18" stroke="#4a78ea" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M8 46Q50 10 92 46Q50 82 8 46Z" fill="#fff" stroke="${ink}" stroke-width="5" stroke-linejoin="round"/><circle cx="50" cy="46" r="17" fill="#4a78ea" stroke="${ink}" stroke-width="4"/><circle cx="50" cy="46" r="7" fill="${ink}"/><circle cx="56" cy="40" r="4" fill="#fff"/><path d="M12 28Q50 2 88 28" stroke="${ink}" stroke-width="6" fill="none" stroke-linecap="round"/>`;
-    if (k === 2) return `<path d="M72 50L94 28V72Z" fill="#ff8a4c" stroke="${ink}" stroke-width="4" stroke-linejoin="round"/><path d="M8 50Q40 16 78 50Q40 84 8 50Z" fill="#ff8a4c" stroke="${ink}" stroke-width="4"/><circle cx="25" cy="46" r="5" fill="${ink}"/><path d="M46 36q8 14 0 28M58 38q7 12 0 24" stroke="#c4561f" stroke-width="4" fill="none" stroke-linecap="round"/><ellipse cx="38" cy="37" rx="10" ry="4" fill="#fff" opacity=".5"/>`;
-    if (k === 3) return `<path d="M50 46C34 46 31 12 50 12C69 12 66 46 50 46ZM50 46V90M24 56H76" stroke="${ink}" stroke-width="20" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M50 46C34 46 31 12 50 12C69 12 66 46 50 46ZM50 46V90M24 56H76" stroke="#f4c24f" stroke-width="11" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M43 22q4-5 8-5" stroke="#fff6c4" stroke-width="4" fill="none" stroke-linecap="round"/>`;
-    return `<path d="M18 88Q50 98 82 88" stroke="${ink}" stroke-width="11" fill="none" stroke-linecap="round"/><path d="M18 88Q50 98 82 88" stroke="#3f9b5a" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M50 84C26 84 8 64 12 42C32 46 46 62 50 84Z" fill="#c94fb8" stroke="${ink}" stroke-width="4" stroke-linejoin="round"/><path d="M50 84C74 84 92 64 88 42C68 46 54 62 50 84Z" fill="#c94fb8" stroke="${ink}" stroke-width="4" stroke-linejoin="round"/><path d="M50 84C30 70 28 40 50 14C72 40 70 70 50 84Z" fill="#ec6fd8" stroke="${ink}" stroke-width="4" stroke-linejoin="round"/><ellipse cx="44" cy="44" rx="4" ry="12" fill="#fff" opacity=".45"/>`;
+    const ink = '#2a1f35', bone = '#f3ead8';
+    if (k === 0) return `<path d="M72 50L94 28V72Z" fill="#4a9be8" stroke="${ink}" stroke-width="4" stroke-linejoin="round"/><path d="M8 50Q40 16 78 50Q40 84 8 50Z" fill="#4a9be8" stroke="${ink}" stroke-width="4"/><path d="M14 54Q40 68 72 54" stroke="#bfe0ff" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="25" cy="45" r="5" fill="${ink}"/><path d="M38 34q8 16 0 32" stroke="#2a6fbf" stroke-width="4" fill="none" stroke-linecap="round"/><ellipse cx="48" cy="36" rx="10" ry="4" fill="#fff" opacity=".5"/>`;
+    if (k === 1) return `<path d="M30 50H76" stroke="${ink}" stroke-width="11" stroke-linecap="round"/><path d="M30 50H76" stroke="${bone}" stroke-width="5" stroke-linecap="round"/>
+      ${[42, 53, 64].map(x => `<path d="M${x} 50Q${x + 5} 34 ${x} 24M${x} 50Q${x + 5} 66 ${x} 76" stroke="${ink}" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M${x} 50Q${x + 5} 34 ${x} 24M${x} 50Q${x + 5} 66 ${x} 76" stroke="${bone}" stroke-width="3.5" fill="none" stroke-linecap="round"/>`).join('')}
+      <path d="M74 50L94 30L89 50L94 70Z" fill="${bone}" stroke="${ink}" stroke-width="4" stroke-linejoin="round"/>
+      <path d="M8 50Q10 28 32 30L34 70Q10 72 8 50Z" fill="${bone}" stroke="${ink}" stroke-width="4" stroke-linejoin="round"/><circle cx="19" cy="45" r="5" fill="${ink}"/><path d="M12 58l6 2" stroke="${ink}" stroke-width="3" stroke-linecap="round"/>`;
+    if (k === 2) return `<path d="M76 70Q96 72 92 86Q88 96 74 90" stroke="${ink}" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M76 70Q96 72 92 86Q88 96 74 90" stroke="#f2a0b5" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <path d="M10 62Q18 34 52 36Q84 40 82 70Q60 84 30 78Q14 74 10 62Z" fill="#b4a7d6" stroke="${ink}" stroke-width="4" stroke-linejoin="round"/>
+      <circle cx="40" cy="30" r="14" fill="#b4a7d6" stroke="${ink}" stroke-width="4"/><circle cx="40" cy="30" r="7" fill="#f2a0b5"/>
+      <circle cx="64" cy="30" r="13" fill="#b4a7d6" stroke="${ink}" stroke-width="4"/><circle cx="64" cy="30" r="6.5" fill="#f2a0b5"/>
+      <circle cx="30" cy="54" r="4.5" fill="${ink}"/><circle cx="12" cy="63" r="5" fill="#f27a9a" stroke="${ink}" stroke-width="2"/><path d="M20 66L4 70M20 62L4 60" stroke="${ink}" stroke-width="1.8" stroke-linecap="round"/><ellipse cx="54" cy="48" rx="10" ry="4" fill="#fff" opacity=".45"/>`;
+    if (k === 3) return `<path d="M64 38L84 18M70 48L92 34" stroke="${ink}" stroke-width="12" stroke-linecap="round"/><path d="M64 38L84 18M70 48L92 34" stroke="#f6e7cc" stroke-width="6" stroke-linecap="round"/><circle cx="86" cy="15" r="6" fill="#f6e7cc" stroke="${ink}" stroke-width="3"/><circle cx="95" cy="32" r="6" fill="#f6e7cc" stroke="${ink}" stroke-width="3"/>
+      <ellipse cx="46" cy="58" rx="38" ry="28" fill="#e0913a" stroke="${ink}" stroke-width="4"/><ellipse cx="46" cy="66" rx="30" ry="14" fill="#c46f22" opacity=".55"/>
+      <path d="M22 46q10-6 20 0M30 58q10-6 20 0M50 46q10-6 20 0" stroke="#a85a1a" stroke-width="3.5" fill="none" stroke-linecap="round"/><ellipse cx="34" cy="42" rx="12" ry="5" fill="#fff" opacity=".45"/>`;
+    return `<path d="M76 72Q94 82 86 94" stroke="${ink}" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M76 72Q94 82 86 94" stroke="#ef5d8f" stroke-width="3.5" fill="none" stroke-linecap="round"/>
+      <circle cx="48" cy="50" r="36" fill="#ef5d8f" stroke="${ink}" stroke-width="4"/>
+      <path d="M20 38Q48 26 76 42M14 54Q48 44 82 58M22 72Q48 62 74 76M36 18Q24 50 36 82M58 16Q72 50 60 84" stroke="#b93a6a" stroke-width="3.5" fill="none" stroke-linecap="round"/><ellipse cx="34" cy="30" rx="10" ry="5" fill="#fff" opacity=".45"/>`;
   }
+  // Hierba gatera: la pieza especial que borra todas las piezas de un tipo
   function bastetArt() {
-    const ink = '#2a1f35', cols = ['#2fc6a0', '#4a78ea', '#ff8a4c', '#f4c24f', '#ec6fd8'];
+    const ink = '#2a1f35', cols = ['#4a9be8', '#f3ead8', '#b4a7d6', '#e0913a', '#ef5d8f'];
     const ring = cols.map((c, i) => `<circle cx="50" cy="52" r="42" fill="none" stroke="${c}" stroke-width="8" stroke-dasharray="52.8 211.1" stroke-dashoffset="${-i * 52.8}"/>`).join('');
-    return `${ring}<path d="M26 44L28 16L44 32ZM74 44L72 16L56 32Z" fill="#f4c24f" stroke="${ink}" stroke-width="4" stroke-linejoin="round"/><circle cx="50" cy="54" r="26" fill="#f4c24f" stroke="${ink}" stroke-width="4"/><path d="M36 50q5-4 10 0M54 50q5-4 10 0" stroke="${ink}" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M46 60h8l-4 5z" fill="#ef7f98"/><path d="M40 40q10-6 20 0" stroke="#1f5fbf" stroke-width="4" fill="none" stroke-linecap="round"/>`;
+    const leaf = (x, y, r) => `<ellipse cx="${x}" cy="${y}" rx="13" ry="7" transform="rotate(${r} ${x} ${y})" fill="#5cc65a" stroke="${ink}" stroke-width="3"/>`;
+    return `${ring}<path d="M50 84V26" stroke="${ink}" stroke-width="7" stroke-linecap="round"/><path d="M50 84V26" stroke="#3f9b5a" stroke-width="3" stroke-linecap="round"/>
+      ${leaf(38, 66, -30)}${leaf(62, 60, 30)}${leaf(39, 46, -40)}${leaf(61, 40, 40)}${leaf(50, 26, -90)}${star4(74, 26, 6, '#fff6c4')}${star4(26, 34, 4, '#fff6c4')}`;
   }
   const TILE_CACHE = {};
   function pieceSVG(k, sp) {
@@ -1514,7 +1804,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
       back = `<circle cx="50" cy="50" r="48" fill="#ffe08a" opacity=".55"/><circle cx="50" cy="50" r="48" fill="none" stroke="#fff6c4" stroke-width="4" stroke-dasharray="6 8"/>`;
       front = `<path d="M84 8l3 8 8 3-8 3-3 8-3-8-8-3 8-3z" fill="#fff" stroke="${ink}" stroke-width="2"/>`;
     }
-    const u = artURL(k >= 0 ? PIECE_ART[k] : 'gato_bastet');
+    const u = artURL(k >= 0 ? PIECE_ART[k] : 'hierba_gatera');
     const art = u ? `<image href="${u}" x="3" y="3" width="94" height="94"/>` : (k >= 0 ? pieceArt(k) : bastetArt());
     return (TILE_CACHE[key] = `<svg viewBox="0 0 100 100" aria-hidden="true">${back}${art}${front}</svg>`);
   }
@@ -1712,13 +2002,13 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
   async function useMatchPower(i) {
     const p = M.powers[M.target], t = M.grid[i];
     if (!p || !p.charges || !t) return;
-    if ((p.key === 'ra' || p.key === 'bastet') && t.sp) { toast('Elige una pieza normal, sin poder especial.'); return; }
+    if ((p.key === 'ra' || p.key === 'bastet' || p.key === 'frost') && t.sp) { toast('Elige una pieza normal, sin poder especial.'); return; }
     M.busy = true; clearTimeout(M.hintTimer);
     p.charges--; M.target = -1; $('m-note').textContent = M.baseNote; renderMatchPowers();
     sfx.meow(); buzz([15, 30, 15]);
     const mm = M;
     if (p.key === 'claw') { await runCascade(resolveStep(M.grid, M.rng, null, new Set([i])), mm); return; }
-    M.grid[i] = p.key === 'ra' ? { k: t.k, sp: 'b' } : { k: -1, sp: 'r' };
+    M.grid[i] = p.key === 'ra' ? { k: t.k, sp: 'b' } : p.key === 'frost' ? { k: t.k, sp: 'h' } : { k: -1, sp: 'r' };
     const el = M.els[i];
     if (el) { el.innerHTML = pieceSVG(M.grid[i].k, M.grid[i].sp); el.classList.remove('born'); void el.offsetWidth; el.classList.add('born'); }
     await wait(300);
@@ -1792,7 +2082,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
       S.match.level = Math.max(S.match.level, n + 1);
       setOfrendas(reward);
       let sc = null;
-      if (statue) sc = addCat(randomStatueGenes());
+      if (statue) sc = addCat(randomStatueGenes(habFam()));
       save(); sfx.legend(); buzz([20, 40, 20, 40, 60]);
       openSheet(`<div class="center">
         <div class="bigstars">${[1, 2, 3].map(i => `<i class="${i <= stars ? 'on' : ''}" style="animation-delay:${i * .15}s">★</i>`).join('')}</div>
@@ -1826,8 +2116,8 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
       <div class="game"><b>Pirámide</b>
         <p>Acomoda bloques de piedra y completa filas o columnas. Cada línea da 1 de piedra para mejorar el templo, y cada ${STATUE_EVERY} líneas en una partida aparece una estatua.</p>
         <span class="note" style="text-align:left">Récord: ${S.pyrBest || 0} puntos · tienes ${S.stone || 0} de piedra</span>
-        <div class="actions"><button class="btn" id="up-from-games" type="button">Mejorar templo</button><button class="btn gold" id="play-pyr" type="button">Jugar Pirámide</button></div></div>
-      <div class="game"><b>Poderes de tus gatos</b><p>Antes de jugar eliges hasta 3 gatos. Los comunes dan movimientos extra o un cambio de bloques; los Elegantes rompen piezas; los Egipcios crean explosivos o bloques de 1×1; los Místicos crean Gatos de Bastet o barren filas enteras. Cada mutación suma cargas.</p></div>
+        <div class="actions"><button class="btn" id="up-from-games" type="button">Mejoras</button><button class="btn gold" id="play-pyr" type="button">Jugar Pirámide</button></div></div>
+      <div class="game"><b>Poderes de tus gatos</b><p>Antes de jugar eliges hasta 3 gatos. Los comunes dan movimientos extra o un cambio de bloques; los Elegantes rompen piezas; los Egipcios crean explosivos o bloques de 1×1; los Místicos crean hierba gatera o barren filas enteras; los Árticos congelan piezas o tiran avalanchas. Cada mutación suma cargas.</p></div>
     </div>`;
     $('play-match').addEventListener('click', () => pickTeam('match', t => openMatch(S.match.level, t)));
     $('play-pyr').addEventListener('click', () => pickTeam('pyr', openPyramid));
@@ -2050,8 +2340,8 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
       PG.floats.push({ text: `+${stone} piedra`, x: cc, y: cr - 1, t0: now + 80, big: true });
       if (PG.combo >= 2) PG.floats.push({ text: `Combo ×${PG.combo}`, x: cc, y: cr + 1.2, t0: now + 160 });
       if (Math.floor(PG.lines / STATUE_EVERY) > before) {
-        PG.statues++; addCat(randomStatueGenes());
-        toast('¡Encontraste una estatua entre los bloques! Ya está en tu templo.');
+        PG.statues++; addCat(randomStatueGenes(habFam()));
+        elderSay(`¡Una estatua entre los bloques! Ya está en ${HABITATS[S.hab].short}.`);
         sfx.awake();
       }
       PG.shake = reduceMotion ? 0 : Math.min(4 + lines * 2, 12);
@@ -2103,7 +2393,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
       const c = Math.floor((x - PL.pad) / PL.cell), r = Math.floor((y - PL.pad) / PL.cell);
       if (r < 0 || c < 0 || r >= PN || c >= PN) { toast('Toca una casilla del tablero.'); return; }
       if (p.key === 'claw' && PG.board[r][c] < 0) { toast('Toca un bloque del tablero.'); return; }
-      const cells = p.key === 'claw' ? [[r, c]] : Array.from({ length: PN }, (_, k) => [[r, k], [k, c]]).flat();
+      const cells = p.key === 'claw' ? [[r, c]] : p.key === 'avalanche' ? [-1, 0, 1].flatMap(dr => [-1, 0, 1].map(dc => [r + dr, c + dc])).filter(([a, b]) => a >= 0 && b >= 0 && a < PN && b < PN) : Array.from({ length: PN }, (_, k) => [[r, k], [k, c]]).flat();
       cells.forEach(([rr, cc]) => { if (PG.board[rr][cc] >= 0) { PG.clearFx.push({ r: rr, c: cc, color: PG.board[rr][cc], t0: now }); PG.board[rr][cc] = -1; } });
       PG.shake = reduceMotion ? 0 : 6;
     }
@@ -2122,6 +2412,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     PG.over = true;
     const record = PG.score > (S.pyrBest || 0);
     if (record) S.pyrBest = PG.score;
+    if (record && PG.score > 200) setTimeout(() => elderSay(`¡Nuevo récord en Pirámide: ${PG.score} puntos!`), 600);
     save();
     if (!quit) [392, 330, 262, 196].forEach((f, i) => tone(f, i * .14, .3, 'sawtooth', .05));
     else sfx.awake();
@@ -2204,18 +2495,18 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
 
   // ================= Mejoras del templo (se pagan con piedra) =================
   const UPGRADES = [
-    { id: 'sarc3', name: 'Tercer sarcófago', desc: 'Cría tres camadas al mismo tiempo.', cost: 30 },
-    { id: 'sarc4', name: 'Cuarto sarcófago', desc: 'Cría cuatro camadas al mismo tiempo.', cost: 60, needs: 'sarc3' },
+    { id: 'sarc3', name: 'Tercer nido de cría', desc: 'Un lugar más para criar en cada hábitat.', cost: 30 },
+    { id: 'sarc4', name: 'Cuarto nido de cría', desc: 'Otro lugar más para criar en cada hábitat.', cost: 60, needs: 'sarc3' },
     { id: 'altar', name: 'Altar mayor', desc: 'El altar guarda hasta 80 ofrendas y junta 1 cada 3 s.', cost: 25 },
     { id: 'patio', name: 'Patio amplio', desc: 'Caben 24 gatos paseando a la vez (antes 14).', cost: 40 },
-    { id: 'estandartes', name: 'Estandartes', desc: 'Banderas azul y oro en las columnas del templo.', cost: 10 },
-    { id: 'obeliscos', name: 'Obeliscos', desc: 'Dos obeliscos dorados junto a las pirámides.', cost: 20 },
-    { id: 'estanque', name: 'Estanque de lotos', desc: 'Un estanque con lotos en el patio.', cost: 25 },
+    { id: 'estandartes', name: 'Estandartes', desc: 'Banderas azul y oro en las columnas (Egipto).', cost: 10 },
+    { id: 'obeliscos', name: 'Obeliscos', desc: 'Dos obeliscos dorados junto a las pirámides (Egipto).', cost: 20 },
+    { id: 'estanque', name: 'Estanque de lotos', desc: 'Un estanque con lotos en el patio (Egipto).', cost: 25 },
   ];
   function openUpgrades() {
     ensureAudio();
     const have = S.stone || 0;
-    openSheet(`<div class="sheet-head"><h2>Mejorar el templo</h2><button class="x" id="x" type="button" aria-label="Cerrar">×</button></div>
+    openSheet(`<div class="sheet-head"><h2>Mejoras</h2><button class="x" id="x" type="button" aria-label="Cerrar">×</button></div>
       <p class="note" style="text-align:left">Tienes <b style="color:var(--ink)">${have} de piedra</b>. La piedra se gana en Pirámide: 1 por cada línea.</p>
       <div class="ups">${UPGRADES.map(u => {
         const done = S.up && S.up[u.id], locked = u.needs && !(S.up && S.up[u.needs]);
@@ -2231,11 +2522,11 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     const u = UPGRADES.find(x => x.id === id);
     if (!u || (S.stone || 0) < u.cost || (S.up && S.up[id])) return;
     S.stone -= u.cost; S.up = { ...(S.up || {}), [id]: true };
-    if (id === 'sarc3' || id === 'sarc4') S.slots.push(null);
+    if (id === 'sarc3' || id === 'sarc4') HAB_ORDER.forEach(h => S.habs[h].slots.push(null));
     $('stone').textContent = S.stone;
     save(); sfx.awake(); buzz([20, 40, 20]);
     renderTemplo(); openUpgrades();
-    toast(`¡${u.name} construido!`);
+    elderSay(`¡${u.name} listo! Así da gusto vivir aquí.`);
   }
 
   // ================= Navegación y hoja =================
@@ -2269,11 +2560,19 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     loadArt();
     const d = data && data.v === 1 && Array.isArray(data.cats) ? data : load();
     if (d) S = { ...freshState(), ...d };
+    // partidas guardadas antes de los hábitats: todo pasa a Egipto
+    if (d && !(d.habs && d.habs.egipto)) { S.habs = freshHabs(); if (Array.isArray(d.slots)) S.habs.egipto.slots = d.slots.slice(); }
+    delete S.slots;
+    const nests = 2 + (S.up && S.up.sarc3 ? 1 : 0) + (S.up && S.up.sarc4 ? 1 : 0);
+    HAB_ORDER.forEach(h => { if (!S.habs[h]) S.habs[h] = { open: h === 'egipto', slots: [] }; while (S.habs[h].slots.length < nests) S.habs[h].slots.push(null); });
+    if (!S.hab || !S.habs[S.hab] || !S.habs[S.hab].open) S.hab = 'egipto';
+    S.cats.forEach(c => { if (!c.hab) c.hab = 'egipto'; });
     renderAll();
     setInterval(tickTemplo, 1000);
     setInterval(() => { if (skyMode() !== mode && !$('tab-templo').hidden) renderTemplo(); }, 60000);
     if (window.ResizeObserver) new ResizeObserver(placeWalkers).observe(document.body);
     requestAnimationFrame(walkLoop);
+    addEventListener('resize', () => { if (PG) pLayout(); });
     setInterval(() => { if (S.births) { S.tip++; } }, 12000);
   }
   const hot = window.claude && window.claude.hot;

@@ -25,15 +25,27 @@ ORIGEN = Path(sys.argv[1]) if len(sys.argv) > 1 else Path('G:/Mi unidad/videogam
 #   fondo   = escenario completo, recortado a la proporción 400:560
 #   icono   = imagen completa cuadrada, sin quitar fondo
 ASSETS = {
-    'fondo_dia': ('fondo', 1120), 'fondo_atardecer': ('fondo', 1120), 'fondo_noche': ('fondo', 1120),
+    # escenarios: 3 hábitats × 3 horas del día
+    **{f'fondo_{h}_{m}': ('fondo', 1120) for h in ('egipto', 'casa', 'nieve') for m in ('dia', 'atardecer', 'noche')},
+    # Egipto
     'esfinge': ('recorte', 640), 'esfinge_piedra': ('recorte', 640),
     'sarcofago': ('recorte', 384), 'altar': ('recorte', 384), 'estanque': ('recorte', 512),
     'obelisco': ('recorte', 512), 'estandarte': ('recorte', 256),
-    'escarabajo': ('cuadro', 192), 'ojo_horus': ('cuadro', 192), 'pescado': ('cuadro', 192),
-    'ankh': ('cuadro', 192), 'loto': ('cuadro', 192), 'gato_bastet': ('cuadro', 192),
+    # Casa
+    'arbol_gato': ('recorte', 640), 'canasta': ('recorte', 384), 'plato': ('recorte', 384),
+    # Nieve
+    'muneco_nieve': ('recorte', 640), 'iglu': ('recorte', 384), 'fogata': ('recorte', 384),
+    # Abuelo Colmillo (el de ojos brillantes se recorta con el mismo encuadre que el normal)
+    'abuelo': ('recorte', 512), 'abuelo_brillo': ('par', 512),
+    # piezas de Ofrendas
+    'pescado': ('cuadro', 192), 'esqueleto': ('cuadro', 192), 'raton': ('cuadro', 192),
+    'pollo': ('cuadro', 192), 'estambre': ('cuadro', 192), 'hierba_gatera': ('cuadro', 192),
+    # bloques de Pirámide
     'bloque_caliza': ('cuadro', 160), 'bloque_granito': ('cuadro', 160), 'bloque_lapislazuli': ('cuadro', 160),
     'bloque_turquesa': ('cuadro', 160), 'bloque_oro': ('cuadro', 160), 'bloque_basalto': ('cuadro', 160),
+    # íconos
     'icono_ofrenda': ('cuadro', 96), 'icono_piedra': ('cuadro', 96), 'icono_app': ('icono', 512),
+    # gato base
     'gato_frente': ('recorte', 512), 'gato_lado_1': ('recorte', 512), 'gato_lado_2': ('recorte', 512),
 }
 CLAVE = (255, 0, 255)
@@ -137,6 +149,20 @@ def main():
             salida.save(DESTINO / archivo, quality=86, optimize=True)
         elif tipo == 'icono':
             salida = img.convert('RGB').resize((tam, tam), Image.LANCZOS)
+            archivo = nombre + '.png'
+            salida.save(DESTINO / archivo, optimize=True)
+        elif tipo == 'par':
+            # mismo recorte que su pareja (abuelo_brillo usa el encuadre de abuelo)
+            base = buscar(nombre.replace('_brillo', ''))
+            rgba = quitar_fondo(img)
+            if base and Image.open(base).size == img.size:
+                caja = quitar_fondo(Image.open(base)).getbbox()
+                x0, y0, x1, y1 = caja
+                m = int(max(x1 - x0, y1 - y0) * 0.02)
+                rgba = rgba.crop((max(0, x0 - m), max(0, y0 - m), min(img.width, x1 + m), min(img.height, y1 + m)))
+            else:
+                rgba = recortar(rgba)
+            salida = ajustar(rgba, tam)
             archivo = nombre + '.png'
             salida.save(DESTINO / archivo, optimize=True)
         else:
