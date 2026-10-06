@@ -36,6 +36,41 @@
    "w": 227,
    "h": 256
   },
+  "arbol_gato": {
+   "file": "arbol_gato.png",
+   "w": 479,
+   "h": 640
+  },
+  "canasta": {
+   "file": "canasta.png",
+   "w": 384,
+   "h": 288
+  },
+  "plato": {
+   "file": "plato.png",
+   "w": 384,
+   "h": 276
+  },
+  "muneco_nieve": {
+   "file": "muneco_nieve.png",
+   "w": 640,
+   "h": 626
+  },
+  "iglu": {
+   "file": "iglu.png",
+   "w": 384,
+   "h": 319
+  },
+  "fogata": {
+   "file": "fogata.png",
+   "w": 341,
+   "h": 384
+  },
+  "abuelo_brillo": {
+   "file": "abuelo_brillo.png",
+   "w": 487,
+   "h": 512
+  },
   "pescado": {
    "file": "pescado.png",
    "w": 192,
@@ -66,8 +101,43 @@
    "w": 192,
    "h": 192
   },
+  "bloque_caliza": {
+   "file": "bloque_caliza.png",
+   "w": 160,
+   "h": 160
+  },
+  "bloque_granito": {
+   "file": "bloque_granito.png",
+   "w": 160,
+   "h": 160
+  },
+  "bloque_lapislazuli": {
+   "file": "bloque_lapislazuli.png",
+   "w": 160,
+   "h": 160
+  },
+  "bloque_turquesa": {
+   "file": "bloque_turquesa.png",
+   "w": 160,
+   "h": 160
+  },
+  "bloque_oro": {
+   "file": "bloque_oro.png",
+   "w": 160,
+   "h": 160
+  },
+  "bloque_basalto": {
+   "file": "bloque_basalto.png",
+   "w": 160,
+   "h": 160
+  },
   "icono_ofrenda": {
    "file": "icono_ofrenda.png",
+   "w": 96,
+   "h": 96
+  },
+  "icono_piedra": {
+   "file": "icono_piedra.png",
    "w": 96,
    "h": 96
   },
