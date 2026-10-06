@@ -13,6 +13,9 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bagel+Fat+One&family=Nunito:wght@600;800;900&display=swap">
 <style>
+/* base: sin esto, el relleno de cada pieza hace que el tablero de 8×8 se salga por la derecha y por abajo */
+*,*::before,*::after{box-sizing:border-box}
+[hidden]{display:none!important}
 /* Layout: app de una columna; templo arriba, contenido en pestañas y barra de navegación fija abajo */
 :root{
   --bg:#131b4a;
