@@ -210,6 +210,36 @@
    "file": "gato_dormido.png",
    "w": 512,
    "h": 355
+  },
+  "gato_caminar_1": {
+   "file": "gato_caminar_1.png",
+   "w": 280,
+   "h": 243
+  },
+  "gato_caminar_2": {
+   "file": "gato_caminar_2.png",
+   "w": 280,
+   "h": 243
+  },
+  "gato_caminar_3": {
+   "file": "gato_caminar_3.png",
+   "w": 280,
+   "h": 243
+  },
+  "gato_caminar_4": {
+   "file": "gato_caminar_4.png",
+   "w": 280,
+   "h": 243
+  },
+  "gato_caminar_5": {
+   "file": "gato_caminar_5.png",
+   "w": 280,
+   "h": 243
+  },
+  "gato_caminar_6": {
+   "file": "gato_caminar_6.png",
+   "w": 280,
+   "h": 243
   }
  }
 }

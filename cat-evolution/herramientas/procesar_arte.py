@@ -32,9 +32,18 @@ HOJAS = {
     'hoja_piramide': ['bloque_caliza', 'bloque_granito', 'bloque_lapislazuli', 'bloque_turquesa', 'bloque_oro', 'bloque_basalto', 'icono_piedra'],
     'hoja_egipto': ['esfinge', 'esfinge_piedra', 'sarcofago', 'altar', 'obelisco', 'estandarte', 'estanque', 'icono_ofrenda'],
     'hoja_casa_nieve': ['arbol_gato', 'canasta', 'plato', 'muneco_nieve', 'iglu', 'fogata'],
+    # hojas de animación: cuadros en orden
+    'hoja_caminar': ['gato_caminar_1', 'gato_caminar_2', 'gato_caminar_3', 'gato_caminar_4', 'gato_caminar_5', 'gato_caminar_6'],
+    'hoja_acicalar': ['gato_acicalar_1', 'gato_acicalar_2', 'gato_acicalar_3', 'gato_acicalar_4'],
+    'hoja_saltar': ['gato_saltar_1', 'gato_saltar_2', 'gato_saltar_3', 'gato_saltar_4'],
+    'hoja_comer': ['gato_comer_1', 'gato_comer_2', 'gato_comer_3'],
+    'hoja_jugar': ['gato_jugar_1', 'gato_jugar_2', 'gato_jugar_3', 'gato_jugar_4'],
 }
 # en la hoja caminan hacia la izquierda; el juego los usa mirando a la derecha
-ESPEJO = {'gato_lado_1', 'gato_lado_2'}
+ESPEJO = {'gato_lado_1', 'gato_lado_2', 'gato_caminar_2'}
+# cuadros de animación que deben quedar del mismo tamaño, alineados abajo y a la derecha (la nariz),
+# para que al pasarlos rápido la cabeza no tiemble
+ANIMACIONES = {'gato_caminar_': 6}
 
 # nombre: (tipo, tamaño máximo en px)
 #   recorte = quitar fondo blanco y recortar al objeto
@@ -66,6 +75,12 @@ ASSETS = {
     'gato_frente': ('recorte', 512), 'gato_lado_1': ('recorte', 512), 'gato_lado_2': ('recorte', 512),
     'gato_colgado': ('recorte', 512), 'gato_estira': ('recorte', 512), 'gato_acostado': ('recorte', 512),
     'gato_sentado_lado': ('recorte', 512), 'gato_agazapado': ('recorte', 512), 'gato_dormido': ('recorte', 512),
+    # cuadros de animación
+    **{f'gato_caminar_{i}': ('recorte', 512) for i in range(1, 7)},
+    **{f'gato_acicalar_{i}': ('recorte', 512) for i in range(1, 5)},
+    **{f'gato_saltar_{i}': ('recorte', 512) for i in range(1, 5)},
+    **{f'gato_comer_{i}': ('recorte', 512) for i in range(1, 4)},
+    **{f'gato_jugar_{i}': ('recorte', 512) for i in range(1, 5)},
 }
 CLAVE = (255, 0, 255)
 
@@ -174,6 +189,14 @@ def main():
             continue
         for nombre, pieza in zip(nombres, sueltas):
             piezas[nombre] = pieza.transpose(Image.FLIP_LEFT_RIGHT) if nombre in ESPEJO else pieza
+    for prefijo, n in ANIMACIONES.items():
+        cuadros = [piezas.get(f'{prefijo}{i}') for i in range(1, n + 1)]
+        if all(cuadros):
+            ancho, alto = max(c.width for c in cuadros), max(c.height for c in cuadros)
+            for i, c in enumerate(cuadros, start=1):
+                lienzo = Image.new('RGBA', (ancho, alto), (0, 0, 0, 0))
+                lienzo.paste(c, (ancho - c.width, alto - c.height), c)
+                piezas[f'{prefijo}{i}'] = lienzo
     for nombre, (tipo, tam) in ASSETS.items():
         if nombre in piezas and tipo in ('recorte', 'cuadro', 'par'):
             pieza = piezas[nombre]
