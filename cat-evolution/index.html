@@ -157,6 +157,65 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
 .game p{margin:0;color:var(--muted);line-height:1.45}
 .soon{justify-self:start;background:var(--bg);color:var(--gold);border-radius:99px;padding:3px 10px;font-size:.75rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
 
+/* Ofrendas (match-3): encabezado, metas, tablero de 8×8 con piezas que caen */
+.match{display:grid;gap:10px;padding-block:6px 20px}
+.mhead{display:flex;align-items:center;gap:10px}
+.mhead .back.confirm{background:var(--gold);color:var(--sand-ink)}
+.mtitle{flex:1;min-width:0;line-height:1.1}
+.mtitle small{display:block;color:var(--muted);font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;font-weight:800}
+.mtitle strong{font-family:var(--display);font-weight:400;font-size:1.4rem}
+.mmoves{text-align:center;background:var(--panel);border-radius:14px;padding:4px 14px}
+.mmoves b{display:block;font-family:var(--display);font-weight:400;font-size:1.7rem;line-height:1.1;font-variant-numeric:tabular-nums}
+.mmoves small{font-size:.68rem;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-weight:800}
+.mgoals{display:flex;gap:8px;flex-wrap:wrap}
+.mgoal{display:grid;grid-template-columns:34px auto;grid-template-rows:auto auto;column-gap:8px;align-items:center;background:var(--panel);border-radius:14px;padding:6px 12px 6px 6px}
+.mgoal svg{grid-row:span 2;width:34px;height:34px}
+.mgoal span{font-family:var(--display);font-size:1.3rem;line-height:1;font-variant-numeric:tabular-nums}
+.mgoal small{font-size:.72rem;color:var(--muted);font-weight:800}
+.mgoal.done{background:var(--turq);color:#08302b}
+.mgoal.done small{color:#08302b}
+.mstatus{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.mstars{display:flex;align-items:center;gap:2px;font-size:1.3rem;color:#4a5394}
+.mstars i{font-style:normal}
+.mstars i.on{color:var(--gold)}
+.mstars small{font-size:.72rem;color:var(--muted);margin-left:6px;font-weight:800}
+.mscore{font-weight:800;color:var(--muted)}
+.mscore b{color:var(--ink);font-variant-numeric:tabular-nums}
+.mboard{
+  position:relative;width:min(100%,max(280px,calc(100dvh - 310px)));aspect-ratio:1;margin-inline:auto;border-radius:16px;
+  background:#1a2360;touch-action:none;overflow:hidden;box-shadow:0 0 0 5px #c9a66b,0 0 0 8px #2a1f35,0 16px 36px rgba(0,0,0,.4);
+}
+.mcell{position:absolute;width:12.5%;height:12.5%}
+.mcell.alt{background:rgba(255,255,255,.05)}
+.mcell.sand{background:radial-gradient(circle at 30% 30%,#c79a52 0 6%,transparent 7%),radial-gradient(circle at 70% 65%,#c79a52 0 5%,transparent 6%),#e2bf7e;box-shadow:inset 0 0 0 2px #c9a66b}
+.mcell.swept{animation:swept .5s ease-out}
+.tile{position:absolute;left:0;top:0;width:12.5%;height:12.5%;padding:.6%;transition:transform .22s cubic-bezier(.3,.1,.3,1),opacity .22s;will-change:transform}
+.tile svg{width:100%;height:100%;display:block;pointer-events:none;filter:drop-shadow(0 2px 0 rgba(0,0,0,.25))}
+.tile.sel svg{animation:selp .7s ease-in-out infinite}
+.tile.pop{opacity:0}
+.tile.born svg{animation:born .4s cubic-bezier(.2,1.6,.4,1)}
+.tile.hint svg{animation:wiggle .5s ease-in-out 3}
+.blast{position:absolute;pointer-events:none;z-index:5;background:rgba(255,246,196,.85);border-radius:8px;animation:blast .55s ease-out forwards}
+.blast.h{left:0;width:100%;height:12.5%}
+.blast.v{top:0;height:100%;width:12.5%}
+.blast.b{width:37.5%;height:37.5%;border-radius:50%}
+.blast.r{width:12.5%;height:12.5%;border-radius:50%;background:radial-gradient(circle,#fff6c4,rgba(244,194,79,0));animation:ring .6s ease-out forwards}
+.mfloat{position:absolute;z-index:6;transform:translate(-50%,-50%);pointer-events:none;font-family:var(--display);font-size:1.2rem;color:#fff;text-shadow:0 2px 0 #2a1f35,0 0 6px #2a1f35;animation:mfloat 1s ease-out forwards;white-space:nowrap}
+.mfloat.big{font-size:1.7rem;color:var(--gold)}
+.mini-pieces{display:flex;gap:6px}
+.mini-pieces svg{width:34px;height:34px}
+.bigstars{display:flex;gap:6px;font-size:3rem;color:#4a5394;line-height:1}
+.bigstars i{font-style:normal}
+.bigstars i.on{color:var(--gold);animation:pop .5s cubic-bezier(.2,1.5,.4,1) both}
+@keyframes selp{50%{transform:scale(1.12)}}
+@keyframes born{from{transform:scale(.4)}to{transform:none}}
+@keyframes wiggle{25%{transform:rotate(-12deg)}75%{transform:rotate(12deg)}}
+@keyframes blast{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(1.15)}}
+@keyframes ring{from{opacity:1;transform:scale(1)}to{opacity:0;transform:scale(9)}}
+@keyframes mfloat{0%{opacity:0;transform:translate(-50%,-30%) scale(.7)}20%{opacity:1;transform:translate(-50%,-60%) scale(1)}100%{opacity:0;transform:translate(-50%,-140%)}}
+@keyframes swept{from{background:#fff6c4}to{background:transparent}}
+@media (prefers-reduced-motion:reduce){.tile{transition:none}.tile.sel svg,.tile.born svg,.tile.hint svg,.blast,.mfloat,.bigstars i.on,.mcell.swept{animation:none}}
+
 /* Navegación */
 .tabs{
   position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;justify-content:center;
@@ -227,14 +286,8 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
   <main>
     <section id="tab-templo"></section>
     <section id="tab-gatos" hidden></section>
-    <section id="tab-juegos" hidden>
-      <div class="block">
-        <h2>Juegos del templo</h2>
-        <div class="game"><span class="soon">Próximamente</span><b>Ofrendas</b><p>Estilo Candy Crush: junta 3 o más escarabajos, ojos de Horus o pescados. Ganas ofrendas para despertar estatuas y criar gatitos, y a veces una estatua de premio.</p></div>
-        <div class="game"><span class="soon">Próximamente</span><b>Pirámide</b><p>Estilo Encaja: acomoda bloques de piedra. Ganas piedra para agrandar el templo con más sarcófagos y más espacio para gatos.</p></div>
-        <div class="game"><span class="soon">Después</span><b>Poderes de tus gatos</b><p>Cada gato te ayudará en los juegos según sus mutaciones. Los legendarios tendrán los poderes más fuertes.</p></div>
-      </div>
-    </section>
+    <section id="tab-juegos" hidden></section>
+    <section id="tab-match" class="match" hidden></section>
   </main>
 </div>
 
@@ -256,7 +309,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
 (() => {
   'use strict';
   // ================= Reglas del juego (valores de prueba) =================
-  const COST = { awaken: 15, breed: 10, dig: 30 };
+  const COST = { awaken: 15, breed: 10, dig: 50 };
   const ALTAR = { everyMs: 4000, cap: 40 };            // 1 ofrenda cada 4 s, máximo 40 guardadas
   const INCUBATE = { comun: 15, raro: 40, epico: 90, legend: 180 }; // segundos (en el juego final serían horas)
   const MUT_RATE = 0.14;                                // probabilidad de mutación por gen
@@ -507,7 +560,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
   const KEY = 'catevolution.v1';
   const SPHINX = { fur: 'arena', pat: 'liso', eyes: 'kohl', acc: 'nemes' };
   function freshState() {
-    return { v: 1, sphinxAwake: false, ofrendas: 0, altarAt: Date.now(), cats: [], slots: [null, null], found: [], births: 0, nextId: 1, tab: 'templo', tip: 0 };
+    return { v: 1, sphinxAwake: false, ofrendas: 0, altarAt: Date.now(), cats: [], slots: [null, null], found: [], births: 0, nextId: 1, tab: 'templo', tip: 0, match: { level: 1, best: {} } };
   }
   let S = freshState();
   function load() { try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && d.v === 1 && Array.isArray(d.cats)) return d; } catch (e) {} return null; }
@@ -568,6 +621,9 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     rumble() { for (let i = 0; i < 6; i++) tone(70 + Math.random() * 40, i * .12, .16, 'sawtooth', .05); },
     awake() { [392, 523, 659, 784].forEach((f, i) => tone(f, .05 + i * .07, .3, 'triangle', .08)); },
     meow() { if (!actx) return; const t = actx.currentTime, o = actx.createOscillator(), g = actx.createGain(); o.type = 'triangle'; o.frequency.setValueAtTime(620, t); o.frequency.linearRampToValueAtTime(900, t + .12); o.frequency.linearRampToValueAtTime(520, t + .4); g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(.12, t + .04); g.gain.exponentialRampToValueAtTime(.0001, t + .45); o.connect(g).connect(actx.destination); o.start(t); o.stop(t + .5); },
+    pop(casc, fired) { const f = 520 + Math.min(casc, 8) * 90; tone(f, 0, .09, 'triangle', .08); tone(f * 1.5, .04, .08, 'sine', .05); if (fired) { tone(160, 0, .25, 'sawtooth', .06); tone(1200, .02, .2, 'square', .03); } },
+    deny() { tone(150, 0, .14, 'square', .05); },
+    fail() { [330, 262, 196].forEach((f, i) => tone(f, i * .12, .28, 'sawtooth', .04)); },
     legend() { [523, 659, 784, 1047, 1319, 1568].forEach((f, i) => tone(f, i * .08, .35, 'triangle', .08)); },
   };
 
@@ -578,6 +634,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     if (S.slots.some(s => s && Date.now() >= s.readyAt)) return '¡Un sarcófago está listo! Tócalo para ver al gatito que nació.';
     if (awake.length < 2 && statues.length) return `Toca las estatuas del templo para despertarlas. Cuesta ${COST.awaken} ofrendas cada una.`;
     if (statues.length > SPOTS.statues.length) return `Tienes ${statues.length - SPOTS.statues.length} estatuas más guardadas en la pestaña Gatos.`;
+    if (S.ofrendas < COST.breed && altarAmount() < COST.breed) return '¿Te faltan ofrendas? Juega Ofrendas: cada nivel da ofrendas y los niveles pares regalan una estatua.';
     if (!S.births && !busy.length) return '¡Ya tienes dos gatos despiertos! Toca "Criar gatitos" y elige a los dos padres.';
     if (!S.births && busy.length) return 'Mientras más raro sea el bebé, más tarda en despertar. Si el sarcófago brilla, viene algo especial.';
     const tips = [
@@ -585,7 +642,8 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
       'Si cruzas dos gatos con mutaciones de la misma familia, es más fácil que salga otra de esa familia.',
       `Hay ${Object.keys(MUT_FAMILY).length} mutaciones en 3 familias: Elegante, Egipcia y Mística. ¿Las encontrarás todas?`,
       'Un gato con 3 o más mutaciones es Legendario.',
-      'Si se te acaban las ofrendas, el altar junta más con el tiempo.',
+      'Si se te acaban las ofrendas, juega Ofrendas o espera a que el altar junte más.',
+      'En Ofrendas, 5 piezas en línea crean al Gato de Bastet: borra todas las piezas de un tipo.',
     ];
     return tips[S.tip % tips.length];
   }
@@ -690,9 +748,10 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
       </div>
       ${S.sphinxAwake ? `<div class="actions temple-actions">
         <button class="btn turq" id="btn-breed" type="button">Criar gatitos · ${COST.breed}</button>
-        <button class="btn" id="btn-dig" type="button">Excavar estatua · ${COST.dig}</button>
+        <button class="btn gold" id="btn-play" type="button">Jugar Ofrendas</button>
+        <button class="btn" id="btn-dig" type="button" style="grid-column:1/-1">Excavar estatua · ${COST.dig}</button>
       </div>` : ''}`;
-    if (S.sphinxAwake) { $('btn-breed').addEventListener('click', openBreed); $('btn-dig').addEventListener('click', dig); }
+    if (S.sphinxAwake) { $('btn-breed').addEventListener('click', openBreed); $('btn-dig').addEventListener('click', dig); $('btn-play').addEventListener('click', () => openMatch(S.match.level)); }
     buildWorld();
     tickTemplo();
   }
@@ -1032,6 +1091,517 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     }, 1000);
   }
 
+  // ================= Motor de Ofrendas (match-3), sin DOM para poder probarlo =================
+  // Pieza = { k: tipo 0..4 (−1 = Gato de Bastet), sp: null | 'h' (fila) | 'v' (columna) | 'b' (explosión 3×3) | 'r' (Bastet) }
+  const MN = 8, NK = 5;
+  function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+
+  function findGroups(g) {
+    const runs = [];
+    for (let r = 0; r < MN; r++) {
+      let c = 0;
+      while (c < MN) {
+        const t = g[r * MN + c];
+        if (!t || t.k < 0) { c++; continue; }
+        let e = c + 1;
+        while (e < MN && g[r * MN + e] && g[r * MN + e].k === t.k) e++;
+        if (e - c >= 3) runs.push({ dir: 'h', k: t.k, cells: Array.from({ length: e - c }, (_, i) => r * MN + c + i) });
+        c = e;
+      }
+    }
+    for (let c = 0; c < MN; c++) {
+      let r = 0;
+      while (r < MN) {
+        const t = g[r * MN + c];
+        if (!t || t.k < 0) { r++; continue; }
+        let e = r + 1;
+        while (e < MN && g[e * MN + c] && g[e * MN + c].k === t.k) e++;
+        if (e - r >= 3) runs.push({ dir: 'v', k: t.k, cells: Array.from({ length: e - r }, (_, i) => (r + i) * MN + c) });
+        r = e;
+      }
+    }
+    const groups = [], owner = new Map();
+    for (const run of runs) {
+      let gp = null;
+      for (const i of run.cells) if (owner.has(i)) { gp = owner.get(i); break; }
+      if (!gp) { gp = { k: run.k, cells: new Set(), runs: [] }; groups.push(gp); }
+      gp.runs.push(run);
+      run.cells.forEach(i => { gp.cells.add(i); owner.set(i, gp); });
+    }
+    return groups;
+  }
+
+  function specialFor(gp) {
+    const maxLen = Math.max(...gp.runs.map(r => r.cells.length));
+    const hasH = gp.runs.some(r => r.dir === 'h'), hasV = gp.runs.some(r => r.dir === 'v');
+    if (maxLen >= 5) return 'r';
+    if (hasH && hasV) return 'b';
+    if (maxLen === 4) return gp.runs.find(r => r.cells.length === 4).dir;
+    return null;
+  }
+
+  function mostCommonKind(g) {
+    const n = new Array(NK).fill(0);
+    g.forEach(t => { if (t && t.k >= 0) n[t.k]++; });
+    return n.indexOf(Math.max(...n));
+  }
+
+  function hasMatchAfterSwap(g, a, b) {
+    const t = g[a]; g[a] = g[b]; g[b] = t;
+    const ok = findGroups(g).length > 0;
+    g[b] = g[a]; g[a] = t;
+    return ok;
+  }
+  function validMoves(g) {
+    const out = [];
+    for (let i = 0; i < MN * MN; i++) {
+      const r = Math.floor(i / MN), c = i % MN;
+      for (const j of [c + 1 < MN ? i + 1 : -1, r + 1 < MN ? i + MN : -1]) {
+        if (j < 0 || !g[i] || !g[j]) continue;
+        if (g[i].sp === 'r' || g[j].sp === 'r' || (g[i].sp && g[j].sp) || hasMatchAfterSwap(g, i, j)) out.push([i, j]);
+      }
+    }
+    return out;
+  }
+
+  function newGrid(rng) {
+    for (;;) {
+      const g = new Array(MN * MN).fill(null);
+      for (let i = 0; i < MN * MN; i++) {
+        const r = Math.floor(i / MN), c = i % MN;
+        let k;
+        do { k = Math.floor(rng() * NK); }
+        while ((c >= 2 && g[i - 1].k === k && g[i - 2].k === k) || (r >= 2 && g[i - MN].k === k && g[i - 2 * MN].k === k));
+        g[i] = { k, sp: null };
+      }
+      if (validMoves(g).length) return g;
+    }
+  }
+
+  function shuffleGrid(g, rng) {
+    const tiles = g.filter(Boolean);
+    for (let tries = 0; tries < 200; tries++) {
+      for (let i = tiles.length - 1; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [tiles[i], tiles[j]] = [tiles[j], tiles[i]]; }
+      tiles.forEach((t, i) => { g[i] = t; });
+      if (!findGroups(g).length && validMoves(g).length) return true;
+    }
+    const fresh = newGrid(rng); fresh.forEach((t, i) => { g[i] = t; });
+    return true;
+  }
+
+  // Intenta un intercambio. Devuelve null si no hace nada, o el primer paso de la jugada.
+  function trySwap(g, a, b) {
+    const A = g[a], B = g[b];
+    if (!A || !B) return null;
+    if (A.sp === 'r' || B.sp === 'r') {
+      g[a] = B; g[b] = A;
+      if (A.sp === 'r' && B.sp === 'r') return { forced: new Set(g.map((_, i) => i)) };
+      const ri = A.sp === 'r' ? b : a;
+      g[ri]._target = (A.sp === 'r' ? B : A).k;
+      return { forced: new Set([ri]) };
+    }
+    g[a] = B; g[b] = A;
+    if (A.sp && B.sp) return { forced: new Set([a, b]) };
+    if (findGroups(g).length) return { swapPair: [a, b] };
+    g[a] = A; g[b] = B;
+    return null;
+  }
+
+  // Un paso de cascada: borra grupos (y lo que disparan los especiales), crea especiales, aplica gravedad y rellena.
+  function resolveStep(g, rng, swapPair, forced) {
+    const groups = forced ? [] : findGroups(g);
+    if (!groups.length && !forced) return null;
+    const clear = new Set(forced || []);
+    const created = [];
+    for (const gp of groups) {
+      const sp = specialFor(gp);
+      let pivot = null;
+      if (sp) {
+        pivot = swapPair ? swapPair.find(i => gp.cells.has(i)) : undefined;
+        if (pivot === undefined) {
+          if (sp === 'b') {
+            const hCells = new Set(gp.runs.filter(r => r.dir === 'h').flatMap(r => r.cells));
+            pivot = gp.runs.filter(r => r.dir === 'v').flatMap(r => r.cells).find(i => hCells.has(i));
+          }
+          if (pivot === undefined) {
+            const run = gp.runs.reduce((a, b) => (b.cells.length > a.cells.length ? b : a));
+            pivot = run.cells[Math.floor(run.cells.length / 2)];
+          }
+        }
+        created.push({ i: pivot, k: sp === 'r' ? -1 : gp.k, sp, was: g[pivot] ? g[pivot].k : gp.k });
+      }
+      gp.cells.forEach(i => { if (i !== pivot) clear.add(i); });
+    }
+    const createdAt = new Set(created.map(c => c.i));
+    const queue = [...clear], fired = [];
+    while (queue.length) {
+      const i = queue.pop(), t = g[i];
+      if (!t || !t.sp || t._fired) continue;
+      t._fired = true;
+      fired.push({ i, sp: t.sp });
+      const r = Math.floor(i / MN), c = i % MN, area = [];
+      if (t.sp === 'h') for (let x = 0; x < MN; x++) area.push(r * MN + x);
+      if (t.sp === 'v') for (let y = 0; y < MN; y++) area.push(y * MN + c);
+      if (t.sp === 'b') for (let y = r - 1; y <= r + 1; y++) for (let x = c - 1; x <= c + 1; x++) if (y >= 0 && y < MN && x >= 0 && x < MN) area.push(y * MN + x);
+      if (t.sp === 'r') { const kk = t._target !== undefined ? t._target : mostCommonKind(g); g.forEach((u, j) => { if (u && u.k === kk) area.push(j); }); }
+      for (const j of area) if (!clear.has(j) && !createdAt.has(j)) { clear.add(j); queue.push(j); }
+    }
+    const cleared = [...clear].filter(i => g[i]).map(i => ({ i, k: g[i].k, sp: g[i].sp }));
+    for (const i of clear) g[i] = null;
+    for (const cr of created) g[cr.i] = { k: cr.k, sp: cr.sp };
+    const moves = [], spawns = [];
+    for (let c = 0; c < MN; c++) {
+      let w = MN - 1;
+      for (let r = MN - 1; r >= 0; r--) {
+        const i = r * MN + c;
+        if (g[i]) { if (r !== w) { g[w * MN + c] = g[i]; g[i] = null; moves.push({ from: i, to: w * MN + c }); } w--; }
+      }
+      const gap = w + 1;
+      for (let r = w; r >= 0; r--) { g[r * MN + c] = { k: Math.floor(rng() * NK), sp: null }; spawns.push({ i: r * MN + c, drop: gap }); }
+    }
+    return { cleared, created, fired, moves, spawns };
+  }
+
+  // Niveles generados: metas "junta piezas" o "limpia la arena" (cada 3er nivel)
+  const SAND_SHAPES = [
+    (r, c) => r >= 2 && r <= 5 && c >= 2 && c <= 5,
+    (r, c) => r === c || r + c === MN - 1,
+    (r, c) => r >= 5,
+    (r, c) => r === 0 || r === MN - 1 || c === 0 || c === MN - 1,
+    (r, c) => (r + c) % 2 === 0 && r >= 1 && r <= 6,
+  ];
+  function levelDef(n) {
+    const rng = mulberry32(n * 9301 + 49297);
+    const moves = Math.max(16, 24 - Math.floor(n / 2));
+    if (n >= 3 && n % 3 === 0) {
+      const f = SAND_SHAPES[(n / 3 - 1) % SAND_SHAPES.length];
+      const sand = [];
+      for (let r = 0; r < MN; r++) for (let c = 0; c < MN; c++) if (f(r, c)) sand.push(r * MN + c);
+      return { n, moves: moves + 6, goal: 'sand', sand };
+    }
+    const kinds = n < 4 ? 1 : 2;
+    const picks = [];
+    while (picks.length < kinds) { const k = Math.floor(rng() * NK); if (!picks.includes(k)) picks.push(k); }
+    const need = {};
+    picks.forEach(k => { need[k] = kinds === 1 ? Math.min(30, 12 + 2 * n) : Math.min(32, 10 + 2 * n); });
+    return { n, moves, goal: 'collect', need };
+  }
+  const starsFor = (left, total) => (left / total >= .3 ? 3 : left / total >= .12 ? 2 : 1);
+
+  // ================= Ofrendas: piezas, pantalla y animaciones =================
+  const MK = [
+    { name: 'Escarabajo', plural: 'escarabajos' },
+    { name: 'Ojo de Horus', plural: 'ojos de Horus' },
+    { name: 'Pescado', plural: 'pescados' },
+    { name: 'Ankh', plural: 'ankhs' },
+    { name: 'Loto', plural: 'lotos' },
+  ];
+  function pieceArt(k) {
+    const ink = '#2a1f35';
+    if (k === 0) return `<path d="M30 34L16 24M70 34l14-10M28 56H10M72 56h18M30 76L16 88M70 76l14 12" stroke="${ink}" stroke-width="5" stroke-linecap="round"/><ellipse cx="50" cy="58" rx="27" ry="31" fill="#2fc6a0" stroke="${ink}" stroke-width="4"/><path d="M50 30v58" stroke="${ink}" stroke-width="3"/><circle cx="50" cy="24" r="11" fill="#1d8f74" stroke="${ink}" stroke-width="4"/><ellipse cx="39" cy="48" rx="6" ry="11" fill="#fff" opacity=".45"/>`;
+    if (k === 1) return `<path d="M42 70l-8 20M56 70q2 16 18 18" stroke="${ink}" stroke-width="12" fill="none" stroke-linecap="round"/><path d="M42 70l-8 20M56 70q2 16 18 18" stroke="#4a78ea" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M8 46Q50 10 92 46Q50 82 8 46Z" fill="#fff" stroke="${ink}" stroke-width="5" stroke-linejoin="round"/><circle cx="50" cy="46" r="17" fill="#4a78ea" stroke="${ink}" stroke-width="4"/><circle cx="50" cy="46" r="7" fill="${ink}"/><circle cx="56" cy="40" r="4" fill="#fff"/><path d="M12 28Q50 2 88 28" stroke="${ink}" stroke-width="6" fill="none" stroke-linecap="round"/>`;
+    if (k === 2) return `<path d="M72 50L94 28V72Z" fill="#ff8a4c" stroke="${ink}" stroke-width="4" stroke-linejoin="round"/><path d="M8 50Q40 16 78 50Q40 84 8 50Z" fill="#ff8a4c" stroke="${ink}" stroke-width="4"/><circle cx="25" cy="46" r="5" fill="${ink}"/><path d="M46 36q8 14 0 28M58 38q7 12 0 24" stroke="#c4561f" stroke-width="4" fill="none" stroke-linecap="round"/><ellipse cx="38" cy="37" rx="10" ry="4" fill="#fff" opacity=".5"/>`;
+    if (k === 3) return `<path d="M50 46C34 46 31 12 50 12C69 12 66 46 50 46ZM50 46V90M24 56H76" stroke="${ink}" stroke-width="20" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M50 46C34 46 31 12 50 12C69 12 66 46 50 46ZM50 46V90M24 56H76" stroke="#f4c24f" stroke-width="11" fill="none" stroke-linecap="round" stroke-linejoin="round"/><path d="M43 22q4-5 8-5" stroke="#fff6c4" stroke-width="4" fill="none" stroke-linecap="round"/>`;
+    return `<path d="M18 88Q50 98 82 88" stroke="${ink}" stroke-width="11" fill="none" stroke-linecap="round"/><path d="M18 88Q50 98 82 88" stroke="#3f9b5a" stroke-width="6" fill="none" stroke-linecap="round"/><path d="M50 84C26 84 8 64 12 42C32 46 46 62 50 84Z" fill="#c94fb8" stroke="${ink}" stroke-width="4" stroke-linejoin="round"/><path d="M50 84C74 84 92 64 88 42C68 46 54 62 50 84Z" fill="#c94fb8" stroke="${ink}" stroke-width="4" stroke-linejoin="round"/><path d="M50 84C30 70 28 40 50 14C72 40 70 70 50 84Z" fill="#ec6fd8" stroke="${ink}" stroke-width="4" stroke-linejoin="round"/><ellipse cx="44" cy="44" rx="4" ry="12" fill="#fff" opacity=".45"/>`;
+  }
+  function bastetArt() {
+    const ink = '#2a1f35', cols = ['#2fc6a0', '#4a78ea', '#ff8a4c', '#f4c24f', '#ec6fd8'];
+    const ring = cols.map((c, i) => `<circle cx="50" cy="52" r="42" fill="none" stroke="${c}" stroke-width="8" stroke-dasharray="52.8 211.1" stroke-dashoffset="${-i * 52.8}"/>`).join('');
+    return `${ring}<path d="M26 44L28 16L44 32ZM74 44L72 16L56 32Z" fill="#f4c24f" stroke="${ink}" stroke-width="4" stroke-linejoin="round"/><circle cx="50" cy="54" r="26" fill="#f4c24f" stroke="${ink}" stroke-width="4"/><path d="M36 50q5-4 10 0M54 50q5-4 10 0" stroke="${ink}" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M46 60h8l-4 5z" fill="#ef7f98"/><path d="M40 40q10-6 20 0" stroke="#1f5fbf" stroke-width="4" fill="none" stroke-linecap="round"/>`;
+  }
+  const TILE_CACHE = {};
+  function pieceSVG(k, sp) {
+    const key = k + '|' + (sp || '');
+    if (TILE_CACHE[key]) return TILE_CACHE[key];
+    const ink = '#2a1f35';
+    let back = '', front = '';
+    if (sp === 'h' || sp === 'v') {
+      const rot = sp === 'v' ? ' transform="rotate(90 50 50)"' : '';
+      back = `<rect x="0" y="40" width="100" height="20" rx="10" fill="#fff" opacity=".55"${rot}/>`;
+      front = `<path d="M2 50l14-12v24zM98 50l-14-12v24z" fill="#fff" stroke="${ink}" stroke-width="3" stroke-linejoin="round"${rot}/>`;
+    }
+    if (sp === 'b') {
+      back = `<circle cx="50" cy="50" r="48" fill="#ffe08a" opacity=".55"/><circle cx="50" cy="50" r="48" fill="none" stroke="#fff6c4" stroke-width="4" stroke-dasharray="6 8"/>`;
+      front = `<path d="M84 8l3 8 8 3-8 3-3 8-3-8-8-3 8-3z" fill="#fff" stroke="${ink}" stroke-width="2"/>`;
+    }
+    return (TILE_CACHE[key] = `<svg viewBox="0 0 100 100" aria-hidden="true">${back}${k >= 0 ? pieceArt(k) : bastetArt()}${front}</svg>`);
+  }
+  const sandIcon = `<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="8" y="8" width="84" height="84" rx="18" fill="#e2bf7e" stroke="#2a1f35" stroke-width="5"/><circle cx="32" cy="34" r="5" fill="#c79a52"/><circle cx="64" cy="30" r="4" fill="#c79a52"/><circle cx="50" cy="58" r="6" fill="#c79a52"/><circle cx="28" cy="70" r="4" fill="#c79a52"/><circle cx="72" cy="68" r="5" fill="#c79a52"/></svg>`;
+
+  let M = null;   // partida en curso
+  const wait = ms => new Promise(r => setTimeout(r, reduceMotion ? Math.min(ms, 60) : ms));
+  function place(el, i, scale) {
+    if (!el) return;
+    el.style.transform = `translate(${(i % MN) * 100}%, ${Math.floor(i / MN) * 100}%)${scale ? ` scale(${scale})` : ''}`;
+  }
+  function makeTile(t, i, fromRow) {
+    const el = document.createElement('div');
+    el.className = 'tile';
+    el.innerHTML = pieceSVG(t.k, t.sp);
+    $('mboard').appendChild(el);
+    if (fromRow !== undefined) {
+      el.style.transition = 'none';
+      el.style.transform = `translate(${(i % MN) * 100}%, ${fromRow * 100}%)`;
+      void el.offsetWidth;
+      el.style.transition = '';
+    }
+    place(el, i);
+    return el;
+  }
+
+  function openMatch(n) {
+    ensureAudio();
+    const def = levelDef(n);
+    M = { n, def, rng: mulberry32((Date.now() ^ (n * 7919)) >>> 0), moves: def.moves, score: 0, busy: false, sel: -1, drag: null,
+      left: { ...(def.need || {}) }, sand: new Set(def.sand || []), els: new Array(MN * MN).fill(null), cells: [], hintTimer: 0, exitArmed: false };
+    M.grid = newGrid(M.rng);
+    ['templo', 'gatos', 'juegos'].forEach(t => { $('tab-' + t).hidden = true; });
+    $('tabs').hidden = true;
+    const el = $('tab-match');
+    el.hidden = false;
+    el.innerHTML = `
+      <div class="mhead">
+        <button class="back" id="m-exit" type="button">‹ Salir</button>
+        <div class="mtitle"><small>Ofrendas</small><strong>Nivel ${n}</strong></div>
+        <div class="mmoves"><b id="m-moves">${M.moves}</b><small>movs.</small></div>
+      </div>
+      <div class="mgoals" id="m-goals"></div>
+      <div class="mstatus"><span class="mstars" id="m-stars"></span><span class="mscore">Puntos <b id="m-score">0</b></span></div>
+      <div class="mboard" id="mboard"></div>
+      <p class="note" id="m-note">${def.goal === 'sand' ? 'Haz combinaciones encima de la arena para limpiarla toda.' : 'Desliza una pieza hacia su vecina para cambiarlas de lugar. Junta 3 o más iguales.'}</p>`;
+    const board = $('mboard');
+    for (let i = 0; i < MN * MN; i++) {
+      const c = document.createElement('div');
+      c.className = 'mcell' + (((i % MN) + Math.floor(i / MN)) % 2 ? ' alt' : '') + (M.sand.has(i) ? ' sand' : '');
+      c.style.left = (i % MN) * 12.5 + '%'; c.style.top = Math.floor(i / MN) * 12.5 + '%';
+      board.appendChild(c); M.cells.push(c);
+    }
+    M.grid.forEach((t, i) => { M.els[i] = makeTile(t, i); });
+    board.addEventListener('pointerdown', onBoardDown);
+    board.addEventListener('pointermove', onBoardMove);
+    board.addEventListener('pointerup', onBoardUp);
+    board.addEventListener('pointercancel', () => { if (M) M.drag = null; });
+    $('m-exit').addEventListener('click', exitMatch);
+    updateMatchHud();
+    scheduleHint();
+    window.scrollTo(0, 0);
+  }
+
+  function exitMatch() {
+    if (!M) return;
+    const btn = $('m-exit');
+    if (M.moves < M.def.moves && !M.over && !M.exitArmed) {
+      M.exitArmed = true; btn.textContent = '¿Salir? Pierdes el nivel'; btn.classList.add('confirm');
+      setTimeout(() => { if (M && btn.isConnected) { M.exitArmed = false; btn.textContent = '‹ Salir'; btn.classList.remove('confirm'); } }, 2500);
+      return;
+    }
+    closeMatch();
+  }
+  function closeMatch(tab) {
+    if (M) clearTimeout(M.hintTimer);
+    M = null;
+    $('tab-match').hidden = true; $('tab-match').innerHTML = '';
+    $('tabs').hidden = false;
+    showTab(tab || S.tab || 'juegos');
+  }
+
+  function updateMatchHud() {
+    if (!M) return;
+    $('m-moves').textContent = M.moves;
+    $('m-score').textContent = M.score;
+    const goals = M.def.goal === 'sand'
+      ? `<div class="mgoal${M.sand.size ? '' : ' done'}">${sandIcon}<span>${M.sand.size ? M.sand.size : '✓'}</span><small>arena</small></div>`
+      : Object.keys(M.left).map(k => `<div class="mgoal${M.left[k] > 0 ? '' : ' done'}">${pieceSVG(Number(k))}<span>${M.left[k] > 0 ? M.left[k] : '✓'}</span><small>${MK[k].plural}</small></div>`).join('');
+    $('m-goals').innerHTML = goals;
+    const st = starsFor(M.moves, M.def.moves);
+    $('m-stars').innerHTML = [1, 2, 3].map(i => `<i class="${i <= st ? 'on' : ''}">★</i>`).join('') + '<small>si ganas ya</small>';
+  }
+
+  // ---- Entrada: deslizar o tocar dos piezas vecinas ----
+  function cellAt(e) {
+    const b = $('mboard').getBoundingClientRect();
+    const c = Math.floor((e.clientX - b.left) / b.width * MN), r = Math.floor((e.clientY - b.top) / b.height * MN);
+    return r < 0 || c < 0 || r >= MN || c >= MN ? -1 : r * MN + c;
+  }
+  function onBoardDown(e) {
+    ensureAudio();
+    if (!M || M.busy) return;
+    const i = cellAt(e); if (i < 0) return;
+    M.drag = { i, x: e.clientX, y: e.clientY };
+    try { $('mboard').setPointerCapture(e.pointerId); } catch (err) {}
+  }
+  function onBoardMove(e) {
+    if (!M || !M.drag || M.busy) return;
+    const dx = e.clientX - M.drag.x, dy = e.clientY - M.drag.y;
+    const size = $('mboard').getBoundingClientRect().width / MN;
+    if (Math.max(Math.abs(dx), Math.abs(dy)) < size * .35) return;
+    const i = M.drag.i, r = Math.floor(i / MN), c = i % MN;
+    let j = -1;
+    if (Math.abs(dx) > Math.abs(dy)) j = dx > 0 ? (c < MN - 1 ? i + 1 : -1) : (c > 0 ? i - 1 : -1);
+    else j = dy > 0 ? (r < MN - 1 ? i + MN : -1) : (r > 0 ? i - MN : -1);
+    M.drag = null; setSel(-1);
+    if (j >= 0) doSwap(i, j);
+  }
+  function onBoardUp(e) {
+    if (!M || !M.drag || M.busy) return;
+    const i = M.drag.i; M.drag = null;
+    if (M.sel < 0) { setSel(i); return; }
+    const a = M.sel, ra = Math.floor(a / MN), rb = Math.floor(i / MN);
+    const adj = (ra === rb && Math.abs(a - i) === 1) || Math.abs(a - i) === MN;
+    setSel(-1);
+    if (adj) doSwap(a, i); else if (a !== i) setSel(i);
+  }
+  function setSel(i) {
+    if (M.sel >= 0 && M.els[M.sel]) M.els[M.sel].classList.remove('sel');
+    M.sel = i;
+    if (i >= 0 && M.els[i]) M.els[i].classList.add('sel');
+  }
+  function scheduleHint() {
+    clearTimeout(M.hintTimer);
+    const mm = M;
+    M.hintTimer = setTimeout(() => {
+      if (M !== mm || M.busy) return;
+      const mv = validMoves(M.grid)[0]; if (!mv) return;
+      mv.forEach(i => { const el = M.els[i]; if (el) { el.classList.remove('hint'); void el.offsetWidth; el.classList.add('hint'); } });
+      scheduleHint();
+    }, 7000);
+  }
+
+  // ---- Jugada ----
+  async function doSwap(a, b) {
+    if (!M || M.busy || M.over) return;
+    M.busy = true; clearTimeout(M.hintTimer);
+    const mm = M, ea = M.els[a], eb = M.els[b];
+    const res = trySwap(M.grid, a, b);
+    if (!res) {
+      place(ea, b); place(eb, a); await wait(170);
+      place(ea, a); place(eb, b); await wait(170);
+      sfx.deny(); if (M === mm) { M.busy = false; scheduleHint(); }
+      return;
+    }
+    M.els[a] = eb; M.els[b] = ea; place(eb, a); place(ea, b);
+    await wait(180);
+    if (M !== mm) return;
+    M.moves--; updateMatchHud();
+    let step = resolveStep(M.grid, M.rng, res.swapPair, res.forced), casc = 1;
+    while (step && M === mm) { await animateStep(step, casc++); step = resolveStep(M.grid, M.rng, null, null); }
+    if (M !== mm) return;
+    if (matchWon()) { await wait(250); finishMatch(true); return; }
+    if (M.moves <= 0) { await wait(250); finishMatch(false); return; }
+    if (!validMoves(M.grid).length) {
+      toast('No quedan jugadas: revolviendo el tablero');
+      shuffleGrid(M.grid, M.rng);
+      M.els.forEach(el => el && el.remove());
+      M.grid.forEach((t, i) => { M.els[i] = makeTile(t, i, Math.floor(i / MN) - MN); });
+      await wait(300);
+    }
+    M.busy = false; scheduleHint();
+  }
+  const matchWon = () => (M.def.goal === 'sand' ? M.sand.size === 0 : Object.values(M.left).every(v => v <= 0));
+
+  async function animateStep(st, casc) {
+    const board = $('mboard');
+    st.fired.forEach(f => blastFx(f));
+    let sumR = 0, sumC = 0;
+    st.cleared.forEach(c => {
+      const el = M.els[c.i];
+      if (el) { el.classList.add('pop'); place(el, c.i, .2); setTimeout(() => el.remove(), 240); }
+      M.els[c.i] = null;
+      if (M.left[c.k] > 0) M.left[c.k]--;
+      clearSand(c.i);
+      sumR += Math.floor(c.i / MN); sumC += c.i % MN;
+    });
+    st.created.forEach(c => {
+      clearSand(c.i);
+      const el = M.els[c.i];
+      if (el) { el.innerHTML = pieceSVG(c.k, c.sp); el.classList.remove('born'); void el.offsetWidth; el.classList.add('born'); }
+    });
+    const gained = st.cleared.length * 10 * casc + st.created.length * 30;
+    M.score += gained;
+    if (st.cleared.length) floatText(`+${gained}`, sumC / st.cleared.length, sumR / st.cleared.length);
+    if (casc >= 2) floatText(casc >= 4 ? `¡Increíble ×${casc}!` : `¡Combo ×${casc}!`, 3.5, 3.5, true);
+    sfx.pop(casc, st.fired.length);
+    if (st.fired.length || casc >= 3) buzz(st.fired.length ? [20, 30, 20] : 12);
+    updateMatchHud();
+    await wait(240);
+    if (!M || !board.isConnected) return;
+    st.moves.forEach(m => { const el = M.els[m.from]; M.els[m.to] = el; M.els[m.from] = null; place(el, m.to); });
+    st.spawns.forEach(s => { M.els[s.i] = makeTile(M.grid[s.i], s.i, Math.floor(s.i / MN) - s.drop); });
+    await wait(260);
+  }
+  function clearSand(i) {
+    if (!M.sand.has(i)) return;
+    M.sand.delete(i);
+    const c = M.cells[i]; c.classList.remove('sand'); c.classList.add('swept');
+  }
+  function blastFx(f) {
+    const board = $('mboard'), d = document.createElement('div');
+    const r = Math.floor(f.i / MN), c = f.i % MN;
+    d.className = 'blast ' + f.sp;
+    if (f.sp === 'h') { d.style.top = r * 12.5 + '%'; }
+    if (f.sp === 'v') { d.style.left = c * 12.5 + '%'; }
+    if (f.sp === 'b') { d.style.left = (c - 1) * 12.5 + '%'; d.style.top = (r - 1) * 12.5 + '%'; }
+    if (f.sp === 'r') { d.style.left = c * 12.5 + '%'; d.style.top = r * 12.5 + '%'; }
+    board.appendChild(d); setTimeout(() => d.remove(), 600);
+  }
+  function floatText(txt, c, r, big) {
+    const board = $('mboard'); if (!board) return;
+    const d = document.createElement('div');
+    d.className = 'mfloat' + (big ? ' big' : '');
+    d.textContent = txt;
+    d.style.left = (c + .5) * 12.5 + '%'; d.style.top = (r + .5) * 12.5 + '%';
+    board.appendChild(d); setTimeout(() => d.remove(), 1000);
+  }
+
+  function finishMatch(win) {
+    M.over = true; M.busy = true; clearTimeout(M.hintTimer);
+    const n = M.n;
+    if (win) {
+      const stars = starsFor(M.moves, M.def.moves);
+      const first = !(S.match.best[n] > 0);
+      const reward = 6 + 4 * stars + (first ? 5 : 0);
+      const statue = first && n % 2 === 0;
+      S.match.best[n] = Math.max(S.match.best[n] || 0, stars);
+      S.match.level = Math.max(S.match.level, n + 1);
+      setOfrendas(reward);
+      let sc = null;
+      if (statue) sc = addCat(randomStatueGenes());
+      save(); sfx.legend(); buzz([20, 40, 20, 40, 60]);
+      openSheet(`<div class="center">
+        <div class="bigstars">${[1, 2, 3].map(i => `<i class="${i <= stars ? 'on' : ''}" style="animation-delay:${i * .15}s">★</i>`).join('')}</div>
+        <div class="big-name">¡Nivel ${n} superado!</div>
+        <span class="note">${M.score} puntos · te sobraron ${M.moves} movimientos</span></div>
+        <div class="new-mut">+${reward} ofrendas${first ? ' (incluye 5 por primera vez)' : ''}</div>
+        ${sc ? `<div class="center"><div class="hero" style="width:140px">${catSVG(sc.genes, { statue: true })}</div><b>¡Encontraste una estatua!</b><span class="note">Ya está en tu templo, esperando que la despiertes.</span></div>` : ''}
+        <div class="actions"><button class="btn" id="m-home" type="button">Ir al templo</button><button class="btn gold" id="m-next" type="button">Nivel ${n + 1}</button></div>`);
+      $('m-next').addEventListener('click', () => { closeSheet(); openMatch(n + 1); });
+      $('m-home').addEventListener('click', () => { closeSheet(); closeMatch('templo'); });
+    } else {
+      setOfrendas(3); save(); sfx.fail();
+      const what = M.def.goal === 'sand' ? `Te faltaron ${M.sand.size} casillas de arena.` : `Te faltaron ${Object.entries(M.left).filter(([, v]) => v > 0).map(([k, v]) => `${v} ${MK[k].plural}`).join(' y ')}.`;
+      openSheet(`<div class="center"><div class="big-name">Sin movimientos</div><span class="note">${what} Te llevas 3 ofrendas de consuelo.</span></div>
+        <div class="actions"><button class="btn" id="m-home" type="button">Ir al templo</button><button class="btn gold" id="m-retry" type="button">Reintentar</button></div>`);
+      $('m-retry').addEventListener('click', () => { closeSheet(); openMatch(n); });
+      $('m-home').addEventListener('click', () => { closeSheet(); closeMatch('templo'); });
+    }
+  }
+
+  function renderJuegos() {
+    const n = S.match.level;
+    const stars = Object.values(S.match.best).reduce((a, b) => a + b, 0);
+    $('tab-juegos').innerHTML = `<div class="block">
+      <h2>Juegos del templo</h2>
+      <div class="game"><b>Ofrendas</b>
+        <div class="mini-pieces">${[0, 1, 2, 3, 4].map(k => pieceSVG(k)).join('')}</div>
+        <p>Junta 3 o más piezas iguales. Cada nivel superado da ofrendas, y los niveles pares te regalan una estatua la primera vez.</p>
+        <span class="note" style="text-align:left">Vas en el nivel ${n} · ${stars} ★ ganadas</span>
+        <button class="btn gold" id="play-match" type="button">Jugar nivel ${n}</button></div>
+      <div class="game"><span class="soon">Próximamente</span><b>Pirámide</b><p>Estilo Encaja: acomoda bloques de piedra. Ganas piedra para agrandar el templo con más sarcófagos y más espacio para gatos.</p></div>
+      <div class="game"><span class="soon">Después</span><b>Poderes de tus gatos</b><p>Cada gato te ayudará en los juegos según sus mutaciones. Los legendarios tendrán los poderes más fuertes.</p></div>
+    </div>`;
+    $('play-match').addEventListener('click', () => openMatch(S.match.level));
+  }
+
   // ================= Navegación y hoja =================
   function openSheet(html) { $('sheet-card').innerHTML = html; $('sheet').hidden = false; $('sheet-card').scrollTop = 0; }
   function closeSheet() { $('sheet').hidden = true; $('sheet-card').innerHTML = ''; }
@@ -1044,6 +1614,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     document.querySelectorAll('.tab').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
     if (t === 'templo') renderTemplo();
     if (t === 'gatos') renderGatos();
+    if (t === 'juegos') renderJuegos();
     window.scrollTo(0, 0);
     save();
   }
@@ -1052,7 +1623,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
   function renderAll() {
     $('ofr').textContent = S.ofrendas;
     $('tabs').hidden = !S.sphinxAwake;
-    renderTemplo(); renderGatos();
+    renderTemplo(); renderGatos(); renderJuegos();
     showTab(S.sphinxAwake ? S.tab : 'templo');
   }
 
