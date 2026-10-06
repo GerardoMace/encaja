@@ -47,6 +47,8 @@ POSES_HOJA_GATOS = HOJAS['hoja_gatos']
 for _a in ACCESORIOS:
     HOJAS[f'hoja_gatos_{_a}'] = [f'{n}_{_a}' for n in POSES_HOJA_GATOS]
     HOJAS[f'hoja_caminar_{_a}'] = [f'gato_caminar_{i}_{_a}' for i in range(1, 7)]
+    # hoja_dormir.jpeg = gato_colgado y gato_dormido juntos (armada a partir de hoja_gatos_2)
+    HOJAS[f'hoja_dormir_{_a}'] = [f'gato_colgado_{_a}', f'gato_dormido_{_a}']
 # en la hoja caminan hacia la izquierda; el juego los usa mirando a la derecha
 ESPEJO = {'gato_lado_1', 'gato_lado_2'} | {f'gato_lado_1_{a}' for a in ACCESORIOS}
 # cuadros de animación que deben quedar del mismo tamaño, alineados abajo y a la derecha (la nariz),
@@ -97,7 +99,7 @@ ASSETS = {
     **{f'gato_comer_{i}': ('recorte', 512) for i in range(1, 4)},
     **{f'gato_jugar_{i}': ('recorte', 512) for i in range(1, 5)},
     # el gato con cada accesorio (hojas editadas en Gemini)
-    **{n: ('recorte', 512) for a in ACCESORIOS for n in HOJAS[f'hoja_gatos_{a}'] + HOJAS[f'hoja_caminar_{a}']},
+    **{n: ('recorte', 512) for a in ACCESORIOS for n in HOJAS[f'hoja_gatos_{a}'] + HOJAS[f'hoja_caminar_{a}'] + HOJAS[f'hoja_dormir_{a}']},
 }
 CLAVE = (255, 0, 255)
 

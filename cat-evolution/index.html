@@ -1311,7 +1311,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       out = document.createElement('canvas'); out.width = w; out.height = h + pad;
       const o = out.getContext('2d');
       o.drawImage(cv, 0, pad);
-      if (acc) {
+      if (acc && !acc.endsWith("*")) {
         const [ax, ay, aw, rot] = ACC_POS[P.acc][acc], ai = accA.img;
         const dw = aw * w, dh = dw * ai.naturalHeight / ai.naturalWidth;
         o.save(); o.translate(ax * w, pad + ay * h); o.rotate(-rot * Math.PI / 180);

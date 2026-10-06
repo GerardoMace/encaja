@@ -270,6 +270,36 @@
    "file": "acc_nemes.png",
    "w": 228,
    "h": 218
+  },
+  "gato_frente_cascabel": {
+   "file": "gato_frente_cascabel.png",
+   "w": 197,
+   "h": 247
+  },
+  "gato_lado_1_cascabel": {
+   "file": "gato_lado_1_cascabel.png",
+   "w": 276,
+   "h": 229
+  },
+  "gato_estira_cascabel": {
+   "file": "gato_estira_cascabel.png",
+   "w": 234,
+   "h": 250
+  },
+  "gato_acostado_cascabel": {
+   "file": "gato_acostado_cascabel.png",
+   "w": 272,
+   "h": 208
+  },
+  "gato_sentado_lado_cascabel": {
+   "file": "gato_sentado_lado_cascabel.png",
+   "w": 197,
+   "h": 251
+  },
+  "gato_agazapado_cascabel": {
+   "file": "gato_agazapado_cascabel.png",
+   "w": 239,
+   "h": 237
   }
  }
 }
