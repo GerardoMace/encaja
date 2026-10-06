@@ -458,8 +458,8 @@ img.catimg{display:block;width:100%;height:auto}
   };
   const GENES = {
     fur:  { label: 'Pelaje',    common: ['naranja', 'gris', 'negro', 'blanco', 'crema', 'cafe'], mut: { elegante: 'plateado', egipcio: 'dorado', mistico: 'cosmico', artico: 'nevado' } },
-    pat:  { label: 'Patrón',    common: ['liso', 'atigrado', 'manchas', 'bicolor'],              mut: { elegante: 'smoking', egipcio: 'jeroglificos', mistico: 'constelacion', artico: 'escarcha' } },
-    eyes: { label: 'Ojos',      common: ['verde', 'ambar', 'azul'],                               mut: { elegante: 'heterocromia', egipcio: 'kohl', mistico: 'galaxia', artico: 'hielo' } },
+    pat:  { label: 'Degradado', common: ['parejo', 'humo', 'claro', 'canela'],                   mut: { elegante: 'perla', egipcio: 'oro', mistico: 'aurora', artico: 'escarcha' } },
+    eyes: { label: 'Tono',      common: ['normal', 'pastel', 'oscuro'],                          mut: { elegante: 'satinado', egipcio: 'bronceado', mistico: 'iridiscente', artico: 'glaciar' } },
     acc:  { label: 'Accesorio', common: ['ninguno', 'cascabel'],                                  mut: { elegante: 'mono', egipcio: 'usekh', mistico: 'luna', artico: 'bufanda' } },
   };
   const GENE_KEYS = Object.keys(GENES);
@@ -471,7 +471,17 @@ img.catimg{display:block;width:100%;height:auto}
     verde: 'Verdes', ambar: 'Ámbar', azul: 'Azules', heterocromia: 'Heterocromía', kohl: 'Delineado de Horus', galaxia: 'Galaxia',
     ninguno: 'Ninguno', cascabel: 'Cascabel', mono: 'Moño de gala', usekh: 'Collar usekh', luna: 'Tiara lunar', nemes: 'Tocado nemes',
     nevado: 'Nevado', escarcha: 'Escarcha', hielo: 'Ojos de hielo', bufanda: 'Bufanda',
+    parejo: 'Parejo', humo: 'Humo', claro: 'Claro', canela: 'Canela', perla: 'Perla', oro: 'Oro', aurora: 'Aurora',
+    normal: 'Normal', pastel: 'Pastel', oscuro: 'Oscuro', satinado: 'Satinado', bronceado: 'Bronceado', iridiscente: 'Iridiscente', glaciar: 'Glaciar',
   };
+  // partidas viejas: patrones y ojos pasan a su color equivalente
+  const OLD_GENES = {
+    pat: { liso: 'parejo', atigrado: 'humo', manchas: 'claro', bicolor: 'canela', smoking: 'perla', jeroglificos: 'oro', constelacion: 'aurora' },
+    eyes: { verde: 'normal', ambar: 'pastel', azul: 'oscuro', heterocromia: 'satinado', kohl: 'bronceado', galaxia: 'iridiscente', hielo: 'glaciar' },
+  };
+  function upgradeGenes(g) { if (g) ['pat', 'eyes'].forEach(k => { const n = OLD_GENES[k][g[k]]; if (n) g[k] = n; }); return g; }
+  // color de abajo del cuerpo: null = el del pelaje
+  const DEGRADADO = { parejo: null, humo: -.4, claro: .5, canela: '#c98a52', perla: '#eeeaf6', oro: '#eab234', aurora: '#d47ce6', escarcha: '#c2e4ff' };
   const MUT_FAMILY = {};
   GENE_KEYS.forEach(k => Object.entries(GENES[k].mut).forEach(([fam, v]) => { MUT_FAMILY[v] = fam; }));
   const CAT_NAMES = ['Cleo', 'Nefer', 'Ramsés', 'Tut', 'Isis', 'Osiris', 'Anubis', 'Horus', 'Seti', 'Amira', 'Nilo', 'Kaia', 'Luna', 'Momo', 'Churro', 'Canela', 'Mango', 'Kiwi', 'Oreo', 'Nala', 'Pelusa', 'Tamal', 'Concha', 'Michi', 'Bigotes', 'Dátil', 'Papiro', 'Menta', 'Chispa', 'Miel', 'Coco', 'Simón', 'Pixel', 'Nube', 'Duna', 'Cairo', 'Giza', 'Zafiro', 'Perla', 'Ónix', 'Sol', 'Tofu', 'Nacho', 'Pistache'];
@@ -759,7 +769,7 @@ img.catimg{display:block;width:100%;height:auto}
 
   // ================= Estado =================
   const KEY = 'catevolution.v1';
-  const SPHINX = { fur: 'arena', pat: 'liso', eyes: 'kohl', acc: 'nemes' };
+  const SPHINX = { fur: 'arena', pat: 'parejo', eyes: 'normal', acc: 'nemes' };
   function freshState() {
     return { v: 1, sphinxAwake: false, ofrendas: 0, altarAt: Date.now(), cats: [], hab: 'egipto', habs: freshHabs(), found: [], births: 0, nextId: 1, tab: 'templo', tip: 0, match: { level: 1, best: {} }, stone: 0, up: {}, pyrBest: 0 };
   }
@@ -849,7 +859,7 @@ img.catimg{display:block;width:100%;height:auto}
     if (!S.births && !busy.length) return '¡Ya tienes dos gatos despiertos! Toca "Criar gatitos" y elige a los dos padres.';
     if (!S.births && busy.length) return `Mientras más raro sea el bebé, más tarda en nacer. Si el ${H.nest.toLowerCase()} brilla, viene algo especial.`;
     const tips = [
-      'Los gatitos heredan pelaje, patrón, ojos y accesorio de sus padres.',
+      'Los gatitos heredan de sus padres el pelaje, el degradado, el tono y el accesorio.',
       'Si cruzas dos gatos con mutaciones de la misma familia, es más fácil que salga otra de esa familia.',
       `Hay ${Object.keys(MUT_FAMILY).length} mutaciones en 4 familias: Elegante, Egipcia, Mística y Ártica. ¿Las encontrarás todas?`,
       'Cada hábitat favorece una familia: en Egipto salen más Egipcias, en la Casa más Elegantes y en la Nieve nacen los Árticos.',
@@ -1152,14 +1162,31 @@ img.catimg{display:block;width:100%;height:auto}
   const CAT_CACHE = new Map();
   const hexRGB = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
 
-  // Solo se pinta el pelaje sobre el gato blanco de Gemini. Patrones, ojos y accesorios vendrán
-  // dibujados por Gemini; aquí no se dibuja nada encima del gato.
+  // Sobre el gato blanco de Gemini solo se pinta el color: pelaje (arriba), degradado (abajo) y tono.
+  // Los accesorios también son dibujos de Gemini, puestos encima.
+  const mixC = (c, h, f) => { const k = hexRGB(h); return [c[0] + (k[0] - c[0]) * f, c[1] + (k[1] - c[1]) * f, c[2] + (k[2] - c[2]) * f]; };
+  function hslRGB(h, s, l) {
+    const f = n => { const k = (n + h / 30) % 12, a = s * Math.min(l, 1 - l); return 255 * (l - a * Math.max(-1, Math.min(k - 3, 9 - k, 1))); };
+    return [f(0), f(8), f(4)];
+  }
+  // tono: efecto sobre todo el pelaje (u = posición horizontal, v = altura, ambas 0-1)
+  function toneColor(c, tone, u, v) {
+    switch (tone) {
+      case 'pastel': return mixC(c, '#ffffff', .32);
+      case 'oscuro': return [c[0] * .7, c[1] * .7, c[2] * .72];
+      case 'satinado': return v < .5 ? mixC(c, '#ffffff', .45 * (1 - v / .5)) : c;
+      case 'bronceado': { const k = mixC(c, '#d8953f', .3); return [Math.min(255, k[0] * 1.06), Math.min(255, k[1] * 1.03), k[2]]; }
+      case 'iridiscente': { const r = hslRGB((u * 300 + v * 80) % 360, .85, .66); return [c[0] + (r[0] - c[0]) * .45, c[1] + (r[1] - c[1]) * .45, c[2] + (r[2] - c[2]) * .45]; }
+      case 'glaciar': return mixC(c, '#8fd0ff', .32);
+      default: return c;
+    }
+  }
   function catArtURL(g, pose, statue) {
     const P = POSES[pose], a = P && ART[P.art];
     if (!a || !a.ready) return null;
     const accA = !statue && P.acc && ACC_POS[P.acc][g.acc] && ART['acc_' + g.acc];
     const acc = accA && accA.ready ? g.acc : '';
-    const key = [pose, g.fur, statue ? 1 : 0, acc].join('|');
+    const key = [pose, g.fur, g.pat, g.eyes, statue ? 1 : 0, acc].join('|');
     if (CAT_CACHE.has(key)) return CAT_CACHE.get(key);
     const img = a.img, sc = Math.min(1, 320 / Math.max(img.naturalWidth, img.naturalHeight));
     const w = Math.round(img.naturalWidth * sc), h = Math.round(img.naturalHeight * sc);
@@ -1171,14 +1198,18 @@ img.catimg{display:block;width:100%;height:auto}
     for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) if (d[(y * w + x) * 4 + 3] > 0) { if (y < y0) y0 = y; if (y > y1) y1 = y; }
     const bh = Math.max(1, y1 - y0);
     const F = FUR[g.fur] || FUR.blanco;
-    const top = hexRGB(F.g ? F.g[0] : F.b), bot = hexRGB(F.g ? F.g[1] : F.b);
+    const topHex = F.g ? F.g[0] : F.b, dg = DEGRADADO[g.pat];
+    const top = hexRGB(topHex), bot = hexRGB(dg == null ? (F.g ? F.g[1] : F.b) : typeof dg === 'number' ? shade(topHex, dg) : dg);
+    const tone = g.eyes || 'normal';
     const stoneC = [205, 182, 136];
     for (let y = 0; y < h; y++) {
       const v = Math.max(0, Math.min(1, (y - y0) / bh));
-      const c = [top[0] + (bot[0] - top[0]) * v, top[1] + (bot[1] - top[1]) * v, top[2] + (bot[2] - top[2]) * v];
-      const darkFur = (c[0] + c[1] + c[2]) / 3 < 110;
+      const t = Math.max(0, Math.min(1, (v - .3) / .6)), m = t * t * (3 - 2 * t);   // el degradado empieza a media panza
+      const c0 = [top[0] + (bot[0] - top[0]) * m, top[1] + (bot[1] - top[1]) * m, top[2] + (bot[2] - top[2]) * m];
       for (let x = 0; x < w; x++) {
         const i = (y * w + x) * 4; if (!d[i + 3]) continue;
+        const c = statue ? c0 : toneColor(c0, tone, x / w, v);
+        const darkFur = (c[0] + c[1] + c[2]) / 3 < 110;
         const r = d[i], gg = d[i + 1], b = d[i + 2];
         if (statue) {
           const l = (.3 * r + .59 * gg + .11 * b) / 255;
@@ -1763,8 +1794,8 @@ img.catimg{display:block;width:100%;height:auto}
       art.innerHTML = sphinxArt(false); art.classList.add('flash'); sfx.awake();
       setTimeout(() => {
         S.sphinxAwake = true;
-        addCat({ fur: 'naranja', pat: 'atigrado', eyes: 'ambar', acc: 'cascabel' });
-        addCat({ fur: 'negro', pat: 'liso', eyes: 'verde', acc: 'ninguno' });
+        addCat({ fur: 'naranja', pat: 'humo', eyes: 'normal', acc: 'cascabel' });
+        addCat({ fur: 'negro', pat: 'parejo', eyes: 'normal', acc: 'ninguno' });
         S.ofrendas = 40; S.altarAt = Date.now();
         save(); renderAll();
         openSheet(`<div class="center"><div class="hero" id="intro-abuelo">${abueloSVG()}</div>
@@ -3018,7 +3049,9 @@ img.catimg{display:block;width:100%;height:auto}
     const nests = 2 + (S.up && S.up.sarc3 ? 1 : 0) + (S.up && S.up.sarc4 ? 1 : 0);
     HAB_ORDER.forEach(h => { if (!S.habs[h]) S.habs[h] = { open: h === 'egipto', slots: [] }; while (S.habs[h].slots.length < nests) S.habs[h].slots.push(null); });
     if (!S.hab || !S.habs[S.hab] || !S.habs[S.hab].open) S.hab = 'egipto';
-    S.cats.forEach(c => { if (!c.hab) c.hab = 'egipto'; });
+    S.cats.forEach(c => { if (!c.hab) c.hab = 'egipto'; upgradeGenes(c.genes); });
+    HAB_ORDER.forEach(h => S.habs[h].slots.forEach(sl => sl && upgradeGenes(sl.genes)));
+    S.found = [...new Set(S.found.map(v => OLD_GENES.pat[v] || OLD_GENES.eyes[v] || v))];
     renderAll();
     setInterval(tickTemplo, 1000);
     setInterval(() => { if (skyMode() !== mode && !$('tab-templo').hidden) renderTemplo(); }, 60000);
