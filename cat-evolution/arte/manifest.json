@@ -213,23 +213,33 @@
   },
   "gato_caminar_1": {
    "file": "gato_caminar_1.png",
-   "w": 238,
-   "h": 217
+   "w": 288,
+   "h": 230
   },
   "gato_caminar_2": {
    "file": "gato_caminar_2.png",
-   "w": 238,
-   "h": 217
+   "w": 288,
+   "h": 230
   },
   "gato_caminar_3": {
    "file": "gato_caminar_3.png",
-   "w": 238,
-   "h": 217
+   "w": 288,
+   "h": 230
   },
   "gato_caminar_4": {
    "file": "gato_caminar_4.png",
-   "w": 238,
-   "h": 217
+   "w": 288,
+   "h": 230
+  },
+  "gato_caminar_5": {
+   "file": "gato_caminar_5.png",
+   "w": 288,
+   "h": 230
+  },
+  "gato_caminar_6": {
+   "file": "gato_caminar_6.png",
+   "w": 288,
+   "h": 230
   },
   "acc_cascabel": {
    "file": "acc_cascabel.png",

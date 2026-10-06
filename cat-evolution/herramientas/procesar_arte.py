@@ -33,7 +33,7 @@ HOJAS = {
     'hoja_egipto': ['esfinge', 'esfinge_piedra', 'sarcofago', 'altar', 'obelisco', 'estandarte', 'estanque', 'icono_ofrenda'],
     'hoja_casa_nieve': ['arbol_gato', 'canasta', 'plato', 'muneco_nieve', 'iglu', 'fogata'],
     # hojas de animación: cuadros en orden
-    'hoja_caminar': ['gato_caminar_1', 'gato_caminar_2', 'gato_caminar_3', 'gato_caminar_4'],
+    'hoja_caminar': [f'gato_caminar_{i}' for i in range(1, 7)],
     'hoja_accesorios': ['acc_cascabel', 'acc_mono', 'acc_usekh', 'acc_luna', 'acc_bufanda', 'acc_nemes'],
     'hoja_acicalar': ['gato_acicalar_1', 'gato_acicalar_2', 'gato_acicalar_3', 'gato_acicalar_4'],
     'hoja_saltar': ['gato_saltar_1', 'gato_saltar_2', 'gato_saltar_3', 'gato_saltar_4'],
@@ -44,7 +44,7 @@ HOJAS = {
 ESPEJO = {'gato_lado_1', 'gato_lado_2'}
 # cuadros de animación que deben quedar del mismo tamaño, alineados abajo y a la derecha (la nariz),
 # para que al pasarlos rápido la cabeza no tiemble
-ANIMACIONES = {'gato_caminar_': 4}
+ANIMACIONES = {'gato_caminar_': 6}
 
 # nombre: (tipo, tamaño máximo en px)
 #   recorte = quitar fondo blanco y recortar al objeto
@@ -77,7 +77,7 @@ ASSETS = {
     'gato_colgado': ('recorte', 512), 'gato_estira': ('recorte', 512), 'gato_acostado': ('recorte', 512),
     'gato_sentado_lado': ('recorte', 512), 'gato_agazapado': ('recorte', 512), 'gato_dormido': ('recorte', 512),
     # cuadros de animación
-    **{f'gato_caminar_{i}': ('recorte', 512) for i in range(1, 5)},
+    **{f'gato_caminar_{i}': ('recorte', 512) for i in range(1, 7)},
     # accesorios sueltos que el juego pone sobre el gato
     'acc_cascabel': ('recorte', 256),
     'acc_mono': ('recorte', 256),
