@@ -1259,10 +1259,13 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     }
   }
   function catArtURL(g, pose, statue) {
-    const P = POSES[pose], a = P && ART[P.art];
+    const P = POSES[pose]; if (!P) return null;
+    // primero el gato que Gemini dibujó ya con su accesorio; si no existe, el gato solo + el accesorio encima
+    const own = !statue && g.acc && ART[P.art + '_' + g.acc];
+    const a = own && own.ready ? own : ART[P.art];
     if (!a || !a.ready) return null;
-    const accA = !statue && P.acc && ACC_POS[P.acc][g.acc] && ART['acc_' + g.acc];
-    const acc = accA && accA.ready ? g.acc : '';
+    const accA = !statue && !(own && own.ready) && P.acc && ACC_POS[P.acc][g.acc] && ART['acc_' + g.acc];
+    const acc = accA && accA.ready ? g.acc : (own && own.ready ? g.acc + '*' : '');
     const key = [pose, g.fur, g.pat, g.eyes, statue ? 1 : 0, acc].join('|');
     if (CAT_CACHE.has(key)) return CAT_CACHE.get(key);
     const img = a.img, sc = Math.min(1, 320 / Math.max(img.naturalWidth, img.naturalHeight));

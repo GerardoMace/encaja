@@ -40,11 +40,18 @@ HOJAS = {
     'hoja_comer': ['gato_comer_1', 'gato_comer_2', 'gato_comer_3'],
     'hoja_jugar': ['gato_jugar_1', 'gato_jugar_2', 'gato_jugar_3', 'gato_jugar_4'],
 }
+# Las mismas hojas de gatos, editadas en Gemini para que el gato lleve un accesorio:
+# hoja_gatos_<acc> y hoja_caminar_<acc> → gato_frente_<acc>, gato_caminar_1_<acc>…
+ACCESORIOS = ['cascabel', 'mono', 'usekh', 'luna', 'bufanda']
+POSES_HOJA_GATOS = HOJAS['hoja_gatos']
+for _a in ACCESORIOS:
+    HOJAS[f'hoja_gatos_{_a}'] = [f'{n}_{_a}' for n in POSES_HOJA_GATOS]
+    HOJAS[f'hoja_caminar_{_a}'] = [f'gato_caminar_{i}_{_a}' for i in range(1, 7)]
 # en la hoja caminan hacia la izquierda; el juego los usa mirando a la derecha
-ESPEJO = {'gato_lado_1', 'gato_lado_2'}
+ESPEJO = {'gato_lado_1', 'gato_lado_2'} | {f'gato_lado_1_{a}' for a in ACCESORIOS}
 # cuadros de animación que deben quedar del mismo tamaño, alineados abajo y a la derecha (la nariz),
 # para que al pasarlos rápido la cabeza no tiemble
-ANIMACIONES = {'gato_caminar_': 6}
+ANIMACIONES = [[f'gato_caminar_{i}' for i in range(1, 7)]] + [[f'gato_caminar_{i}_{a}' for i in range(1, 7)] for a in ACCESORIOS]
 
 # nombre: (tipo, tamaño máximo en px)
 #   recorte = quitar fondo blanco y recortar al objeto
@@ -89,6 +96,8 @@ ASSETS = {
     **{f'gato_saltar_{i}': ('recorte', 512) for i in range(1, 5)},
     **{f'gato_comer_{i}': ('recorte', 512) for i in range(1, 4)},
     **{f'gato_jugar_{i}': ('recorte', 512) for i in range(1, 5)},
+    # el gato con cada accesorio (hojas editadas en Gemini)
+    **{n: ('recorte', 512) for a in ACCESORIOS for n in HOJAS[f'hoja_gatos_{a}'] + HOJAS[f'hoja_caminar_{a}']},
 }
 CLAVE = (255, 0, 255)
 
@@ -199,14 +208,14 @@ def main():
             piezas[nombre] = pieza.transpose(Image.FLIP_LEFT_RIGHT) if nombre in ESPEJO else pieza
     for nombre in [k for k in piezas if k.startswith('acc_')]:
         piezas[nombre] = quitar_huecos(piezas[nombre])
-    for prefijo, n in ANIMACIONES.items():
-        cuadros = [piezas.get(f'{prefijo}{i}') for i in range(1, n + 1)]
+    for nombres in ANIMACIONES:
+        cuadros = [piezas.get(n) for n in nombres]
         if all(cuadros):
             ancho, alto = max(c.width for c in cuadros), max(c.height for c in cuadros)
-            for i, c in enumerate(cuadros, start=1):
+            for n, c in zip(nombres, cuadros):
                 lienzo = Image.new('RGBA', (ancho, alto), (0, 0, 0, 0))
                 lienzo.paste(c, (ancho - c.width, alto - c.height), c)
-                piezas[f'{prefijo}{i}'] = lienzo
+                piezas[n] = lienzo
     for nombre, (tipo, tam) in ASSETS.items():
         if nombre in piezas and tipo in ('recorte', 'cuadro', 'par'):
             pieza = piezas[nombre]
