@@ -216,6 +216,20 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
 @keyframes swept{from{background:#fff6c4}to{background:transparent}}
 @media (prefers-reduced-motion:reduce){.tile{transition:none}.tile.sel svg,.tile.born svg,.tile.hint svg,.blast,.mfloat,.bigstars i.on,.mcell.swept{animation:none}}
 
+/* Pirámide y mejoras */
+.wallet{display:flex;gap:8px}
+.wallet .purse{padding:6px 12px 6px 8px}
+.pwrap{display:flex;justify-content:center}
+.pwrap canvas{display:block;touch-action:none;max-width:100%}
+.ups{display:grid;gap:8px}
+.up{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:center;background:var(--panel);border-radius:14px;padding:10px 12px}
+.up b{display:block}
+.up small{display:block;color:var(--muted);font-size:.84rem;line-height:1.35;margin-top:2px}
+.up .btn{padding:9px 12px;white-space:nowrap}
+.up.done{opacity:.75}
+.up-ok{color:var(--turq);font-weight:900;font-size:.85rem}
+.obj.pond{pointer-events:none}
+.dig-link{justify-self:center;color:var(--muted);font-weight:800;font-size:.88rem;text-decoration:underline;padding:6px}
 /* Navegación */
 .tabs{
   position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;justify-content:center;
@@ -277,9 +291,15 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
 <div class="app">
   <header class="topbar">
     <div class="logo">Cat <em>Evolution</em></div>
+    <div class="wallet">
     <div class="purse" id="purse" title="Ofrendas">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#f4c24f" stroke="#7a5410" stroke-width="1.2" d="M12 2.5c-2.6 0-4.3 2-4.3 4.4 0 1.7.9 3.1 2.2 4.1H5.5v2.6h5.2V21.5h2.6V13.6h5.2V11h-4.4c1.3-1 2.2-2.4 2.2-4.1 0-2.4-1.7-4.4-4.3-4.4zm0 2.4c1.1 0 1.8.9 1.8 2s-.8 2.4-1.8 3.3c-1-.9-1.8-2.2-1.8-3.3s.7-2 1.8-2z"/></svg>
       <b id="ofr">0</b><span class="sr" hidden>ofrendas</span>
+    </div>
+    <div class="purse" id="purse-stone" title="Piedra">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20L12 4l9 16z" fill="#e2bf7e" stroke="#7a5410" stroke-width="1.2" stroke-linejoin="round"/><path d="M12 4l9 16h-6z" fill="#c39d5f"/><path d="M7.5 12h9M5.2 16h13.6" stroke="#a8834a" stroke-width="1"/></svg>
+      <b id="stone">0</b>
+    </div>
     </div>
   </header>
 
@@ -288,6 +308,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     <section id="tab-gatos" hidden></section>
     <section id="tab-juegos" hidden></section>
     <section id="tab-match" class="match" hidden></section>
+    <section id="tab-pyr" class="match" hidden></section>
   </main>
 </div>
 
@@ -310,7 +331,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
   'use strict';
   // ================= Reglas del juego (valores de prueba) =================
   const COST = { awaken: 15, breed: 10, dig: 50 };
-  const ALTAR = { everyMs: 4000, cap: 40 };            // 1 ofrenda cada 4 s, máximo 40 guardadas
+  const ALTAR = { get everyMs() { return S.up && S.up.altar ? 3000 : 4000; }, get cap() { return S.up && S.up.altar ? 80 : 40; } }; // el Altar mayor lo mejora
   const INCUBATE = { comun: 15, raro: 40, epico: 90, legend: 180 }; // segundos (en el juego final serían horas)
   const MUT_RATE = 0.14;                                // probabilidad de mutación por gen
   const FAM_WEIGHT = { elegante: .55, egipcio: .30, mistico: .15 };
@@ -560,7 +581,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
   const KEY = 'catevolution.v1';
   const SPHINX = { fur: 'arena', pat: 'liso', eyes: 'kohl', acc: 'nemes' };
   function freshState() {
-    return { v: 1, sphinxAwake: false, ofrendas: 0, altarAt: Date.now(), cats: [], slots: [null, null], found: [], births: 0, nextId: 1, tab: 'templo', tip: 0, match: { level: 1, best: {} } };
+    return { v: 1, sphinxAwake: false, ofrendas: 0, altarAt: Date.now(), cats: [], slots: [null, null], found: [], births: 0, nextId: 1, tab: 'templo', tip: 0, match: { level: 1, best: {} }, stone: 0, up: {}, pyrBest: 0 };
   }
   let S = freshState();
   function load() { try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && d.v === 1 && Array.isArray(d.cats)) return d; } catch (e) {} return null; }
@@ -635,6 +656,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     if (awake.length < 2 && statues.length) return `Toca las estatuas del templo para despertarlas. Cuesta ${COST.awaken} ofrendas cada una.`;
     if (statues.length > SPOTS.statues.length) return `Tienes ${statues.length - SPOTS.statues.length} estatuas más guardadas en la pestaña Gatos.`;
     if (S.ofrendas < COST.breed && altarAmount() < COST.breed) return '¿Te faltan ofrendas? Juega Ofrendas: cada nivel da ofrendas y los niveles pares regalan una estatua.';
+    if ((S.stone || 0) >= 10 && !Object.keys(S.up || {}).length) return 'Ya tienes piedra para mejorar el templo. Toca "Mejorar templo".';
     if (!S.births && !busy.length) return '¡Ya tienes dos gatos despiertos! Toca "Criar gatitos" y elige a los dos padres.';
     if (!S.births && busy.length) return 'Mientras más raro sea el bebé, más tarda en despertar. Si el sarcófago brilla, viene algo especial.';
     const tips = [
@@ -643,6 +665,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
       `Hay ${Object.keys(MUT_FAMILY).length} mutaciones en 3 familias: Elegante, Egipcia y Mística. ¿Las encontrarás todas?`,
       'Un gato con 3 o más mutaciones es Legendario.',
       'Si se te acaban las ofrendas, juega Ofrendas o espera a que el altar junte más.',
+      'Juega Pirámide para ganar piedra y mejorar el templo: más sarcófagos, un altar mayor y decoraciones.',
       'En Ofrendas, 5 piezas en línea crean al Gato de Bastet: borra todas las piezas de un tipo.',
     ];
     return tips[S.tip % tips.length];
@@ -660,12 +683,12 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
   // Posiciones en fracción de la escena (ancla = centro de la base del objeto)
   const SPOTS = {
     sphinx: { x: .5, y: .49, w: .3 },
-    sarc: [{ x: .2, y: .51, w: .12 }, { x: .8, y: .51, w: .12 }],
+    sarc: [{ x: .2, y: .51, w: .12 }, { x: .8, y: .51, w: .12 }, { x: .13, y: .67, w: .11 }, { x: .87, y: .67, w: .11 }],
     altar: { x: .2, y: .93, w: .15 },
     statues: [{ x: .78, y: .9 }, { x: .37, y: .7 }, { x: .63, y: .7 }, { x: .5, y: .86 }, { x: .3, y: .8 }, { x: .7, y: .79 }],
   };
   const FLOOR = { x0: .17, x1: .83, y0: .57, y1: .93 };
-  const MAX_WALKERS = 14;
+  const maxWalkers = () => (S.up && S.up.patio ? 24 : 14);
   const walkers = new Map();   // id de gato → { x, y, tx, ty, walking, until, face, el, flip }
   const spawnAt = {};          // dónde aparece un gato recién despertado o recién nacido
   const statuePos = {};
@@ -702,6 +725,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     <path d="M300 264L346 214L392 264Z" fill="${P.pyr}"/><path d="M346 214L392 264H354Z" fill="${P.pyrS}"/>
     <rect y="260" width="400" height="24" fill="${P.nile}"/>
     <g class="shim" stroke="${P.nileHi}" stroke-width="2" stroke-linecap="round" opacity=".55"><path d="M40 268h18M120 275h26M210 267h14M290 276h22M350 269h16"/></g>
+    ${S.up && S.up.obeliscos ? [44, 356].map(x => `<path d="M${x - 8} 266L${x - 5} 178L${x} 166L${x + 5} 178L${x + 8} 266Z" fill="${P.stone}"/><path d="M${x} 166L${x + 5} 178H${x - 5}Z" fill="#f4c24f"/><path d="M${x} 178V266" stroke="${P.stoneS}" stroke-width="3"/>`).join('') : ''}
     ${palm(24, 266, .85, P)}${palm(380, 266, .8, P)}${palm(60, 268, .55, P)}
     <rect y="284" width="400" height="276" fill="url(#floor)"/>
     <g stroke="${P.line}" stroke-width="1.2" opacity=".35" fill="none">${tiles.join('')}</g>
@@ -709,6 +733,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     ${column(96, 204, 266, 16, P)}${column(134, 204, 266, 16, P)}${column(266, 204, 266, 16, P)}${column(304, 204, 266, 16, P)}
     <rect x="78" y="182" width="244" height="16" fill="${P.stone}"/><rect x="78" y="194" width="244" height="4" fill="${P.stoneS}"/>
     <g fill="${P.stoneS}">${Array.from({ length: 11 }, (_, i) => `<rect x="${92 + i * 21}" y="186" width="${i % 2 ? 4 : 8}" height="6" rx="1"/>`).join('')}</g>
+    ${S.up && S.up.estandartes ? [96, 134, 266, 304].map(x => `<path d="M${x - 7} 206h14v34l-7-6-7 6z" fill="#1f5fbf"/><path d="M${x - 7} 212h14M${x - 7} 222h14" stroke="#f4c24f" stroke-width="3"/>`).join('') : ''}
     ${torch(115, 266, P)}${torch(285, 266, P)}
     </svg>`;
   }
@@ -748,10 +773,12 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
       </div>
       ${S.sphinxAwake ? `<div class="actions temple-actions">
         <button class="btn turq" id="btn-breed" type="button">Criar gatitos · ${COST.breed}</button>
+        <button class="btn" id="btn-up" type="button">Mejorar templo</button>
         <button class="btn gold" id="btn-play" type="button">Jugar Ofrendas</button>
-        <button class="btn" id="btn-dig" type="button" style="grid-column:1/-1">Excavar estatua · ${COST.dig}</button>
+        <button class="btn gold" id="btn-pyr" type="button">Jugar Pirámide</button>
+        <button class="dig-link" id="btn-dig" type="button" style="grid-column:1/-1">Excavar una estatua por ${COST.dig} ofrendas</button>
       </div>` : ''}`;
-    if (S.sphinxAwake) { $('btn-breed').addEventListener('click', openBreed); $('btn-dig').addEventListener('click', dig); $('btn-play').addEventListener('click', () => openMatch(S.match.level)); }
+    if (S.sphinxAwake) { $('btn-breed').addEventListener('click', openBreed); $('btn-dig').addEventListener('click', dig); $('btn-play').addEventListener('click', () => openMatch(S.match.level)); $('btn-pyr').addEventListener('click', openPyramid); $('btn-up').addEventListener('click', openUpgrades); }
     buildWorld();
     tickTemplo();
   }
@@ -773,6 +800,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
         html += objHTML('statue', { ...sp, w: .16 }, `<span class="tag">Despertar · ${COST.awaken}</span>${catSVG(c.genes, { statue: true })}`, 'Estatua dormida: toca para despertarla', `data-statue="${c.id}"`);
       });
     }
+    if (S.up && S.up.estanque) html += `<div class="obj pond" aria-hidden="true" style="left:64%;top:99.5%;width:32%;z-index:5"><svg viewBox="0 0 120 40"><ellipse cx="60" cy="22" rx="58" ry="17" fill="#c9a66b"/><ellipse cx="60" cy="21" rx="52" ry="14" fill="#3d93d6"/><path d="M26 18h14M70 26h18" stroke="#bfe6ff" stroke-width="2" stroke-linecap="round" opacity=".7"/><ellipse cx="44" cy="24" rx="9" ry="4" fill="#3f9b5a"/><ellipse cx="84" cy="16" rx="8" ry="3.5" fill="#3f9b5a"/><path d="M44 22c-4-2-5-7-3-10c2 2 3 5 3 10zm0 0c4-2 5-7 3-10c-2 2-3 5-3 10z" fill="#ec6fd8"/></svg></div>`;
     world.innerHTML = html;
     $('obj-sphinx').addEventListener('click', () => {
       ensureAudio();
@@ -788,7 +816,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
       world.querySelectorAll('[data-statue]').forEach(b => b.addEventListener('click', () => openCat(Number(b.dataset.statue))));
     }
     // Gatos despiertos caminando
-    const awake = S.cats.filter(c => c.awake).slice(-MAX_WALKERS);
+    const awake = S.cats.filter(c => c.awake).slice(-maxWalkers());
     const ids = new Set(awake.map(c => c.id));
     [...walkers.keys()].forEach(id => { if (!ids.has(id)) walkers.delete(id); });
     const now = performance.now();
@@ -862,6 +890,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
       placeWalkers();
     }
     requestAnimationFrame(walkLoop);
+    addEventListener('resize', () => { if (PG) pLayout(); });
   }
 
   function tickTemplo() {
@@ -909,7 +938,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     let armed = false;
     $('btn-reset').addEventListener('click', e => {
       if (!armed) { armed = true; e.currentTarget.classList.add('confirm'); e.currentTarget.textContent = 'Toca otra vez para borrar todo'; return; }
-      S = freshState(); save(); $('ofr').textContent = 0; showTab('templo'); renderAll();
+      S = freshState(); save(); $('ofr').textContent = 0; $('stone').textContent = 0; showTab('templo'); renderAll();
     });
     $('dot-gatos').hidden = !S.cats.some(c => !c.awake);
   }
@@ -1596,10 +1625,370 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
         <p>Junta 3 o más piezas iguales. Cada nivel superado da ofrendas, y los niveles pares te regalan una estatua la primera vez.</p>
         <span class="note" style="text-align:left">Vas en el nivel ${n} · ${stars} ★ ganadas</span>
         <button class="btn gold" id="play-match" type="button">Jugar nivel ${n}</button></div>
-      <div class="game"><span class="soon">Próximamente</span><b>Pirámide</b><p>Estilo Encaja: acomoda bloques de piedra. Ganas piedra para agrandar el templo con más sarcófagos y más espacio para gatos.</p></div>
+      <div class="game"><b>Pirámide</b>
+        <p>Acomoda bloques de piedra y completa filas o columnas. Cada línea da 1 de piedra para mejorar el templo, y cada ${STATUE_EVERY} líneas en una partida aparece una estatua.</p>
+        <span class="note" style="text-align:left">Récord: ${S.pyrBest || 0} puntos · tienes ${S.stone || 0} de piedra</span>
+        <div class="actions"><button class="btn" id="up-from-games" type="button">Mejorar templo</button><button class="btn gold" id="play-pyr" type="button">Jugar Pirámide</button></div></div>
       <div class="game"><span class="soon">Después</span><b>Poderes de tus gatos</b><p>Cada gato te ayudará en los juegos según sus mutaciones. Los legendarios tendrán los poderes más fuertes.</p></div>
     </div>`;
     $('play-match').addEventListener('click', () => openMatch(S.match.level));
+    $('play-pyr').addEventListener('click', openPyramid);
+    $('up-from-games').addEventListener('click', openUpgrades);
+  }
+
+  // ================= Pirámide (estilo Encaja): bloques de piedra que dan piedra para el templo =================
+  const PN = 8;
+  const PSHAPE_DEFS = [
+    ['X', 3], ['XX', 4], ['X/X', 4], ['XXX', 4], ['X/X/X', 4], ['XXXX', 3], ['X/X/X/X', 3], ['XXXXX', 2], ['X/X/X/X/X', 2],
+    ['XX/XX', 5], ['XXX/XXX/XXX', 2],
+    ['XX/X.', 3], ['XX/.X', 3], ['X./XX', 3], ['.X/XX', 3],
+    ['X../X../XXX', 2], ['..X/..X/XXX', 2], ['XXX/X../X..', 2], ['XXX/..X/..X', 2],
+    ['X./X./XX', 2], ['.X/.X/XX', 2], ['XX/X./X.', 2], ['XX/.X/.X', 2],
+    ['XXX/X..', 2], ['XXX/..X', 2], ['X../XXX', 2], ['..X/XXX', 2],
+    ['XXX/.X.', 2], ['.X./XXX', 2], ['X./XX/X.', 2], ['.X/XX/.X', 2],
+    ['XX./.XX', 2], ['.XX/XX.', 2], ['X./XX/.X', 2], ['.X/XX/X.', 2],
+  ];
+  const PSHAPES = PSHAPE_DEFS.map(([def, weight]) => {
+    const rows = def.split('/'), cells = [];
+    rows.forEach((row, r) => [...row].forEach((ch, c) => { if (ch === 'X') cells.push([r, c]); }));
+    return { cells, h: rows.length, w: Math.max(...rows.map(x => x.length)), weight };
+  });
+  const PTOTAL = PSHAPES.reduce((a, s) => a + s.weight, 0);
+  const STONES = [
+    { base: '#e9cf95', hi: '#f8e7bf', lo: '#c39d5f', mark: '#a8834a' },
+    { base: '#d98273', hi: '#f0a99d', lo: '#ad5a4f', mark: '#8c4238' },
+    { base: '#3f6fe0', hi: '#8aa6f2', lo: '#2a4fb0', mark: '#f4c24f' },
+    { base: '#2fc6a0', hi: '#86e6cc', lo: '#1d9175', mark: '#13664f' },
+    { base: '#f4c24f', hi: '#ffe597', lo: '#c58f22', mark: '#946510' },
+    { base: '#6b6f8e', hi: '#959ab5', lo: '#474a66', mark: '#30324a' },
+  ];
+  const STATUE_EVERY = 25;
+  function pRandomPiece() {
+    let x = Math.random() * PTOTAL, s = 0;
+    for (let i = 0; i < PSHAPES.length; i++) { x -= PSHAPES[i].weight; if (x < 0) { s = i; break; } }
+    return { s, color: Math.floor(Math.random() * STONES.length) };
+  }
+
+  let PG = null;
+  const PL = { W: 0, H: 0, pad: 0, cell: 0, tcell: 0, trayY: 0, trayH: 0, ctx: null };
+
+  function pCanPlace(sh, r0, c0) {
+    for (const [r, c] of sh.cells) {
+      const rr = r0 + r, cc = c0 + c;
+      if (rr < 0 || cc < 0 || rr >= PN || cc >= PN || PG.board[rr][cc] >= 0) return false;
+    }
+    return true;
+  }
+  function pFits(sh) {
+    for (let r = 0; r <= PN - sh.h; r++) for (let c = 0; c <= PN - sh.w; c++) if (pCanPlace(sh, r, c)) return true;
+    return false;
+  }
+  function pDeal() {
+    let tray;
+    for (let i = 0; i < 15; i++) { tray = [pRandomPiece(), pRandomPiece(), pRandomPiece()]; if (tray.some(p => pFits(PSHAPES[p.s]))) break; }
+    PG.tray = tray;
+  }
+  function pLines(sh, r0, c0) {
+    const filled = (r, c) => PG.board[r][c] >= 0 || sh.cells.some(([pr, pc]) => pr + r0 === r && pc + c0 === c);
+    const rows = new Set(), cols = new Set();
+    for (let r = 0; r < PN; r++) { let ok = true; for (let c = 0; c < PN; c++) if (!filled(r, c)) { ok = false; break; } if (ok) rows.add(r); }
+    for (let c = 0; c < PN; c++) { let ok = true; for (let r = 0; r < PN; r++) if (!filled(r, c)) { ok = false; break; } if (ok) cols.add(c); }
+    return { rows, cols };
+  }
+
+  function openPyramid() {
+    ensureAudio();
+    PG = { board: Array.from({ length: PN }, () => Array(PN).fill(-1)), tray: [null, null, null], score: 0, lines: 0, stone: 0, combo: 0, sinceClear: 0,
+      over: false, drag: null, clearFx: [], placeFx: [], floats: [], shake: 0, statues: 0, shown: 0, exitArmed: false };
+    pDeal();
+    ['templo', 'gatos', 'juegos'].forEach(t => { $('tab-' + t).hidden = true; });
+    $('tabs').hidden = true;
+    const el = $('tab-pyr');
+    el.hidden = false;
+    el.innerHTML = `
+      <div class="mhead">
+        <button class="back" id="p-exit" type="button">‹ Salir</button>
+        <div class="mtitle"><small>Pirámide</small><strong id="p-score">0</strong></div>
+        <div class="mmoves"><b id="p-stone">0</b><small>piedra</small></div>
+      </div>
+      <div class="mstatus"><span class="mscore">Récord <b>${S.pyrBest || 0}</b></span><span class="mscore" id="p-combo"></span><span class="mscore">Líneas <b id="p-lines">0</b></span></div>
+      <div class="pwrap" id="p-wrap"><canvas id="p-canvas" aria-label="Tablero de la pirámide: arrastra los bloques de abajo al tablero"></canvas></div>
+      <p class="note">Arrastra los bloques al tablero. Cada fila o columna completa da 1 de piedra; cada ${STATUE_EVERY} líneas en una partida aparece una estatua.</p>`;
+    const cv = $('p-canvas');
+    PL.ctx = cv.getContext('2d');
+    cv.addEventListener('pointerdown', pDown);
+    cv.addEventListener('pointermove', pMove);
+    cv.addEventListener('pointerup', pUp);
+    cv.addEventListener('pointercancel', () => { if (PG) PG.drag = null; });
+    $('p-exit').addEventListener('click', exitPyramid);
+    pLayout();
+    window.scrollTo(0, 0);
+    requestAnimationFrame(pLoop);
+  }
+  function exitPyramid() {
+    if (!PG) return;
+    const btn = $('p-exit');
+    if (PG.score > 0 && !PG.over && !PG.exitArmed) {
+      PG.exitArmed = true; btn.textContent = '¿Salir? La partida termina'; btn.classList.add('confirm');
+      setTimeout(() => { if (PG && btn.isConnected) { PG.exitArmed = false; btn.textContent = '‹ Salir'; btn.classList.remove('confirm'); } }, 2500);
+      return;
+    }
+    if (!PG.over && PG.score > 0) { pGameOver(true); return; }
+    closePyramid();
+  }
+  function closePyramid(tab) {
+    PG = null;
+    $('tab-pyr').hidden = true; $('tab-pyr').innerHTML = '';
+    $('tabs').hidden = false;
+    showTab(tab || S.tab || 'juegos');
+  }
+
+  function pLayout() {
+    const wrap = $('p-wrap'); if (!wrap || !PG) return;
+    const avail = Math.max(280, Math.min(wrap.clientWidth, (window.innerHeight - 250) / 1.36));
+    const cv = $('p-canvas');
+    PL.W = avail; PL.pad = avail * .025; PL.cell = (avail - PL.pad * 2) / PN; PL.tcell = PL.cell * .46;
+    PL.trayY = avail + PL.cell * .35; PL.trayH = PL.cell * 2.9; PL.H = PL.trayY + PL.trayH;
+    const dpr = Math.min(window.devicePixelRatio || 1, 3);
+    cv.style.width = avail + 'px'; cv.style.height = PL.H + 'px';
+    cv.width = Math.round(avail * dpr); cv.height = Math.round(PL.H * dpr);
+    PL.ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+
+  function prr(ctx, x, y, w, h, r) {
+    r = Math.min(r, w / 2, h / 2);
+    ctx.beginPath(); ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+  }
+  function drawStone(x, y, s, ci, alpha) {
+    const ctx = PL.ctx, C = STONES[ci], g = s * .05, r = s * .14;
+    ctx.globalAlpha = alpha === undefined ? 1 : alpha;
+    ctx.fillStyle = C.lo; prr(ctx, x + g, y + g, s - 2 * g, s - 2 * g, r); ctx.fill();
+    ctx.fillStyle = C.base; prr(ctx, x + g, y + g, s - 2 * g, s - 2 * g - s * .1, r); ctx.fill();
+    ctx.fillStyle = C.hi; prr(ctx, x + g + s * .1, y + g + s * .06, s - 2 * g - s * .2, s * .1, s * .05); ctx.fill();
+    ctx.strokeStyle = C.mark; ctx.fillStyle = C.mark; ctx.lineWidth = Math.max(1, s * .06); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    const cx = x + s / 2, cy = y + s * .5, u = s * .15;
+    ctx.beginPath();
+    if (ci % 4 === 0) { ctx.moveTo(cx - 1.5 * u, cy - u * .4); ctx.lineTo(cx - .75 * u, cy - u); ctx.lineTo(cx, cy - u * .4); ctx.lineTo(cx + .75 * u, cy - u); ctx.lineTo(cx + 1.5 * u, cy - u * .4); ctx.moveTo(cx - 1.5 * u, cy + u * .6); ctx.lineTo(cx - .75 * u, cy); ctx.lineTo(cx, cy + u * .6); ctx.lineTo(cx + .75 * u, cy); ctx.lineTo(cx + 1.5 * u, cy + u * .6); ctx.stroke(); }
+    if (ci % 4 === 1) { ctx.arc(cx, cy, u * 1.1, 0, 7); ctx.stroke(); ctx.beginPath(); ctx.arc(cx, cy, u * .3, 0, 7); ctx.fill(); }
+    if (ci % 4 === 2) { ctx.ellipse(cx, cy - u * .7, u * .55, u * .7, 0, 0, 7); ctx.moveTo(cx, cy); ctx.lineTo(cx, cy + u * 1.4); ctx.moveTo(cx - u, cy + u * .3); ctx.lineTo(cx + u, cy + u * .3); ctx.stroke(); }
+    if (ci % 4 === 3) { ctx.moveTo(cx - 1.4 * u, cy); ctx.quadraticCurveTo(cx, cy - 1.3 * u, cx + 1.4 * u, cy); ctx.quadraticCurveTo(cx, cy + 1.3 * u, cx - 1.4 * u, cy); ctx.stroke(); ctx.beginPath(); ctx.arc(cx, cy, u * .4, 0, 7); ctx.fill(); }
+    ctx.globalAlpha = 1;
+  }
+  function drawEmptyStone(x, y, s) {
+    const ctx = PL.ctx, g = s * .05;
+    ctx.fillStyle = '#2b3370'; prr(ctx, x + g, y + g, s - 2 * g, s - 2 * g, s * .14); ctx.fill();
+    ctx.fillStyle = '#323b7d'; prr(ctx, x + g, y + g, s - 2 * g, s * .1, s * .05); ctx.fill();
+  }
+
+  function pPos(e) {
+    const b = $('p-canvas').getBoundingClientRect();
+    return { x: (e.clientX - b.left) * (PL.W / b.width), y: (e.clientY - b.top) * (PL.H / b.height) };
+  }
+  function pDragPos() {
+    const sh = PSHAPES[PG.tray[PG.drag.slot].s], w = sh.w * PL.cell, h = sh.h * PL.cell;
+    return { px: PG.drag.x - w / 2, py: PG.drag.touch ? PG.drag.y - h - PL.cell * .9 : PG.drag.y - h / 2, sh };
+  }
+  function pPreview() {
+    if (!PG || !PG.drag) return null;
+    const { px, py, sh } = pDragPos();
+    const c0 = Math.round((px - PL.pad) / PL.cell), r0 = Math.round((py - PL.pad) / PL.cell);
+    if (!pCanPlace(sh, r0, c0)) return { valid: false };
+    return { valid: true, r0, c0, sh, ...pLines(sh, r0, c0) };
+  }
+  function pDown(e) {
+    ensureAudio();
+    if (!PG || PG.over) return;
+    const { x, y } = pPos(e);
+    if (y < PL.trayY - PL.cell * .3) return;
+    const slot = Math.max(0, Math.min(2, Math.floor(x / (PL.W / 3))));
+    if (!PG.tray[slot]) return;
+    PG.drag = { slot, x, y, touch: e.pointerType !== 'mouse' };
+    try { $('p-canvas').setPointerCapture(e.pointerId); } catch (err) {}
+    tone(660, 0, .06, 'triangle', .06);
+    e.preventDefault();
+  }
+  function pMove(e) { if (PG && PG.drag) { const p = pPos(e); PG.drag.x = p.x; PG.drag.y = p.y; } }
+  function pUp() {
+    if (!PG || !PG.drag) return;
+    const pv = pPreview(), slot = PG.drag.slot;
+    PG.drag = null;
+    if (pv && pv.valid) pPlace(slot, pv.r0, pv.c0);
+  }
+
+  function pPlace(slot, r0, c0) {
+    const p = PG.tray[slot], sh = PSHAPES[p.s], now = performance.now();
+    const { rows, cols } = pLines(sh, r0, c0);
+    for (const [r, c] of sh.cells) { PG.board[r0 + r][c0 + c] = p.color; PG.placeFx.push({ r: r0 + r, c: c0 + c, t0: now }); }
+    PG.tray[slot] = null;
+    const lines = rows.size + cols.size;
+    let gained = sh.cells.length;
+    const cr = r0 + sh.h / 2, cc = c0 + sh.w / 2;
+    if (lines) {
+      PG.combo++; PG.sinceClear = 0;
+      gained += 10 * lines * (lines + 1) / 2 * PG.combo;
+      const gone = new Set();
+      rows.forEach(r => { for (let c = 0; c < PN; c++) gone.add(r * PN + c); });
+      cols.forEach(c => { for (let r = 0; r < PN; r++) gone.add(r * PN + c); });
+      gone.forEach(k => {
+        const r = Math.floor(k / PN), c = k % PN;
+        PG.clearFx.push({ r, c, color: PG.board[r][c], t0: now + (reduceMotion ? 0 : (Math.abs(r + .5 - cr) + Math.abs(c + .5 - cc)) * 22) });
+        PG.board[r][c] = -1;
+      });
+      let stone = lines;
+      if (PG.board.every(row => row.every(v => v < 0))) { stone += 10; gained += 300; PG.floats.push({ text: '¡Tablero limpio! +10 piedra', x: PN / 2, y: PN / 2 - 1, t0: now + 150, big: true }); }
+      const before = Math.floor(PG.lines / STATUE_EVERY);
+      PG.lines += lines; PG.stone += stone; S.stone = (S.stone || 0) + stone;
+      PG.floats.push({ text: `+${stone} piedra`, x: cc, y: cr - 1, t0: now + 80, big: true });
+      if (PG.combo >= 2) PG.floats.push({ text: `Combo ×${PG.combo}`, x: cc, y: cr + 1.2, t0: now + 160 });
+      if (Math.floor(PG.lines / STATUE_EVERY) > before) {
+        PG.statues++; addCat(randomStatueGenes());
+        toast('¡Encontraste una estatua entre los bloques! Ya está en tu templo.');
+        sfx.awake();
+      }
+      PG.shake = reduceMotion ? 0 : Math.min(4 + lines * 2, 12);
+      const notes = [523, 659, 784, 1047, 1319, 1568], up = 1 + .06 * Math.min(PG.combo - 1, 6);
+      for (let i = 0; i < Math.min(2 + lines, notes.length); i++) tone(notes[i] * up, i * .06, .18, 'square', .05);
+      tone(110, 0, .25, 'triangle', .22);
+      buzz(lines >= 2 ? [15, 30, 25] : 18);
+      setStoneHud();
+    } else {
+      PG.sinceClear++; if (PG.sinceClear >= 3) PG.combo = 0;
+      tone(180, 0, .12, 'triangle', .22); tone(90, 0, .08, 'sine', .1); buzz(8);
+    }
+    PG.score += gained;
+    PG.floats.push({ text: `+${gained}`, x: cc, y: cr, t0: now, plain: true });
+    if (PG.tray.every(t => !t)) pDeal();
+    $('p-lines').textContent = PG.lines;
+    $('p-combo').innerHTML = PG.combo >= 2 ? `<b style="color:var(--gold)">Combo ×${PG.combo}</b>` : '';
+    save();
+    if (!PG.tray.some(t => t && pFits(PSHAPES[t.s]))) { PG.over = true; setTimeout(() => pGameOver(false), 800); }
+  }
+  function setStoneHud() {
+    if ($('p-stone')) $('p-stone').textContent = PG.stone;
+    $('stone').textContent = S.stone || 0;
+    const p = $('purse-stone'); p.classList.remove('bump'); void p.offsetWidth; p.classList.add('bump');
+  }
+
+  function pGameOver(quit) {
+    if (!PG) return;
+    PG.over = true;
+    const record = PG.score > (S.pyrBest || 0);
+    if (record) S.pyrBest = PG.score;
+    save();
+    if (!quit) [392, 330, 262, 196].forEach((f, i) => tone(f, i * .14, .3, 'sawtooth', .05));
+    else sfx.awake();
+    const g = PG;
+    openSheet(`<div class="center"><div class="big-name">${quit ? 'Partida terminada' : 'Ya no cabe ningún bloque'}</div>
+      <span class="note">${g.score} puntos · ${g.lines} líneas${record ? ' · ¡nuevo récord!' : ''}</span></div>
+      <div class="new-mut">+${g.stone} de piedra para el templo${g.statues ? ` y ${g.statues} estatua${g.statues > 1 ? 's' : ''}` : ''}</div>
+      <p class="note">Usa la piedra en "Mejorar templo": más sarcófagos, un altar mayor y decoraciones.</p>
+      <div class="actions"><button class="btn" id="p-home" type="button">Ir al templo</button><button class="btn gold" id="p-again" type="button">Jugar otra vez</button></div>`);
+    $('p-again').addEventListener('click', () => { closeSheet(); openPyramid(); });
+    $('p-home').addEventListener('click', () => { closeSheet(); closePyramid('templo'); });
+  }
+
+  let pLast = 0;
+  function pLoop(now) {
+    if (!PG) return;
+    pRender(now);
+    if (PG.shown !== PG.score) { PG.shown = PG.shown < PG.score ? Math.min(PG.score, PG.shown + Math.max(1, Math.ceil((PG.score - PG.shown) * .18))) : PG.score; const s = $('p-score'); if (s) s.textContent = PG.shown; }
+    requestAnimationFrame(pLoop);
+  }
+  function pRender(now) {
+    const ctx = PL.ctx, { W, H, pad, cell, tcell, trayY, trayH } = PL;
+    if (!ctx || !W) return;
+    ctx.clearRect(0, 0, W, H);
+    ctx.save();
+    if (PG.shake > .2) { ctx.translate((Math.random() - .5) * PG.shake, (Math.random() - .5) * PG.shake); PG.shake *= .86; } else PG.shake = 0;
+    ctx.fillStyle = '#c9a66b'; prr(ctx, 0, 0, W, W, cell * .32); ctx.fill();
+    ctx.fillStyle = '#1d2458'; prr(ctx, pad * .5, pad * .5, W - pad, W - pad, cell * .28); ctx.fill();
+    const pv = pPreview(), piece = PG.drag ? PG.tray[PG.drag.slot] : null;
+    const willClear = (r, c) => pv && pv.valid && (pv.rows.has(r) || pv.cols.has(c));
+    for (let r = 0; r < PN; r++) for (let c = 0; c < PN; c++) {
+      const x = pad + c * cell, y = pad + r * cell, v = PG.board[r][c];
+      if (v < 0) drawEmptyStone(x, y, cell); else drawStone(x, y, cell, willClear(r, c) ? piece.color : v);
+    }
+    if (pv && pv.valid) for (const [r, c] of pv.sh.cells) { const R = pv.r0 + r, C = pv.c0 + c; drawStone(pad + C * cell, pad + R * cell, cell, piece.color, willClear(R, C) ? .9 : .42); }
+    for (let i = PG.placeFx.length - 1; i >= 0; i--) {
+      const f = PG.placeFx[i], t = (now - f.t0) / 220;
+      if (t >= 1) { PG.placeFx.splice(i, 1); continue; }
+      ctx.fillStyle = `rgba(255,255,255,${.45 * (1 - t)})`; prr(ctx, pad + f.c * cell + cell * .05, pad + f.r * cell + cell * .05, cell * .9, cell * .9, cell * .14); ctx.fill();
+    }
+    const dur = reduceMotion ? 150 : 380;
+    for (let i = PG.clearFx.length - 1; i >= 0; i--) {
+      const f = PG.clearFx[i], t = (now - f.t0) / dur, x = pad + f.c * cell, y = pad + f.r * cell;
+      if (t < 0) { drawStone(x, y, cell, f.color); continue; }
+      if (t >= 1) { PG.clearFx.splice(i, 1); continue; }
+      const s = cell * (1 - t * t), o = (cell - s) / 2;
+      drawStone(x + o, y + o, s, f.color, 1 - t * .6);
+      if (t < .35) { ctx.fillStyle = `rgba(255,240,200,${.8 * (1 - t / .35)})`; prr(ctx, x + o, y + o, s, s, s * .14); ctx.fill(); }
+    }
+    const slotW = W / 3;
+    for (let i = 0; i < 3; i++) {
+      const p = PG.tray[i];
+      if (!p || (PG.drag && PG.drag.slot === i)) continue;
+      const sh = PSHAPES[p.s], fits = pFits(sh);
+      const ox = (i + .5) * slotW - sh.w * tcell / 2, oy = trayY + trayH / 2 - sh.h * tcell / 2;
+      for (const [r, c] of sh.cells) drawStone(ox + c * tcell, oy + r * tcell, tcell, p.color, fits ? 1 : .28);
+    }
+    if (PG.drag) {
+      const { px, py, sh } = pDragPos();
+      ctx.shadowColor = 'rgba(0,0,0,.35)'; ctx.shadowBlur = cell * .4; ctx.shadowOffsetY = cell * .15;
+      for (const [r, c] of sh.cells) drawStone(px + c * cell, py + r * cell, cell, piece.color);
+      ctx.shadowColor = 'transparent'; ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+    }
+    ctx.restore();
+    for (let i = PG.floats.length - 1; i >= 0; i--) {
+      const f = PG.floats[i], t = (now - f.t0) / 900;
+      if (t < 0) continue;
+      if (t >= 1) { PG.floats.splice(i, 1); continue; }
+      const size = cell * (f.big ? .5 : .44) * (t < .15 ? .6 + t / .15 * .4 : 1);
+      const x = Math.max(cell * 2.4, Math.min(W - cell * 2.4, pad + f.x * cell)), y = pad + f.y * cell - t * cell * (reduceMotion ? 0 : 1.1);
+      ctx.globalAlpha = 1 - t * t;
+      ctx.font = `${size}px "Bagel Fat One", "Arial Rounded MT Bold", sans-serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
+      ctx.lineWidth = size * .22; ctx.strokeStyle = '#1d2458'; ctx.strokeText(f.text, x, y);
+      ctx.fillStyle = f.plain ? '#ffffff' : '#f4c24f'; ctx.fillText(f.text, x, y);
+      ctx.globalAlpha = 1;
+    }
+  }
+
+  // ================= Mejoras del templo (se pagan con piedra) =================
+  const UPGRADES = [
+    { id: 'sarc3', name: 'Tercer sarcófago', desc: 'Cría tres camadas al mismo tiempo.', cost: 30 },
+    { id: 'sarc4', name: 'Cuarto sarcófago', desc: 'Cría cuatro camadas al mismo tiempo.', cost: 60, needs: 'sarc3' },
+    { id: 'altar', name: 'Altar mayor', desc: 'El altar guarda hasta 80 ofrendas y junta 1 cada 3 s.', cost: 25 },
+    { id: 'patio', name: 'Patio amplio', desc: 'Caben 24 gatos paseando a la vez (antes 14).', cost: 40 },
+    { id: 'estandartes', name: 'Estandartes', desc: 'Banderas azul y oro en las columnas del templo.', cost: 10 },
+    { id: 'obeliscos', name: 'Obeliscos', desc: 'Dos obeliscos dorados junto a las pirámides.', cost: 20 },
+    { id: 'estanque', name: 'Estanque de lotos', desc: 'Un estanque con lotos en el patio.', cost: 25 },
+  ];
+  function openUpgrades() {
+    ensureAudio();
+    const have = S.stone || 0;
+    openSheet(`<div class="sheet-head"><h2>Mejorar el templo</h2><button class="x" id="x" type="button" aria-label="Cerrar">×</button></div>
+      <p class="note" style="text-align:left">Tienes <b style="color:var(--ink)">${have} de piedra</b>. La piedra se gana en Pirámide: 1 por cada línea.</p>
+      <div class="ups">${UPGRADES.map(u => {
+        const done = S.up && S.up[u.id], locked = u.needs && !(S.up && S.up[u.needs]);
+        return `<div class="up${done ? ' done' : ''}"><div><b>${u.name}</b><small>${u.desc}${locked ? ' Primero construye el anterior.' : ''}</small></div>
+          ${done ? '<span class="up-ok">Construido</span>' : `<button class="btn ${have >= u.cost && !locked ? 'gold' : ''}" data-up="${u.id}" type="button" ${have >= u.cost && !locked ? '' : 'disabled'}>${u.cost} piedra</button>`}</div>`;
+      }).join('')}</div>
+      <button class="btn turq" id="go-pyr" type="button">Jugar Pirámide para ganar piedra</button>`);
+    $('x').addEventListener('click', closeSheet);
+    $('go-pyr').addEventListener('click', () => { closeSheet(); openPyramid(); });
+    document.querySelectorAll('[data-up]').forEach(b => b.addEventListener('click', () => buyUpgrade(b.dataset.up)));
+  }
+  function buyUpgrade(id) {
+    const u = UPGRADES.find(x => x.id === id);
+    if (!u || (S.stone || 0) < u.cost || (S.up && S.up[id])) return;
+    S.stone -= u.cost; S.up = { ...(S.up || {}), [id]: true };
+    if (id === 'sarc3' || id === 'sarc4') S.slots.push(null);
+    $('stone').textContent = S.stone;
+    save(); sfx.awake(); buzz([20, 40, 20]);
+    renderTemplo(); openUpgrades();
+    toast(`¡${u.name} construido!`);
   }
 
   // ================= Navegación y hoja =================
@@ -1622,6 +2011,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
 
   function renderAll() {
     $('ofr').textContent = S.ofrendas;
+    $('stone').textContent = S.stone || 0;
     $('tabs').hidden = !S.sphinxAwake;
     renderTemplo(); renderGatos(); renderJuegos();
     showTab(S.sphinxAwake ? S.tab : 'templo');
