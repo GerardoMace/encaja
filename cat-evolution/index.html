@@ -230,6 +230,23 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
 .up-ok{color:var(--turq);font-weight:900;font-size:.85rem}
 .obj.pond{pointer-events:none}
 .dig-link{justify-self:center;color:var(--muted);font-weight:800;font-size:.88rem;text-decoration:underline;padding:6px}
+/* Poderes de los gatos */
+.powers{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.power{display:flex;align-items:center;gap:6px;background:var(--panel);border-radius:14px;padding:4px 8px 4px 4px;text-align:left;min-width:0}
+.power .pw-cat{width:34px;flex:none}
+.power .pw-txt{min-width:0;line-height:1.15}
+.power .pw-txt b{display:block;font-size:.78rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.power .pw-txt small{font-size:.7rem;color:var(--muted);font-weight:800}
+.power.on{background:var(--turq);color:#08302b}
+.power.on small{color:#08302b}
+.power:disabled{opacity:.55}
+.pick .card .pw{font-size:.72rem;font-weight:900;color:#1d6f5f;line-height:1.2}
+.stuck{margin:0;background:var(--gold);color:var(--sand-ink);border-radius:14px;padding:10px 12px;font-weight:800;text-align:center}
+.stuck button{text-decoration:underline;font-weight:900}
+.powinfo{display:grid;gap:6px}
+.powinfo div{background:var(--panel);border-radius:12px;padding:10px 12px}
+.powinfo b{display:block}
+.powinfo small{color:var(--muted);font-weight:700}
 /* Navegación */
 .tabs{
   position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;justify-content:center;
@@ -666,6 +683,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
       'Un gato con 3 o más mutaciones es Legendario.',
       'Si se te acaban las ofrendas, juega Ofrendas o espera a que el altar junte más.',
       'Juega Pirámide para ganar piedra y mejorar el templo: más sarcófagos, un altar mayor y decoraciones.',
+      'Lleva hasta 3 gatos a los minijuegos: cada uno te da un poder, y los que tienen más mutaciones traen más cargas.',
       'En Ofrendas, 5 piezas en línea crean al Gato de Bastet: borra todas las piezas de un tipo.',
     ];
     return tips[S.tip % tips.length];
@@ -778,7 +796,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
         <button class="btn gold" id="btn-pyr" type="button">Jugar Pirámide</button>
         <button class="dig-link" id="btn-dig" type="button" style="grid-column:1/-1">Excavar una estatua por ${COST.dig} ofrendas</button>
       </div>` : ''}`;
-    if (S.sphinxAwake) { $('btn-breed').addEventListener('click', openBreed); $('btn-dig').addEventListener('click', dig); $('btn-play').addEventListener('click', () => openMatch(S.match.level)); $('btn-pyr').addEventListener('click', openPyramid); $('btn-up').addEventListener('click', openUpgrades); }
+    if (S.sphinxAwake) { $('btn-breed').addEventListener('click', openBreed); $('btn-dig').addEventListener('click', dig); $('btn-play').addEventListener('click', () => pickTeam('match', t => openMatch(S.match.level, t))); $('btn-pyr').addEventListener('click', () => pickTeam('pyr', openPyramid)); $('btn-up').addEventListener('click', openUpgrades); }
     buildWorld();
     tickTemplo();
   }
@@ -1022,7 +1040,8 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     openSheet(`<div class="sheet-head"><h2>${esc(c.name)}</h2><button class="x" id="x" type="button" aria-label="Cerrar">×</button></div>
       <div class="hero halo" style="--halo:${RARITY[r].halo}55">${catSVG(c.genes)}</div>
       <div class="center">${badge(r)}<span class="note">Estilo ${styleOf(c.genes)} · Generación ${c.gen}${c.parents ? ` · Hijo de ${esc(c.parents[0])} y ${esc(c.parents[1])}` : ' · Despertado de una estatua'}</span></div>
-      ${genesHTML(c.genes)}`);
+      ${genesHTML(c.genes)}
+      <div class="powinfo">${['match', 'pyr'].map(gm => { const pw = powerOf(c, gm); return `<div><b>${gm === 'match' ? 'En Ofrendas' : 'En Pirámide'}: ${powerLabel(pw)}</b><small>${pw.desc}</small></div>`; }).join('')}</div>`);
     $('x').addEventListener('click', closeSheet);
   }
 
@@ -1317,6 +1336,87 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
   }
   const starsFor = (left, total) => (left / total >= .3 ? 3 : left / total >= .12 ? 2 : 1);
 
+  // ================= Poderes de los gatos (etapa 4) =================
+  // Cada gato da un poder según su estilo; las cargas crecen con el número de mutaciones.
+  const POWERS = {
+    match: {
+      caricatura: { key: 'moves', name: 'Ronroneo', desc: '+2 movimientos al empezar' },
+      elegante: { key: 'claw', name: 'Zarpazo', desc: 'Rompe la pieza que toques' },
+      egipcio: { key: 'ra', name: 'Bendición de Ra', desc: 'Vuelve explosiva la pieza que toques' },
+      mistico: { key: 'bastet', name: 'Ojo de Bastet', desc: 'Convierte la pieza que toques en Gato de Bastet' },
+    },
+    pyr: {
+      caricatura: { key: 'reroll', name: 'Cambio', desc: 'Cambia los 3 bloques de abajo' },
+      elegante: { key: 'claw', name: 'Zarpazo', desc: 'Quita el bloque que toques' },
+      egipcio: { key: 'small', name: 'Cincel', desc: 'Convierte un bloque de abajo en uno de 1×1' },
+      mistico: { key: 'sweep', name: 'Barrido estelar', desc: 'Borra la fila y la columna que toques' },
+    },
+  };
+  const TEAM_MAX = 3;
+  function famKey(g) {
+    const c = {};
+    GENE_KEYS.forEach(k => { const f = MUT_FAMILY[g[k]]; if (f) c[f] = (c[f] || 0) + 1; });
+    let best = null;
+    ['mistico', 'egipcio', 'elegante'].forEach(f => { if (c[f] && (!best || c[f] > c[best])) best = f; });
+    return best || 'caricatura';
+  }
+  function powerOf(cat, game) {
+    const fam = famKey(cat.genes), base = POWERS[game][fam];
+    const muts = GENE_KEYS.filter(k => MUT_FAMILY[cat.genes[k]]).length;
+    const charges = { moves: 2, reroll: 1, claw: 1 + muts, ra: muts, bastet: Math.ceil(muts / 2), small: muts, sweep: Math.ceil(muts / 2) }[base.key];
+    return { ...base, charges, catId: cat.id };
+  }
+  const powerLabel = p => (p.key === 'moves' ? `${p.name} +${p.charges}` : `${p.name} ×${p.charges}`);
+
+  // Elegir equipo antes de jugar
+  let teamPick = [];
+  function pickTeam(game, start) {
+    ensureAudio();
+    const awake = S.cats.filter(c => c.awake);
+    if (!awake.length) { start([]); return; }
+    S.team = S.team || {};
+    teamPick = (S.team[game] || []).filter(id => awake.some(c => c.id === id)).slice(0, TEAM_MAX);
+    const draw = () => {
+      const sorted = [...awake].sort((a, b) => GENE_KEYS.filter(k => MUT_FAMILY[b.genes[k]]).length - GENE_KEYS.filter(k => MUT_FAMILY[a.genes[k]]).length || b.id - a.id);
+      openSheet(`<div class="sheet-head"><h2>Elige tu equipo</h2><button class="x" id="x" type="button" aria-label="Cerrar">×</button></div>
+        <p class="note" style="text-align:left">Lleva hasta ${TEAM_MAX} gatos a ${game === 'match' ? 'Ofrendas' : 'Pirámide'}. Cada uno te da un poder; los gatos con más mutaciones traen más cargas.</p>
+        <div class="pick">${sorted.map(c => {
+          const i = teamPick.indexOf(c.id), p = powerOf(c, game), r = rarityOf(c.genes);
+          return `<button class="card" data-team="${c.id}" type="button" aria-pressed="${i >= 0}">${i >= 0 ? `<span class="tag">${i + 1}</span>` : ''}
+            <div class="art">${catSVG(c.genes)}</div><span class="name">${esc(c.name)}</span><span class="meta">${badge(r)}</span><span class="pw">${powerLabel(p)}</span></button>`;
+        }).join('')}</div>
+        <div class="actions"><button class="btn" id="team-none" type="button">Jugar sin gatos</button><button class="btn gold" id="team-go" type="button">${teamPick.length ? `Empezar con ${teamPick.length} gato${teamPick.length > 1 ? 's' : ''}` : 'Elige hasta 3 gatos'}</button></div>`);
+      $('x').addEventListener('click', closeSheet);
+      document.querySelectorAll('[data-team]').forEach(b => b.addEventListener('click', () => {
+        const id = Number(b.dataset.team), i = teamPick.indexOf(id);
+        if (i >= 0) teamPick.splice(i, 1); else { if (teamPick.length >= TEAM_MAX) teamPick.shift(); teamPick.push(id); }
+        const sc = $('sheet-card').scrollTop; draw(); $('sheet-card').scrollTop = sc;
+      }));
+      $('team-none').addEventListener('click', () => { closeSheet(); start([]); });
+      $('team-go').addEventListener('click', () => {
+        if (!teamPick.length) { toast('Toca hasta 3 gatos para llevarlos, o juega sin gatos.'); return; }
+        S.team[game] = [...teamPick]; save(); closeSheet(); start([...teamPick]);
+      });
+    };
+    draw();
+  }
+  const teamPowers = (ids, game) => (ids || []).map(id => S.cats.find(c => c.id === id && c.awake)).filter(Boolean).map(c => powerOf(c, game));
+
+  // Barra de poderes dentro de cada minijuego
+  function renderPowerBar(el, powers, target, onTap) {
+    if (!el) return;
+    if (!powers.length) { el.innerHTML = ''; el.hidden = true; return; }
+    el.hidden = false;
+    el.innerHTML = powers.map((p, i) => {
+      const cat = S.cats.find(c => c.id === p.catId);
+      const passive = p.key === 'moves';
+      return `<button class="power${target === i ? ' on' : ''}" data-pw="${i}" type="button" ${passive || !p.charges ? 'disabled' : ''} title="${esc(p.desc)}">
+        <span class="pw-cat">${cat ? catSVG(cat.genes) : ''}</span>
+        <span class="pw-txt"><b>${p.name}</b><small>${passive ? 'aplicado' : p.charges ? `${p.charges} carga${p.charges > 1 ? 's' : ''}` : 'agotado'}</small></span></button>`;
+    }).join('');
+    el.querySelectorAll('[data-pw]').forEach(b => b.addEventListener('click', () => onTap(Number(b.dataset.pw))));
+  }
+
   // ================= Ofrendas: piezas, pantalla y animaciones =================
   const MK = [
     { name: 'Escarabajo', plural: 'escarabajos' },
@@ -1378,12 +1478,16 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     return el;
   }
 
-  function openMatch(n) {
+  function openMatch(n, team) {
     ensureAudio();
     const def = levelDef(n);
     M = { n, def, rng: mulberry32((Date.now() ^ (n * 7919)) >>> 0), moves: def.moves, score: 0, busy: false, sel: -1, drag: null,
       left: { ...(def.need || {}) }, sand: new Set(def.sand || []), els: new Array(MN * MN).fill(null), cells: [], hintTimer: 0, exitArmed: false };
     M.grid = newGrid(M.rng);
+    M.team = team || []; M.powers = teamPowers(M.team, 'match'); M.target = -1;
+    const bonus = M.powers.filter(x => x.key === 'moves').reduce((a, x) => a + x.charges, 0);
+    M.moves += bonus; M.total = def.moves + bonus;
+    M.baseNote = def.goal === 'sand' ? 'Haz combinaciones encima de la arena para limpiarla toda.' : 'Desliza una pieza hacia su vecina para cambiarlas de lugar. Junta 3 o más iguales.';
     ['templo', 'gatos', 'juegos'].forEach(t => { $('tab-' + t).hidden = true; });
     $('tabs').hidden = true;
     const el = $('tab-match');
@@ -1396,8 +1500,9 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
       </div>
       <div class="mgoals" id="m-goals"></div>
       <div class="mstatus"><span class="mstars" id="m-stars"></span><span class="mscore">Puntos <b id="m-score">0</b></span></div>
+      <div class="powers" id="m-powers" hidden></div>
       <div class="mboard" id="mboard"></div>
-      <p class="note" id="m-note">${def.goal === 'sand' ? 'Haz combinaciones encima de la arena para limpiarla toda.' : 'Desliza una pieza hacia su vecina para cambiarlas de lugar. Junta 3 o más iguales.'}</p>`;
+      <p class="note" id="m-note">${M.baseNote}</p>`;
     const board = $('mboard');
     for (let i = 0; i < MN * MN; i++) {
       const c = document.createElement('div');
@@ -1411,6 +1516,8 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     board.addEventListener('pointerup', onBoardUp);
     board.addEventListener('pointercancel', () => { if (M) M.drag = null; });
     $('m-exit').addEventListener('click', exitMatch);
+    renderMatchPowers();
+    if (bonus) toast(`Tus gatos te dan +${bonus} movimientos`);
     updateMatchHud();
     scheduleHint();
     window.scrollTo(0, 0);
@@ -1442,7 +1549,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
       ? `<div class="mgoal${M.sand.size ? '' : ' done'}">${sandIcon}<span>${M.sand.size ? M.sand.size : '✓'}</span><small>arena</small></div>`
       : Object.keys(M.left).map(k => `<div class="mgoal${M.left[k] > 0 ? '' : ' done'}">${pieceSVG(Number(k))}<span>${M.left[k] > 0 ? M.left[k] : '✓'}</span><small>${MK[k].plural}</small></div>`).join('');
     $('m-goals').innerHTML = goals;
-    const st = starsFor(M.moves, M.def.moves);
+    const st = starsFor(M.moves, M.total);
     $('m-stars').innerHTML = [1, 2, 3].map(i => `<i class="${i <= st ? 'on' : ''}">★</i>`).join('') + '<small>si ganas ya</small>';
   }
 
@@ -1456,6 +1563,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     ensureAudio();
     if (!M || M.busy) return;
     const i = cellAt(e); if (i < 0) return;
+    if (M.target >= 0) { useMatchPower(i); return; }
     M.drag = { i, x: e.clientX, y: e.clientY };
     try { $('mboard').setPointerCapture(e.pointerId); } catch (err) {}
   }
@@ -1512,7 +1620,10 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     await wait(180);
     if (M !== mm) return;
     M.moves--; updateMatchHud();
-    let step = resolveStep(M.grid, M.rng, res.swapPair, res.forced), casc = 1;
+    await runCascade(resolveStep(M.grid, M.rng, res.swapPair, res.forced), mm);
+  }
+  async function runCascade(step, mm) {
+    let casc = 1;
     while (step && M === mm) { await animateStep(step, casc++); step = resolveStep(M.grid, M.rng, null, null); }
     if (M !== mm) return;
     if (matchWon()) { await wait(250); finishMatch(true); return; }
@@ -1525,6 +1636,30 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
       await wait(300);
     }
     M.busy = false; scheduleHint();
+  }
+  function renderMatchPowers() {
+    renderPowerBar($('m-powers'), M.powers, M.target, i => {
+      if (!M || M.busy || M.over) return;
+      ensureAudio();
+      M.target = M.target === i ? -1 : i; setSel(-1);
+      $('m-note').textContent = M.target >= 0 ? `${M.powers[i].desc}. Toca el poder otra vez para cancelar.` : M.baseNote;
+      renderMatchPowers();
+    });
+  }
+  async function useMatchPower(i) {
+    const p = M.powers[M.target], t = M.grid[i];
+    if (!p || !p.charges || !t) return;
+    if ((p.key === 'ra' || p.key === 'bastet') && t.sp) { toast('Elige una pieza normal, sin poder especial.'); return; }
+    M.busy = true; clearTimeout(M.hintTimer);
+    p.charges--; M.target = -1; $('m-note').textContent = M.baseNote; renderMatchPowers();
+    sfx.meow(); buzz([15, 30, 15]);
+    const mm = M;
+    if (p.key === 'claw') { await runCascade(resolveStep(M.grid, M.rng, null, new Set([i])), mm); return; }
+    M.grid[i] = p.key === 'ra' ? { k: t.k, sp: 'b' } : { k: -1, sp: 'r' };
+    const el = M.els[i];
+    if (el) { el.innerHTML = pieceSVG(M.grid[i].k, M.grid[i].sp); el.classList.remove('born'); void el.offsetWidth; el.classList.add('born'); }
+    await wait(300);
+    if (M === mm) { M.busy = false; scheduleHint(); }
   }
   const matchWon = () => (M.def.goal === 'sand' ? M.sand.size === 0 : Object.values(M.left).every(v => v <= 0));
 
@@ -1584,9 +1719,9 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
 
   function finishMatch(win) {
     M.over = true; M.busy = true; clearTimeout(M.hintTimer);
-    const n = M.n;
+    const n = M.n, team = M.team;
     if (win) {
-      const stars = starsFor(M.moves, M.def.moves);
+      const stars = starsFor(M.moves, M.total);
       const first = !(S.match.best[n] > 0);
       const reward = 6 + 4 * stars + (first ? 5 : 0);
       const statue = first && n % 2 === 0;
@@ -1603,14 +1738,14 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
         <div class="new-mut">+${reward} ofrendas${first ? ' (incluye 5 por primera vez)' : ''}</div>
         ${sc ? `<div class="center"><div class="hero" style="width:140px">${catSVG(sc.genes, { statue: true })}</div><b>¡Encontraste una estatua!</b><span class="note">Ya está en tu templo, esperando que la despiertes.</span></div>` : ''}
         <div class="actions"><button class="btn" id="m-home" type="button">Ir al templo</button><button class="btn gold" id="m-next" type="button">Nivel ${n + 1}</button></div>`);
-      $('m-next').addEventListener('click', () => { closeSheet(); openMatch(n + 1); });
+      $('m-next').addEventListener('click', () => { closeSheet(); openMatch(n + 1, team); });
       $('m-home').addEventListener('click', () => { closeSheet(); closeMatch('templo'); });
     } else {
       setOfrendas(3); save(); sfx.fail();
       const what = M.def.goal === 'sand' ? `Te faltaron ${M.sand.size} casillas de arena.` : `Te faltaron ${Object.entries(M.left).filter(([, v]) => v > 0).map(([k, v]) => `${v} ${MK[k].plural}`).join(' y ')}.`;
       openSheet(`<div class="center"><div class="big-name">Sin movimientos</div><span class="note">${what} Te llevas 3 ofrendas de consuelo.</span></div>
         <div class="actions"><button class="btn" id="m-home" type="button">Ir al templo</button><button class="btn gold" id="m-retry" type="button">Reintentar</button></div>`);
-      $('m-retry').addEventListener('click', () => { closeSheet(); openMatch(n); });
+      $('m-retry').addEventListener('click', () => { closeSheet(); openMatch(n, team); });
       $('m-home').addEventListener('click', () => { closeSheet(); closeMatch('templo'); });
     }
   }
@@ -1629,10 +1764,10 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
         <p>Acomoda bloques de piedra y completa filas o columnas. Cada línea da 1 de piedra para mejorar el templo, y cada ${STATUE_EVERY} líneas en una partida aparece una estatua.</p>
         <span class="note" style="text-align:left">Récord: ${S.pyrBest || 0} puntos · tienes ${S.stone || 0} de piedra</span>
         <div class="actions"><button class="btn" id="up-from-games" type="button">Mejorar templo</button><button class="btn gold" id="play-pyr" type="button">Jugar Pirámide</button></div></div>
-      <div class="game"><span class="soon">Después</span><b>Poderes de tus gatos</b><p>Cada gato te ayudará en los juegos según sus mutaciones. Los legendarios tendrán los poderes más fuertes.</p></div>
+      <div class="game"><b>Poderes de tus gatos</b><p>Antes de jugar eliges hasta 3 gatos. Los comunes dan movimientos extra o un cambio de bloques; los Elegantes rompen piezas; los Egipcios crean explosivos o bloques de 1×1; los Místicos crean Gatos de Bastet o barren filas enteras. Cada mutación suma cargas.</p></div>
     </div>`;
-    $('play-match').addEventListener('click', () => openMatch(S.match.level));
-    $('play-pyr').addEventListener('click', openPyramid);
+    $('play-match').addEventListener('click', () => pickTeam('match', t => openMatch(S.match.level, t)));
+    $('play-pyr').addEventListener('click', () => pickTeam('pyr', openPyramid));
     $('up-from-games').addEventListener('click', openUpgrades);
   }
 
@@ -1696,10 +1831,12 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     return { rows, cols };
   }
 
-  function openPyramid() {
+  const PYR_NOTE = `Arrastra los bloques al tablero. Cada fila o columna completa da 1 de piedra; cada ${STATUE_EVERY} líneas en una partida aparece una estatua.`;
+  function openPyramid(team) {
     ensureAudio();
     PG = { board: Array.from({ length: PN }, () => Array(PN).fill(-1)), tray: [null, null, null], score: 0, lines: 0, stone: 0, combo: 0, sinceClear: 0,
-      over: false, drag: null, clearFx: [], placeFx: [], floats: [], shake: 0, statues: 0, shown: 0, exitArmed: false };
+      over: false, drag: null, clearFx: [], placeFx: [], floats: [], shake: 0, statues: 0, shown: 0, exitArmed: false, stuck: false, target: -1 };
+    PG.team = Array.isArray(team) ? team : []; PG.powers = teamPowers(PG.team, 'pyr');
     pDeal();
     ['templo', 'gatos', 'juegos'].forEach(t => { $('tab-' + t).hidden = true; });
     $('tabs').hidden = true;
@@ -1712,8 +1849,10 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
         <div class="mmoves"><b id="p-stone">0</b><small>piedra</small></div>
       </div>
       <div class="mstatus"><span class="mscore">Récord <b>${S.pyrBest || 0}</b></span><span class="mscore" id="p-combo"></span><span class="mscore">Líneas <b id="p-lines">0</b></span></div>
+      <div class="powers" id="p-powers" hidden></div>
+      <p class="stuck" id="p-stuck" hidden>Ya no cabe ningún bloque. Usa un poder de tus gatos o <button id="p-end" type="button">termina la partida</button>.</p>
       <div class="pwrap" id="p-wrap"><canvas id="p-canvas" aria-label="Tablero de la pirámide: arrastra los bloques de abajo al tablero"></canvas></div>
-      <p class="note">Arrastra los bloques al tablero. Cada fila o columna completa da 1 de piedra; cada ${STATUE_EVERY} líneas en una partida aparece una estatua.</p>`;
+      <p class="note" id="p-note">${PYR_NOTE}</p>`;
     const cv = $('p-canvas');
     PL.ctx = cv.getContext('2d');
     cv.addEventListener('pointerdown', pDown);
@@ -1721,6 +1860,8 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     cv.addEventListener('pointerup', pUp);
     cv.addEventListener('pointercancel', () => { if (PG) PG.drag = null; });
     $('p-exit').addEventListener('click', exitPyramid);
+    $('p-end').addEventListener('click', () => { if (PG && !PG.over) { PG.over = true; $('p-stuck').hidden = true; pGameOver(false); } });
+    renderPyrPowers();
     pLayout();
     window.scrollTo(0, 0);
     requestAnimationFrame(pLoop);
@@ -1801,6 +1942,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     ensureAudio();
     if (!PG || PG.over) return;
     const { x, y } = pPos(e);
+    if (PG.target >= 0) { pUsePowerAt(x, y); return; }
     if (y < PL.trayY - PL.cell * .3) return;
     const slot = Math.max(0, Math.min(2, Math.floor(x / (PL.W / 3))));
     if (!PG.tray[slot]) return;
@@ -1863,7 +2005,46 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     $('p-lines').textContent = PG.lines;
     $('p-combo').innerHTML = PG.combo >= 2 ? `<b style="color:var(--gold)">Combo ×${PG.combo}</b>` : '';
     save();
-    if (!PG.tray.some(t => t && pFits(PSHAPES[t.s]))) { PG.over = true; setTimeout(() => pGameOver(false), 800); }
+    pCheckStuck();
+  }
+  function pCheckStuck() {
+    if (!PG || PG.over) return;
+    const fits = PG.tray.some(t => t && pFits(PSHAPES[t.s]));
+    const usable = PG.powers.some(p => p.charges > 0);
+    PG.stuck = !fits && usable;
+    $('p-stuck').hidden = !PG.stuck;
+    if (!fits && !usable) { PG.over = true; setTimeout(() => pGameOver(false), 800); }
+  }
+  function renderPyrPowers() {
+    renderPowerBar($('p-powers'), PG.powers, PG.target, i => {
+      if (!PG || PG.over) return;
+      ensureAudio();
+      const p = PG.powers[i];
+      if (p.key === 'reroll') { p.charges--; pDeal(); PG.target = -1; sfx.meow(); buzz(12); renderPyrPowers(); pCheckStuck(); return; }
+      PG.target = PG.target === i ? -1 : i;
+      $('p-note').textContent = PG.target >= 0 ? `${p.desc}. Toca el poder otra vez para cancelar.` : PYR_NOTE;
+      renderPyrPowers();
+    });
+  }
+  function pUsePowerAt(x, y) {
+    const p = PG.powers[PG.target], now = performance.now();
+    if (!p || !p.charges) return;
+    if (p.key === 'small') {
+      if (y < PL.trayY - PL.cell * .3) { toast('Toca uno de los bloques de abajo.'); return; }
+      const slot = Math.max(0, Math.min(2, Math.floor(x / (PL.W / 3))));
+      const t = PG.tray[slot]; if (!t) return;
+      PG.tray[slot] = { s: 0, color: t.color };
+    } else {
+      const c = Math.floor((x - PL.pad) / PL.cell), r = Math.floor((y - PL.pad) / PL.cell);
+      if (r < 0 || c < 0 || r >= PN || c >= PN) { toast('Toca una casilla del tablero.'); return; }
+      if (p.key === 'claw' && PG.board[r][c] < 0) { toast('Toca un bloque del tablero.'); return; }
+      const cells = p.key === 'claw' ? [[r, c]] : Array.from({ length: PN }, (_, k) => [[r, k], [k, c]]).flat();
+      cells.forEach(([rr, cc]) => { if (PG.board[rr][cc] >= 0) { PG.clearFx.push({ r: rr, c: cc, color: PG.board[rr][cc], t0: now }); PG.board[rr][cc] = -1; } });
+      PG.shake = reduceMotion ? 0 : 6;
+    }
+    p.charges--; PG.target = -1; $('p-note').textContent = PYR_NOTE;
+    sfx.meow(); buzz([15, 30, 15]);
+    renderPyrPowers(); pCheckStuck();
   }
   function setStoneHud() {
     if ($('p-stone')) $('p-stone').textContent = PG.stone;
@@ -1880,12 +2061,13 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     if (!quit) [392, 330, 262, 196].forEach((f, i) => tone(f, i * .14, .3, 'sawtooth', .05));
     else sfx.awake();
     const g = PG;
+    $('p-stuck').hidden = true;
     openSheet(`<div class="center"><div class="big-name">${quit ? 'Partida terminada' : 'Ya no cabe ningún bloque'}</div>
       <span class="note">${g.score} puntos · ${g.lines} líneas${record ? ' · ¡nuevo récord!' : ''}</span></div>
       <div class="new-mut">+${g.stone} de piedra para el templo${g.statues ? ` y ${g.statues} estatua${g.statues > 1 ? 's' : ''}` : ''}</div>
       <p class="note">Usa la piedra en "Mejorar templo": más sarcófagos, un altar mayor y decoraciones.</p>
       <div class="actions"><button class="btn" id="p-home" type="button">Ir al templo</button><button class="btn gold" id="p-again" type="button">Jugar otra vez</button></div>`);
-    $('p-again').addEventListener('click', () => { closeSheet(); openPyramid(); });
+    $('p-again').addEventListener('click', () => { closeSheet(); openPyramid(g.team); });
     $('p-home').addEventListener('click', () => { closeSheet(); closePyramid('templo'); });
   }
 
@@ -1977,7 +2159,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
       }).join('')}</div>
       <button class="btn turq" id="go-pyr" type="button">Jugar Pirámide para ganar piedra</button>`);
     $('x').addEventListener('click', closeSheet);
-    $('go-pyr').addEventListener('click', () => { closeSheet(); openPyramid(); });
+    $('go-pyr').addEventListener('click', () => { closeSheet(); pickTeam('pyr', openPyramid); });
     document.querySelectorAll('[data-up]').forEach(b => b.addEventListener('click', () => buyUpgrade(b.dataset.up)));
   }
   function buyUpgrade(id) {
