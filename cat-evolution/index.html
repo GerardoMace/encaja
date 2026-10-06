@@ -60,40 +60,69 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
 .purse svg{width:22px;height:22px}
 .purse.bump{animation:pulse .4s}
 
-/* Templo */
-.intro{display:grid;justify-items:center;text-align:center;gap:14px;padding-block:20px}
-.intro .big{width:min(78vw,300px)}
-.intro p{margin:0;color:var(--muted);font-size:1.05rem;line-height:1.45;max-width:30ch}
-.guide{display:grid;grid-template-columns:92px 1fr;gap:12px;align-items:center;margin-top:4px}
-.bubble{
-  position:relative;background:var(--sand);color:var(--sand-ink);border-radius:18px;padding:12px 14px;
-  font-weight:800;font-size:.95rem;line-height:1.4;
+/* Templo vivo: escena con fondo (cielo, pirámides, Nilo), mundo (objetos + gatos ordenados por profundidad) y columnas al frente */
+.scene{
+  position:relative;aspect-ratio:400/560;width:min(100%,max(300px,calc((100dvh - 250px) / 1.4)));margin:4px auto 0;
+  border-radius:24px;overflow:hidden;background:var(--bg-hi);box-shadow:0 18px 40px rgba(0,0,0,.35);isolation:isolate;
 }
-.bubble::before{content:"";position:absolute;left:-8px;top:50%;margin-top:-8px;border:8px solid transparent;border-left:0;border-right-color:var(--sand)}
-.bubble small{display:block;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;opacity:.6;margin-bottom:2px}
-.block{margin-top:22px;display:grid;gap:12px}
-.altar{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;background:var(--panel);border-radius:18px;padding:12px 14px}
-.altar svg{width:40px;height:40px}
-.altar b{display:block;font-size:.98rem}
-.altar small{color:var(--muted);font-size:.82rem}
-.bar{height:8px;border-radius:99px;background:var(--bg);margin-top:6px;overflow:hidden}
-.bar i{display:block;height:100%;background:var(--gold);border-radius:99px;transition:width .4s}
+.scene .bg,.scene .fg,.scene .fx{position:absolute;inset:0;pointer-events:none}
+.scene .bg svg,.scene .fg svg{width:100%;height:100%;display:block}
+.world{position:absolute;inset:0}
+.fx{z-index:1500;overflow:hidden}
+.fg{z-index:2000}
+.say{
+  position:absolute;z-index:2100;left:12px;right:12px;top:12px;margin:0;background:var(--sand);color:var(--sand-ink);
+  border-radius:16px;padding:9px 12px;font-weight:800;font-size:.9rem;line-height:1.35;box-shadow:0 6px 16px rgba(0,0,0,.25);
+}
+.say::after{content:"";position:absolute;left:50%;bottom:-8px;margin-left:-8px;border:8px solid transparent;border-bottom:0;border-top-color:var(--sand)}
+.say small{display:block;font-size:.68rem;letter-spacing:.1em;text-transform:uppercase;opacity:.6}
+.obj{position:absolute;transform:translate(-50%,-100%);padding:0;display:block}
+.obj svg{display:block;width:100%;height:auto}
+.obj .tag{
+  position:absolute;left:50%;top:0;transform:translate(-50%,-100%);white-space:nowrap;z-index:1;
+  background:rgba(19,27,74,.88);color:var(--ink);border-radius:99px;padding:2px 9px;font-size:.72rem;font-weight:900;font-variant-numeric:tabular-nums;
+}
+.obj .tag.gold{background:var(--gold);color:var(--sand-ink)}
+.obj .tag:empty{display:none}
+.obj.sphinx.asleep .tag{animation:pulse 1.4s infinite}
+.obj.sarc-obj svg{filter:drop-shadow(0 0 9px var(--glow,transparent))}
+.obj.sarc-obj.ready svg{animation:wobble 1.2s infinite}
+.obj.sarc-obj.empty svg{opacity:.6}
+.walker{position:absolute;left:0;top:0;padding:0;transform-origin:50% 100%;will-change:transform}
+.walker::before{content:"";position:absolute;left:20%;right:20%;bottom:-3%;height:9%;border-radius:50%;background:rgba(0,0,0,.22)}
+.walker .flip{position:relative;width:100%;aspect-ratio:200/210}
+.walker .side,.walker .front{position:absolute;left:0;right:0;bottom:0}
+.walker .side{display:none}
+.walker.walking .side{display:block}
+.walker.walking .front{display:none}
+.walker.walking .side svg{animation:bob .38s ease-in-out infinite alternate}
+.lgA,.lgB{transform-box:fill-box;transform-origin:50% 8%}
+.walker.walking .lgA{animation:leg .38s ease-in-out infinite alternate}
+.walker.walking .lgB{animation:leg .38s ease-in-out infinite alternate-reverse}
+.emote{position:absolute;left:50%;top:0;transform:translateX(-50%);font-weight:900;font-size:1.4rem;color:#ff6f91;opacity:0;pointer-events:none;text-shadow:0 2px 0 rgba(0,0,0,.25)}
+.emote.on{animation:emote 1.6s ease-out}
+.flame{transform-box:fill-box;transform-origin:50% 100%;animation:flicker .2s infinite alternate}
+.glowp{animation:glowp 2.6s ease-in-out infinite alternate}
+.shim{animation:shim 3.2s ease-in-out infinite alternate}
+.twinkle{animation:twinkle 2.2s ease-in-out infinite alternate}
+.mote{position:absolute;width:4px;height:4px;border-radius:50%;background:rgba(255,244,210,.75);opacity:0;animation:drift 10s linear infinite}
+.night .mote{background:#e2ff9a;box-shadow:0 0 8px 2px rgba(226,255,154,.6)}
+.temple-actions{margin-top:14px}
 .btn{border-radius:14px;padding:12px 16px;font-weight:900;background:var(--panel-hi)}
 .btn.gold{background:var(--gold);color:var(--sand-ink);box-shadow:0 4px 0 #b9881f}
 .btn.gold:active:not(:disabled){transform:translateY(2px);box-shadow:0 2px 0 #b9881f}
 .btn.turq{background:var(--turq);color:#08302b;box-shadow:0 4px 0 #23917f}
 .btn.turq:active:not(:disabled){transform:translateY(2px);box-shadow:0 2px 0 #23917f}
 .actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.slots{display:grid;grid-template-columns:1fr 1fr;gap:12px}
-.slot{
-  background:var(--panel);border-radius:18px;padding:12px;display:grid;justify-items:center;gap:6px;text-align:center;min-height:200px;align-content:center;
-}
-.slot.empty{background:transparent;border:2px dashed var(--panel-hi);color:var(--muted);font-weight:800}
-.slot .sarc{width:72px;filter:drop-shadow(0 0 10px var(--glow,transparent))}
-.slot.ready .sarc{animation:wobble 1.2s infinite}
-.slot .time{font-family:var(--display);font-size:1.3rem;font-variant-numeric:tabular-nums}
-.slot small{color:var(--muted);font-size:.8rem;line-height:1.3}
-.slot.ready{box-shadow:inset 0 0 0 3px var(--gold)}
+@keyframes leg{from{transform:rotate(18deg)}to{transform:rotate(-18deg)}}
+@keyframes bob{from{transform:translateY(0)}to{transform:translateY(-3%)}}
+@keyframes emote{0%{opacity:0;transform:translate(-50%,10px) scale(.6)}20%{opacity:1;transform:translate(-50%,-6px) scale(1)}100%{opacity:0;transform:translate(-50%,-38px)}}
+@keyframes flicker{from{transform:scale(1,1)}to{transform:scale(.9,1.12)}}
+@keyframes glowp{from{opacity:.7}to{opacity:1}}
+@keyframes shim{from{transform:translateX(-10px)}to{transform:translateX(10px)}}
+@keyframes twinkle{from{opacity:.25}to{opacity:1}}
+@keyframes drift{0%{transform:translate(0,0);opacity:0}15%{opacity:1}85%{opacity:.8}100%{transform:translate(34px,-140px);opacity:0}}
+@media (prefers-reduced-motion:reduce){.walker.walking .side svg,.walker.walking .lgA,.walker.walking .lgB,.flame,.glowp,.shim,.twinkle,.mote,.obj.sarc-obj.ready svg,.obj.sphinx.asleep .tag{animation:none}.mote{display:none}}
 
 /* Gatos */
 .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
@@ -404,6 +433,62 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     return `<svg class="cat" viewBox="0 0 200 210" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>${defs}</defs>${o2}</svg>`;
   }
 
+  // Gato de perfil caminando (mira a la derecha); las patas lgA/lgB se animan con CSS
+  function catSideSVG(g) {
+    const id = 's' + (++uid), F = FUR[g.fur] || FUR.naranja;
+    const ink = '#2a1f35', white = '#fbf6ee', gold = '#f4c24f', starC = '#fff6c4';
+    const pat = g.pat, smoking = pat === 'smoking';
+    const fur = F.g ? `url(#${id}f)` : F.b;
+    const dark = lum(F.b) < .3 ? shade(F.b, .3) : shade(F.b, -.3);
+    const body = smoking ? '#2b2731' : fur;
+    const far = smoking ? '#211e27' : shade(F.g ? F.g[1] : F.b, -.18);
+    let defs = F.g ? `<linearGradient id="${id}f" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${F.g[0]}"/><stop offset="1" stop-color="${F.g[1]}"/></linearGradient>` : '';
+    const S = `stroke="${ink}" stroke-width="3" stroke-linejoin="round"`;
+    const sock = pat === 'bicolor' || smoking;
+    const leg = (x, cls, fill) => `<g class="${cls}"><rect x="${x}" y="96" width="15" height="48" rx="7.5" fill="${fill}" ${S}/>${sock ? `<rect x="${x + 1.5}" y="131" width="12" height="11.5" rx="5.75" fill="${white}"/>` : ''}</g>`;
+    let o = '';
+    o += `<path d="M48 88C22 86 14 58 28 32" stroke="${ink}" stroke-width="14" fill="none" stroke-linecap="round"/><path d="M48 88C22 86 14 58 28 32" stroke="${body}" stroke-width="8" fill="none" stroke-linecap="round"/>`;
+    o += leg(74, 'lgB', far) + leg(142, 'lgA', far);
+    o += leg(56, 'lgA', body) + leg(124, 'lgB', body);
+    o += `<ellipse cx="100" cy="94" rx="58" ry="30" fill="${body}" ${S}/>`;
+    if (pat === 'atigrado') o += `<path d="M80 68q5 14 0 28M98 65q5 16 0 32M116 67q5 14 0 28" stroke="${dark}" stroke-width="5" fill="none" stroke-linecap="round"/>`;
+    if (pat === 'manchas') o += `<circle cx="80" cy="84" r="8" fill="${dark}"/><circle cx="112" cy="104" r="7" fill="${dark}"/><circle cx="98" cy="74" r="5" fill="${dark}"/>`;
+    if (pat === 'bicolor') o += `<ellipse cx="104" cy="112" rx="40" ry="10" fill="${white}"/><ellipse cx="140" cy="100" rx="12" ry="14" fill="${white}"/>`;
+    if (smoking) o += `<ellipse cx="140" cy="98" rx="13" ry="18" fill="${white}"/>`;
+    if (pat === 'jeroglificos') o += `<path d="M60 98q42 14 84 0" stroke="${gold}" stroke-width="4" fill="none" stroke-linecap="round"/><path d="M96 78a4 5 0 1 0 8 0a4 5 0 1 0-8 0M100 83v12M94 88h12" stroke="${gold}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+    if (pat === 'constelacion') {
+      const pts = [[74, 90], [92, 78], [112, 92], [128, 104]];
+      o += `<path d="M${pts.map(p => p.join(' ')).join('L')}" stroke="${starC}" stroke-opacity=".7" stroke-width="1.5" fill="none"/>` + pts.map(([x, y], i) => star4(x, y, i % 2 ? 4 : 6, starC)).join('');
+    }
+    if (g.fur === 'cosmico') o += star4(70, 104, 3, starC) + star4(120, 76, 3, starC);
+    // collares al cuello, antes de la cabeza para que la cara quede encima
+    if (g.acc === 'cascabel') o += `<path d="M124 66Q126 90 148 98" stroke="${ink}" stroke-width="9" fill="none" stroke-linecap="round"/><path d="M124 66Q126 90 148 98" stroke="#d94848" stroke-width="5.5" fill="none" stroke-linecap="round"/><circle cx="146" cy="101" r="5.5" fill="${gold}" stroke="${ink}" stroke-width="1.8"/>`;
+    if (g.acc === 'usekh') o += [['#2a1f35', 19], ['#1f5fbf', 16], ['#36cbb9', 11], ['#f4c24f', 6], ['#d94848', 2]].map(([c, w]) => `<path d="M122 62Q122 92 152 100" stroke="${c}" stroke-width="${w}" fill="none" stroke-linecap="round"/>`).join('');
+    o += `<path d="M160 42L173 10Q176 6 179 10L184 48Z" fill="${fur}" ${S}/>`;
+    o += `<path d="M138 48L141 13Q143 8 147 11L165 38Z" fill="${fur}" ${S}/><path d="M144 38L145 21L157 34Z" fill="#f6a5b6"/>`;
+    o += `<ellipse cx="158" cy="64" rx="31" ry="28" fill="${fur}" ${S}/>`;
+    if (pat === 'atigrado') o += `<path d="M150 42l3 10M161 39l1 10" stroke="${dark}" stroke-width="4.5" stroke-linecap="round"/>`;
+    if (pat === 'manchas') o += `<circle cx="148" cy="50" r="5" fill="${dark}"/>`;
+    if (pat === 'jeroglificos') o += `<path d="M146 45q10-6 20 0" stroke="${gold}" stroke-width="3.5" fill="none" stroke-linecap="round"/>`;
+    if (pat === 'constelacion') o += star4(150, 46, 4, starC);
+    if (pat === 'bicolor' || smoking) o += `<ellipse cx="179" cy="73" rx="13" ry="10" fill="${white}"/>`;
+    let iris = IRIS[g.eyes] || IRIS.verde;
+    if (g.eyes === 'heterocromia') iris = IRIS.azul;
+    if (g.eyes === 'galaxia') {
+      defs += `<radialGradient id="${id}g" cx=".45" cy=".4" r=".7"><stop offset="0" stop-color="#f1e6ff"/><stop offset=".45" stop-color="#8a5cff"/><stop offset="1" stop-color="#1b2a85"/></radialGradient>`;
+      iris = `url(#${id}g)`;
+    }
+    o += `<ellipse cx="168" cy="60" rx="6.5" ry="8.5" fill="${iris}" stroke="${ink}" stroke-width="2"/>`;
+    o += g.eyes === 'galaxia' ? star4(168, 61, 3.5, '#ffffff') : `<ellipse cx="169.5" cy="61" rx="2.6" ry="6" fill="${ink}"/><circle cx="171" cy="57" r="2" fill="#fff"/>`;
+    if (g.eyes === 'kohl') o += `<path d="M160 55Q168 49 176 55L184 52" stroke="${ink}" stroke-width="3" fill="none" stroke-linecap="round"/>`;
+    o += `<path d="M184 67L190 67L187 71Z" fill="#ef7f98" stroke="${ink}" stroke-width="1.5" stroke-linejoin="round"/><path d="M187 71q0 5-6 6" stroke="${ink}" stroke-width="2" fill="none" stroke-linecap="round"/>`;
+    o += `<path d="M178 75L198 71M178 79L197 83" stroke="${ink}" stroke-opacity=".45" stroke-width="1.6" stroke-linecap="round"/>`;
+    o += `<ellipse cx="168" cy="76" rx="5" ry="3" fill="#ff8fa8" opacity=".45"/>`;
+    if (g.acc === 'mono') o += `<path d="M142 90L130 82L130 98ZM142 90L154 82L154 98Z" fill="#b8325f" stroke="${ink}" stroke-width="2" stroke-linejoin="round"/><circle cx="142" cy="90" r="4" fill="#8e2148" stroke="${ink}" stroke-width="1.5"/>`;
+    if (g.acc === 'luna') o += `<circle cx="162" cy="22" r="14" fill="#fff0a8" opacity=".22"/><path d="M166 10a12 12 0 1 0 0 22a9.5 9.5 0 1 1 0-22Z" fill="#fff0a8" stroke="${ink}" stroke-width="1.8"/>`;
+    return `<svg class="cat" viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg" aria-hidden="true"><defs>${defs}</defs>${o}</svg>`;
+  }
+
   function sarcSVG() {
     return `<svg class="sarc" viewBox="0 0 120 180" aria-hidden="true">
       <path d="M60 6C88 6 104 26 104 52L96 166Q60 178 24 166L16 52C16 26 32 6 60 6Z" fill="#f4c24f" stroke="#2a1f35" stroke-width="4"/>
@@ -415,6 +500,8 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
       <path d="M27 128H93M26 146H94" stroke="#1f5fbf" stroke-width="5"/>
     </svg>`;
   }
+
+  const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   // ================= Estado =================
   const KEY = 'catevolution.v1';
@@ -489,7 +576,8 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     const awake = S.cats.filter(c => c.awake), statues = S.cats.filter(c => !c.awake);
     const busy = S.slots.filter(Boolean);
     if (S.slots.some(s => s && Date.now() >= s.readyAt)) return '¡Un sarcófago está listo! Tócalo para ver al gatito que nació.';
-    if (awake.length < 2 && statues.length) return `Te dejé estatuas en la pestaña Gatos. Despiértalas con ofrendas: cuesta ${COST.awaken} cada una.`;
+    if (awake.length < 2 && statues.length) return `Toca las estatuas del templo para despertarlas. Cuesta ${COST.awaken} ofrendas cada una.`;
+    if (statues.length > SPOTS.statues.length) return `Tienes ${statues.length - SPOTS.statues.length} estatuas más guardadas en la pestaña Gatos.`;
     if (!S.births && !busy.length) return '¡Ya tienes dos gatos despiertos! Toca "Criar gatitos" y elige a los dos padres.';
     if (!S.births && busy.length) return 'Mientras más raro sea el bebé, más tarda en despertar. Si el sarcófago brilla, viene algo especial.';
     const tips = [
@@ -502,66 +590,244 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     return tips[S.tip % tips.length];
   }
 
+  // ================= Templo vivo =================
+  // Paleta según la hora real del jugador: día, atardecer o noche
+  const PALETTES = {
+    day:   { sky1: '#6fb8ec', sky2: '#f6dfa6', orb: '#fff4c2', dune: '#e7c47f', pyr: '#e2b065', pyrS: '#c08a45', nile: '#3d93d6', nileHi: '#bfe6ff', palm: '#3f9b5a', trunk: '#8a5a34', stone: '#e5c88d', stoneS: '#c9a669', stoneHi: '#f3dfb0', floor1: '#ecd39b', floor2: '#d6ad6c', line: '#b8894c', glow: .3, stars: false },
+    dusk:  { sky1: '#3a3478', sky2: '#f29a6b', orb: '#ffcf8a', dune: '#c98a62', pyr: '#b9775e', pyrS: '#8e5249', nile: '#6a6fb8', nileHi: '#ffd2b0', palm: '#2f6b4f', trunk: '#5e3b2e', stone: '#d7a982', stoneS: '#a8775c', stoneHi: '#ecc7a2', floor1: '#dcae84', floor2: '#b07e5c', line: '#8e5e45', glow: .55, stars: false },
+    night: { sky1: '#0b1140', sky2: '#283a8c', orb: '#f4f1d0', dune: '#2b3474', pyr: '#323d86', pyrS: '#222b66', nile: '#1d3f88', nileHi: '#9fc3ff', palm: '#1d3b4d', trunk: '#2a2a4a', stone: '#7b7bb0', stoneS: '#5a5a92', stoneHi: '#9b9bcc', floor1: '#6a679e', floor2: '#45437a', line: '#33315f', glow: .9, stars: true },
+  };
+  const skyMode = () => { const h = new Date().getHours(); return h >= 7 && h < 17 ? 'day' : h >= 17 && h < 20 ? 'dusk' : 'night'; };
+  let mode = skyMode();
+  // Posiciones en fracción de la escena (ancla = centro de la base del objeto)
+  const SPOTS = {
+    sphinx: { x: .5, y: .49, w: .3 },
+    sarc: [{ x: .2, y: .51, w: .12 }, { x: .8, y: .51, w: .12 }],
+    altar: { x: .2, y: .93, w: .15 },
+    statues: [{ x: .78, y: .9 }, { x: .37, y: .7 }, { x: .63, y: .7 }, { x: .5, y: .86 }, { x: .3, y: .8 }, { x: .7, y: .79 }],
+  };
+  const FLOOR = { x0: .17, x1: .83, y0: .57, y1: .93 };
+  const MAX_WALKERS = 14;
+  const walkers = new Map();   // id de gato → { x, y, tx, ty, walking, until, face, el, flip }
+  const spawnAt = {};          // dónde aparece un gato recién despertado o recién nacido
+  const statuePos = {};
+  const depth = y => Math.max(.5, .62 + .38 * (y - FLOOR.y0) / (FLOOR.y1 - FLOOR.y0));
+
+  function palm(x, y, s, P) {
+    const fr = [[-54, -72, -34, -106], [-40, -112, -26, -118], [8, -120, -8, -122], [40, -104, 18, -116], [46, -74, 30, -100]];
+    return `<g transform="translate(${x} ${y}) scale(${s})"><path d="M0 0C-4-30 2-60-6-90" stroke="${P.trunk}" stroke-width="7" fill="none" stroke-linecap="round"/>${fr.map(([ex, ey, cx, cy]) => `<path d="M-6-90Q${cx} ${cy} ${ex} ${ey}" stroke="${P.palm}" stroke-width="7" fill="none" stroke-linecap="round"/>`).join('')}</g>`;
+  }
+  function column(x, y0, y1, w, P) {
+    return `<rect x="${x - w / 2}" y="${y0}" width="${w}" height="${y1 - y0}" fill="${P.stone}"/><rect x="${x + w / 6}" y="${y0}" width="${w / 3}" height="${y1 - y0}" fill="${P.stoneS}"/>` +
+      `<path d="M${x - w / 2} ${y0 + 6}L${x - w * .95} ${y0 - 8}H${x + w * .95}L${x + w / 2} ${y0 + 6}Z" fill="${P.stoneHi}"/><rect x="${x - w * .7}" y="${y1 - 6}" width="${w * 1.4}" height="6" fill="${P.stoneS}"/>`;
+  }
+  function torch(x, y, P) {
+    return `<circle class="glowp" cx="${x}" cy="${y - 30}" r="46" fill="url(#torchglow)"/><rect x="${x - 2.5}" y="${y - 26}" width="5" height="26" fill="${P.trunk}"/><path d="M${x - 9} ${y - 28}H${x + 9}L${x + 6} ${y - 22}H${x - 6}Z" fill="${P.stoneHi}"/>` +
+      `<g class="flame"><path d="M${x} ${y - 46}c5 6 8 10 8 14a8 8 0 0 1-16 0c0-4 3-8 8-14z" fill="#ffb347"/><path d="M${x} ${y - 39}c3 3 4 5 4 7a4 4 0 0 1-8 0c0-2 1-4 4-7z" fill="#fff0a8"/></g>`;
+  }
+  function sceneBG(P) {
+    let rnd = 7; const r = () => (rnd = (rnd * 16807) % 2147483647) / 2147483647;
+    const stars = P.stars ? Array.from({ length: 26 }, () => `<circle class="twinkle" cx="${(r() * 400).toFixed(0)}" cy="${(r() * 190).toFixed(0)}" r="${(r() * 1.4 + .6).toFixed(1)}" fill="#fff" style="animation-delay:${(r() * 2).toFixed(2)}s"/>`).join('') : '';
+    const tiles = [];
+    for (let i = -7; i <= 7; i++) tiles.push(`<path d="M${200 + i * 16} 284L${200 + i * 70} 560"/>`);
+    [300, 322, 352, 392, 446, 514].forEach(y => tiles.push(`<path d="M0 ${y}H400"/>`));
+    return `<svg viewBox="0 0 400 560" preserveAspectRatio="none" aria-hidden="true"><defs>
+      <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${P.sky1}"/><stop offset="1" stop-color="${P.sky2}"/></linearGradient>
+      <linearGradient id="floor" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${P.floor1}"/><stop offset="1" stop-color="${P.floor2}"/></linearGradient>
+      <radialGradient id="torchglow"><stop offset="0" stop-color="#ffb347" stop-opacity="${P.glow}"/><stop offset="1" stop-color="#ffb347" stop-opacity="0"/></radialGradient>
+    </defs>
+    <rect width="400" height="300" fill="url(#sky)"/>${stars}
+    <circle cx="322" cy="86" r="24" fill="${P.orb}"/>${P.stars ? `<circle cx="331" cy="80" r="21" fill="${P.sky1}" opacity=".85"/>` : `<circle cx="322" cy="86" r="34" fill="${P.orb}" opacity=".25"/>`}
+    <path d="M0 252Q80 226 160 246T320 238T400 246V300H0Z" fill="${P.dune}"/>
+    <path d="M36 264L108 182L180 264Z" fill="${P.pyr}"/><path d="M108 182L180 264H122Z" fill="${P.pyrS}"/>
+    <path d="M150 264L236 158L322 264Z" fill="${P.pyr}"/><path d="M236 158L322 264H252Z" fill="${P.pyrS}"/>
+    <path d="M300 264L346 214L392 264Z" fill="${P.pyr}"/><path d="M346 214L392 264H354Z" fill="${P.pyrS}"/>
+    <rect y="260" width="400" height="24" fill="${P.nile}"/>
+    <g class="shim" stroke="${P.nileHi}" stroke-width="2" stroke-linecap="round" opacity=".55"><path d="M40 268h18M120 275h26M210 267h14M290 276h22M350 269h16"/></g>
+    ${palm(24, 266, .85, P)}${palm(380, 266, .8, P)}${palm(60, 268, .55, P)}
+    <rect y="284" width="400" height="276" fill="url(#floor)"/>
+    <g stroke="${P.line}" stroke-width="1.2" opacity=".35" fill="none">${tiles.join('')}</g>
+    <rect x="70" y="266" width="260" height="20" fill="${P.stoneS}"/><rect x="70" y="266" width="260" height="5" fill="${P.stoneHi}"/>
+    ${column(96, 204, 266, 16, P)}${column(134, 204, 266, 16, P)}${column(266, 204, 266, 16, P)}${column(304, 204, 266, 16, P)}
+    <rect x="78" y="182" width="244" height="16" fill="${P.stone}"/><rect x="78" y="194" width="244" height="4" fill="${P.stoneS}"/>
+    <g fill="${P.stoneS}">${Array.from({ length: 11 }, (_, i) => `<rect x="${92 + i * 21}" y="186" width="${i % 2 ? 4 : 8}" height="6" rx="1"/>`).join('')}</g>
+    ${torch(115, 266, P)}${torch(285, 266, P)}
+    </svg>`;
+  }
+  function sceneFG(P) {
+    const band = (x, w) => `<g fill="${P.stoneS}">${[150, 230, 310, 390, 470].map(y => `<rect x="${x + w * .3}" y="${y}" width="${w * .4}" height="10" rx="2"/><circle cx="${x + w / 2}" cy="${y + 24}" r="${w * .12}"/>`).join('')}</g>`;
+    return `<svg viewBox="0 0 400 560" preserveAspectRatio="none" aria-hidden="true">
+      <rect x="-6" y="70" width="34" height="490" fill="${P.stone}"/><rect x="16" y="70" width="12" height="490" fill="${P.stoneS}"/>
+      <path d="M-6 84L-14 56H36L28 84Z" fill="${P.stoneHi}"/>${band(-6, 34)}
+      <rect x="372" y="70" width="34" height="490" fill="${P.stone}"/><rect x="372" y="70" width="10" height="490" fill="${P.stoneHi}"/>
+      <path d="M372 84L364 56H414L406 84Z" fill="${P.stoneHi}"/>${band(372, 34)}
+    </svg>`;
+  }
+  function altarSceneSVG() {
+    return `<svg viewBox="0 0 100 92" aria-hidden="true">
+      <rect x="10" y="72" width="80" height="16" rx="3" fill="#c9a66b" stroke="#2a1f35" stroke-width="2.5"/>
+      <rect x="20" y="50" width="60" height="24" rx="3" fill="#e2bf7e" stroke="#2a1f35" stroke-width="2.5"/>
+      <path d="M46 56a4 5 0 1 0 8 0a4 5 0 1 0-8 0M50 61v9M45 65h10" stroke="#a8792e" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+      <path d="M28 50Q50 64 72 50Z" fill="#f4c24f" stroke="#2a1f35" stroke-width="2.5" stroke-linejoin="round"/>
+      <g id="altar-flame" style="transform-box:fill-box;transform-origin:50% 100%"><g class="flame">
+        <path d="M50 12c9 11 13 18 13 25a13 13 0 0 1-26 0c0-7 4-14 13-25z" fill="#ffb347"/><path d="M50 25c5 6 7 10 7 14a7 7 0 0 1-14 0c0-4 2-8 7-14z" fill="#fff0a8"/>
+      </g></g>
+    </svg>`;
+  }
+
   function renderTemplo() {
     const el = $('tab-templo');
-    if (!S.sphinxAwake) {
-      el.innerHTML = `<div class="intro">
-        <h2>El templo dormido</h2>
-        <button class="big" id="sphinx-statue" type="button" aria-label="Despertar a la esfinge">${catSVG(SPHINX, { statue: true })}</button>
-        <p>Una esfinge de piedra custodia el templo de los gatos. Tócala para despertarla.</p>
-      </div>`;
-      $('sphinx-statue').addEventListener('click', wakeSphinx);
-      return;
-    }
+    mode = skyMode();
+    const P = PALETTES[mode];
+    const motes = Array.from({ length: 7 }, (_, i) => `<i class="mote" style="left:${12 + i * 12}%;top:${60 + (i * 37) % 32}%;animation-delay:${(i * 1.4).toFixed(1)}s"></i>`).join('');
     el.innerHTML = `
-      <div class="guide">
-        <div>${catSVG(SPHINX)}</div>
-        <p class="bubble"><small>La Esfinge</small><span id="guide-text">${esc(guideText())}</span></p>
+      <div class="scene ${mode}" id="scene">
+        <div class="bg">${sceneBG(P)}</div>
+        <div class="world" id="world"></div>
+        <div class="fx" aria-hidden="true">${motes}</div>
+        <div class="fg">${sceneFG(P)}</div>
+        <p class="say"><small id="say-who">La Esfinge</small><span id="guide-text"></span></p>
       </div>
-      <div class="block">
-        <div class="altar">
-          ${altarSVG()}
-          <div><b>Altar de ofrendas</b><small id="altar-txt"></small><div class="bar"><i id="altar-bar"></i></div></div>
-          <button class="btn gold" id="btn-altar" type="button">Recoger</button>
-        </div>
-      </div>
-      <div class="block">
-        <h2>Sarcófagos de cría</h2>
-        <div class="slots" id="slots"></div>
-        <div class="actions">
-          <button class="btn turq" id="btn-breed" type="button">Criar gatitos · ${COST.breed}</button>
-          <button class="btn" id="btn-dig" type="button">Excavar estatua · ${COST.dig}</button>
-        </div>
-      </div>`;
-    $('btn-altar').addEventListener('click', collectAltar);
-    $('btn-breed').addEventListener('click', openBreed);
-    $('btn-dig').addEventListener('click', dig);
+      ${S.sphinxAwake ? `<div class="actions temple-actions">
+        <button class="btn turq" id="btn-breed" type="button">Criar gatitos · ${COST.breed}</button>
+        <button class="btn" id="btn-dig" type="button">Excavar estatua · ${COST.dig}</button>
+      </div>` : ''}`;
+    if (S.sphinxAwake) { $('btn-breed').addEventListener('click', openBreed); $('btn-dig').addEventListener('click', dig); }
+    buildWorld();
     tickTemplo();
   }
-  function altarSVG() {
-    return `<svg viewBox="0 0 40 40" aria-hidden="true"><path d="M6 30h28v6H6z" fill="#c9a66b"/><path d="M10 22h20v8H10z" fill="#e2bf7e"/><path d="M20 4c4 5 6 8 6 11a6 6 0 0 1-12 0c0-3 2-6 6-11z" fill="#f4c24f"/><path d="M20 10c2 3 3 4 3 6a3 3 0 0 1-6 0c0-2 1-3 3-6z" fill="#fff0a8"/></svg>`;
+
+  function objHTML(cls, spot, inner, label, attrs) {
+    return `<button class="obj ${cls}" type="button" aria-label="${esc(label)}" ${attrs || ''} style="left:${spot.x * 100}%;top:${spot.y * 100}%;width:${spot.w * 100}%;z-index:${Math.round(spot.y * 1000)}">${inner}</button>`;
   }
+  function buildWorld() {
+    const world = $('world');
+    let html = objHTML('sphinx' + (S.sphinxAwake ? '' : ' asleep'), SPOTS.sphinx,
+      `<span class="tag gold">${S.sphinxAwake ? '' : '¡Tócame!'}</span><div id="sphinx-art">${catSVG(SPHINX, { statue: !S.sphinxAwake })}</div>`,
+      S.sphinxAwake ? 'La Esfinge: toca para otro consejo' : 'Despertar a la esfinge', 'id="obj-sphinx"');
+    if (S.sphinxAwake) {
+      S.slots.forEach((s, i) => { html += objHTML('sarc-obj', SPOTS.sarc[i], `<span class="tag" id="sarc-tag-${i}"></span>${sarcSVG()}`, 'Sarcófago de cría', `data-slot="${i}"`); });
+      html += objHTML('altar-obj', SPOTS.altar, `<span class="tag gold" id="altar-tag"></span>${altarSceneSVG()}`, 'Altar de ofrendas: toca para recoger', 'id="obj-altar"');
+      S.cats.filter(c => !c.awake).slice(0, SPOTS.statues.length).forEach((c, i) => {
+        const sp = SPOTS.statues[i];
+        statuePos[c.id] = { x: sp.x, y: sp.y };
+        html += objHTML('statue', { ...sp, w: .16 }, `<span class="tag">Despertar · ${COST.awaken}</span>${catSVG(c.genes, { statue: true })}`, 'Estatua dormida: toca para despertarla', `data-statue="${c.id}"`);
+      });
+    }
+    world.innerHTML = html;
+    $('obj-sphinx').addEventListener('click', () => {
+      ensureAudio();
+      if (!S.sphinxAwake) { wakeSphinx(); return; }
+      S.tip++; sfx.meow(); tickTemplo();
+    });
+    if (S.sphinxAwake) {
+      world.querySelectorAll('[data-slot]').forEach(b => b.addEventListener('click', () => {
+        const i = Number(b.dataset.slot);
+        if (S.slots[i]) openSlot(i); else openBreed();
+      }));
+      $('obj-altar').addEventListener('click', collectAltar);
+      world.querySelectorAll('[data-statue]').forEach(b => b.addEventListener('click', () => openCat(Number(b.dataset.statue))));
+    }
+    // Gatos despiertos caminando
+    const awake = S.cats.filter(c => c.awake).slice(-MAX_WALKERS);
+    const ids = new Set(awake.map(c => c.id));
+    [...walkers.keys()].forEach(id => { if (!ids.has(id)) walkers.delete(id); });
+    const now = performance.now();
+    awake.forEach(c => {
+      let w = walkers.get(c.id);
+      if (!w) {
+        const sp = spawnAt[c.id];
+        const x = sp ? sp.x : FLOOR.x0 + Math.random() * (FLOOR.x1 - FLOOR.x0);
+        const y = sp ? sp.y : FLOOR.y0 + Math.random() * (FLOOR.y1 - FLOOR.y0);
+        w = { x, y, tx: x, ty: y, walking: false, until: now + (sp ? 900 : Math.random() * 2500), face: Math.random() < .5 ? -1 : 1 };
+        delete spawnAt[c.id];
+        walkers.set(c.id, w);
+      }
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'walker' + (w.walking ? ' walking' : '');
+      b.setAttribute('aria-label', `${c.name}: ver su ficha`);
+      b.innerHTML = `<div class="flip"><div class="side">${catSideSVG(c.genes)}</div><div class="front">${catSVG(c.genes)}</div></div><span class="emote" aria-hidden="true"></span>`;
+      b.addEventListener('click', () => {
+        ensureAudio(); emote(w, '♥'); sfx.meow(); buzz(10);
+        if (w.walking) setIdle(w, performance.now());
+        setTimeout(() => openCat(c.id), 380);
+      });
+      w.el = b; w.flip = b.firstChild;
+      world.appendChild(b);
+    });
+    placeWalkers();
+  }
+
+  function emote(w, ch) {
+    const e = w.el && w.el.querySelector('.emote'); if (!e) return;
+    e.textContent = ch; e.classList.remove('on'); void e.offsetWidth; e.classList.add('on');
+  }
+  function setIdle(w, t) {
+    w.walking = false; w.el && w.el.classList.remove('walking');
+    w.until = t + 2000 + Math.random() * 5000;
+    if (Math.random() < .3) emote(w, pick(['♥', 'z', '♪', '✦', '…']));
+  }
+  function setWalk(w) {
+    if (reduceMotion) { w.until = Infinity; return; }
+    w.tx = FLOOR.x0 + Math.random() * (FLOOR.x1 - FLOOR.x0);
+    w.ty = FLOOR.y0 + Math.random() * (FLOOR.y1 - FLOOR.y0);
+    w.walking = true; w.el && w.el.classList.add('walking');
+  }
+  function placeWalkers() {
+    const world = $('world'); if (!world) return;
+    const W = world.clientWidth, H = world.clientHeight;
+    for (const w of walkers.values()) {
+      if (!w.el) continue;
+      w.el.style.width = (W * .2) + 'px';
+      w.el.style.transform = `translate3d(${w.x * W}px,${w.y * H}px,0) translate(-50%,-100%) scale(${depth(w.y)})`;
+      w.el.style.zIndex = Math.round(w.y * 1000);
+      w.flip.style.transform = `scaleX(${w.face})`;
+    }
+  }
+  let lastT = 0;
+  function walkLoop(t) {
+    const dt = Math.min(.05, (t - lastT) / 1000 || 0); lastT = t;
+    const world = $('world');
+    if (world && !$('tab-templo').hidden && world.clientWidth) {
+      const W = world.clientWidth, H = world.clientHeight;
+      for (const w of walkers.values()) {
+        if (!w.el || !w.el.isConnected) continue;
+        if (w.walking) {
+          const dx = (w.tx - w.x) * W, dy = (w.ty - w.y) * H, d = Math.hypot(dx, dy);
+          const stepPx = W * .07 * depth(w.y) * dt;
+          if (d <= stepPx) { w.x = w.tx; w.y = w.ty; setIdle(w, t); }
+          else { w.x += dx / d * stepPx / W; w.y += dy / d * stepPx / H; if (Math.abs(dx) > 2) w.face = dx < 0 ? -1 : 1; }
+        } else if (t > w.until) setWalk(w);
+      }
+      placeWalkers();
+    }
+    requestAnimationFrame(walkLoop);
+  }
+
   function tickTemplo() {
-    if (!S.sphinxAwake || $('tab-templo').hidden) return;
+    const gt = $('guide-text'); if (!gt || $('tab-templo').hidden) return;
+    if (!S.sphinxAwake) {
+      $('say-who').textContent = 'El templo dormido';
+      gt.textContent = 'Una esfinge de piedra custodia el templo de los gatos. Tócala para despertarla.';
+      return;
+    }
+    $('say-who').textContent = 'La Esfinge';
+    const t = guideText(); if (gt.textContent !== t) gt.textContent = t;
     const a = altarAmount();
-    const txt = $('altar-txt'); if (!txt) return;
-    txt.textContent = a >= ALTAR.cap ? `${a} listas · el altar está lleno` : `${a} listas · +1 cada ${ALTAR.everyMs / 1000} s`;
-    $('altar-bar').style.width = (100 * a / ALTAR.cap) + '%';
-    $('btn-altar').disabled = a === 0;
-    const gt = $('guide-text'); const t = guideText(); if (gt.textContent !== t) gt.textContent = t;
-    const box = $('slots');
-    box.innerHTML = S.slots.map((s, i) => {
-      if (!s) return `<div class="slot empty">Sarcófago vacío</div>`;
+    const at = $('altar-tag'); if (at) at.textContent = a ? `+${a}${a >= ALTAR.cap ? ' · lleno' : ''}` : '';
+    const fl = $('altar-flame'); if (fl) fl.style.transform = `scale(${(.55 + .6 * a / ALTAR.cap).toFixed(2)})`;
+    S.slots.forEach((s, i) => {
+      const tag = $('sarc-tag-' + i), obj = document.querySelector(`[data-slot="${i}"]`);
+      if (!tag || !obj) return;
+      if (!s) { tag.textContent = '+ Criar'; tag.className = 'tag'; obj.className = 'obj sarc-obj empty'; obj.style.removeProperty('--glow'); return; }
       const left = Math.max(0, Math.ceil((s.readyAt - Date.now()) / 1000));
-      const glow = s.rarity === 'comun' ? 'transparent' : getComputedStyle(document.documentElement).getPropertyValue(s.rarity === 'raro' ? '--r-raro' : s.rarity === 'epico' ? '--r-epico' : '--r-legend');
-      return `<button class="slot${left ? '' : ' ready'}" data-slot="${i}" type="button" style="--glow:${glow}">
-        ${sarcSVG()}
-        <span class="time">${left ? fmt(left) : '¡Listo!'}</span>
-        <small>${esc(s.names[0])} + ${esc(s.names[1])}${left ? '' : '<br>Toca para abrir'}</small>
-      </button>`;
-    }).join('');
-    box.querySelectorAll('[data-slot]').forEach(b => b.addEventListener('click', () => openSlot(Number(b.dataset.slot))));
-    $('btn-breed').disabled = false;
+      tag.textContent = left ? fmt(left) : '¡Listo!';
+      tag.className = left ? 'tag' : 'tag gold';
+      obj.className = 'obj sarc-obj' + (left ? '' : ' ready');
+      const glow = { comun: 'transparent', raro: '#36cbb9', epico: '#b48cff', legend: '#f4c24f' }[s.rarity];
+      obj.style.setProperty('--glow', glow);
+    });
   }
 
   function renderGatos() {
@@ -608,13 +874,15 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
   // ================= Acciones =================
   function wakeSphinx() {
     ensureAudio();
-    const b = $('sphinx-statue');
-    b.disabled = true;
-    b.innerHTML = catSVG(SPHINX, { statue: true, cracks: true });
-    b.classList.add('waking'); sfx.rumble(); buzz([30, 60, 30, 60, 80]);
+    const art = $('sphinx-art');
+    if (!art || art.dataset.busy) return;
+    art.dataset.busy = '1';
+    const tag = document.querySelector('#obj-sphinx .tag'); if (tag) tag.textContent = '';
+    art.innerHTML = catSVG(SPHINX, { statue: true, cracks: true });
+    art.classList.add('waking'); sfx.rumble(); buzz([30, 60, 30, 60, 80]);
     setTimeout(() => {
-      b.classList.remove('waking');
-      b.innerHTML = catSVG(SPHINX); b.classList.add('flash'); sfx.awake();
+      art.classList.remove('waking');
+      art.innerHTML = catSVG(SPHINX); art.classList.add('flash'); sfx.awake();
       setTimeout(() => {
         S.sphinxAwake = true;
         addCat({ fur: 'naranja', pat: 'atigrado', eyes: 'ambar', acc: 'cascabel' });
@@ -623,9 +891,9 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
         save(); renderAll();
         openSheet(`<div class="center"><div class="hero">${catSVG(SPHINX)}</div>
           <div class="big-name">¡Despertaste a la Esfinge!</div>
-          <p class="note">"Hace siglos que los gatos de este templo duermen convertidos en piedra. Te regalo 2 estatuas y 40 ofrendas. Despiértalas, crúzalas… y descubre qué nace."</p>
-          <button class="btn gold" id="go-cats" type="button">Ver mis estatuas</button></div>`);
-        $('go-cats').addEventListener('click', () => { closeSheet(); showTab('gatos'); });
+          <p class="note">"Hace siglos que los gatos de este templo duermen convertidos en piedra. Te dejé 2 estatuas aquí en el templo y 40 ofrendas. Toca las estatuas para despertarlas, crúzalas… y descubre qué nace."</p>
+          <button class="btn gold" id="go-temple" type="button">¡Vamos!</button></div>`);
+        $('go-temple').addEventListener('click', closeSheet);
       }, 700);
     }, 950);
   }
@@ -642,10 +910,10 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     if (S.ofrendas < COST.dig) { toast(`Te faltan ${COST.dig - S.ofrendas} ofrendas. El altar junta más con el tiempo.`); return; }
     setOfrendas(-COST.dig);
     const c = addCat(randomStatueGenes());
-    save(); sfx.rumble(); renderGatos();
+    save(); sfx.rumble(); renderGatos(); renderTemplo();
     openSheet(`<div class="center"><div class="hero pop">${catSVG(c.genes, { statue: true })}</div>
       <div class="big-name">¡Encontraste una estatua!</div>
-      <p class="note">Nadie sabe qué gato duerme adentro hasta despertarlo.</p>
+      <p class="note">Ya está en el templo. Nadie sabe qué gato duerme adentro hasta despertarlo.</p>
       <button class="btn gold" id="wake-now" type="button">Despertar · ${COST.awaken}</button></div>`);
     $('wake-now').addEventListener('click', () => openCat(c.id));
   }
@@ -677,6 +945,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     box.innerHTML = catSVG(c.genes, { statue: true, cracks: true });
     box.classList.add('waking'); sfx.rumble(); buzz([30, 60, 30, 60, 80]);
     setTimeout(() => {
+      if (statuePos[c.id]) spawnAt[c.id] = statuePos[c.id];
       c.awake = true;
       const fresh = discover(c.genes);
       save(); renderGatos(); renderTemplo();
@@ -755,6 +1024,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     setTimeout(() => {
       S.slots[i] = null;
       const c = addCat(s.genes, { awake: true, gen: s.gen, parents: s.names });
+      spawnAt[c.id] = { x: SPOTS.sarc[i].x, y: FLOOR.y0 + .02 };
       S.births++; S.tip++;
       const fresh = discover(c.genes);
       save(); renderTemplo(); renderGatos();
@@ -792,6 +1062,9 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     if (d) S = { ...freshState(), ...d };
     renderAll();
     setInterval(tickTemplo, 1000);
+    setInterval(() => { if (skyMode() !== mode && !$('tab-templo').hidden) renderTemplo(); }, 60000);
+    if (window.ResizeObserver) new ResizeObserver(placeWalkers).observe(document.body);
+    requestAnimationFrame(walkLoop);
     setInterval(() => { if (S.births) { S.tip++; } }, 12000);
   }
   const hot = window.claude && window.claude.hot;
