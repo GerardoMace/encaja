@@ -47,6 +47,7 @@ ASSETS = {
     'icono_ofrenda': ('cuadro', 96), 'icono_piedra': ('cuadro', 96), 'icono_app': ('icono', 512),
     # gato base
     'gato_frente': ('recorte', 512), 'gato_lado_1': ('recorte', 512), 'gato_lado_2': ('recorte', 512),
+    'gato_colgado': ('recorte', 512),
 }
 CLAVE = (255, 0, 255)
 
