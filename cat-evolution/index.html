@@ -1123,21 +1123,30 @@ img.catimg{display:block;width:100%;height:auto}
   // Posiciones en fracción de la imagen: neck = [x, y, ancho, giro] del collar, crown = punto sobre la cabeza,
   // eyes = centros de los ojos, eyeR = radio del ojo (fracción del lado menor)
   const POSES = {
-    frente:    { art: 'gato_frente',       neck: [.5, .6, .46, 0],      crown: [.5, .04],  eyes: [[.32, .4], [.72, .4]], eyeR: .07, wing: 1 },
+    frente:    { art: 'gato_frente', acc: 'frente',       neck: [.5, .6, .46, 0],      crown: [.5, .04],  eyes: [[.32, .4], [.72, .4]], eyeR: .07, wing: 1 },
     lado:      { art: 'gato_lado_1',       neck: [.79, .47, .22, -.55], crown: [.84, .03], eyes: [[.86, .32]], eyeR: .05 },
-    acostado:  { art: 'gato_acostado',     neck: [.73, .6, .3, 0],      crown: [.73, .04], eyes: [[.62, .37], [.83, .37]], eyeR: .055, wing: 1 },
-    sentado:   { art: 'gato_sentado_lado', neck: [.68, .43, .26, -.45], crown: [.74, .03], eyes: [[.79, .29]], eyeR: .05 },
+    acostado:  { art: 'gato_acostado', acc: 'acostado',     neck: [.73, .6, .3, 0],      crown: [.73, .04], eyes: [[.62, .37], [.83, .37]], eyeR: .055, wing: 1 },
+    sentado:   { art: 'gato_sentado_lado', acc: 'sentado', neck: [.68, .43, .26, -.45], crown: [.74, .03], eyes: [[.79, .29]], eyeR: .05 },
     estira:    { art: 'gato_estira',       eyes: [[.19, .64], [.39, .64]], eyeR: .05 },
     agazapado: { art: 'gato_agazapado',    eyes: [[.13, .5], [.33, .5]], eyeR: .05 },
     dormido:   { art: 'gato_dormido' },
     colgado:   { art: 'gato_colgado' },
     // cuadros de la caminata (todos del mismo tamaño, alineados por la nariz)
-    caminar1: { art: 'gato_caminar_1' }, caminar2: { art: 'gato_caminar_2' }, caminar3: { art: 'gato_caminar_3' },
-    caminar4: { art: 'gato_caminar_4' }, caminar5: { art: 'gato_caminar_5' }, caminar6: { art: 'gato_caminar_6' },
+    caminar1: { art: 'gato_caminar_1', acc: 'caminar' }, caminar2: { art: 'gato_caminar_2', acc: 'caminar' },
+    caminar3: { art: 'gato_caminar_3', acc: 'caminar' }, caminar4: { art: 'gato_caminar_4', acc: 'caminar' },
   };
-  const WALK_FRAMES = 6, WALK_MS = 105;
+  const WALK_FRAMES = 4, WALK_MS = 150;
+  // Accesorios de Gemini puestos sobre cada pose: [x, y] del centro y ancho (fracciones de la imagen del gato), giro en grados.
+  // Las poses que no aparecen aquí (dormido, colgado) se ven sin accesorio.
+  const ACC_POS = {
+    caminar:  { cascabel: [.75, .6, .24, -35], mono: [.85, .65, .17, -5], usekh: [.79, .63, .27, -12], luna: [.81, .25, .24, -5], bufanda: [.76, .65, .27, -12], nemes: [.74, .4, .3, 10] },
+    frente:   { cascabel: [.5, .7, .44, 0], mono: [.5, .62, .24, 0], usekh: [.5, .7, .5, 0], luna: [.5, .12, .52, 0], bufanda: [.5, .72, .5, 0], nemes: [.5, .28, .82, 0] },
+    acostado: { cascabel: [.73, .66, .28, 0], mono: [.73, .6, .14, 0], usekh: [.73, .67, .32, 0], luna: [.73, .13, .33, 0], bufanda: [.73, .7, .3, 0], nemes: [.73, .27, .47, 0] },
+    sentado:  { cascabel: [.66, .47, .36, -30], mono: [.78, .5, .2, 0], usekh: [.7, .5, .4, -15], luna: [.71, .1, .32, -8], bufanda: [.66, .52, .36, -15], nemes: [.62, .21, .44, 10] },
+  };
+  const ACC_PAD = .2;   // espacio arriba del gato para lo que sobresale de la cabeza (diadema)
   const hasWalkArt = () => !!artURL('gato_caminar_' + WALK_FRAMES);
-  const IDLE_POSES = ['sentado', 'acostado', 'dormido', 'estira'];
+  const IDLE_POSES = ['sentado', 'sentado', 'acostado', 'dormido'];
   const CAT_CACHE = new Map();
   const hexRGB = h => [parseInt(h.slice(1, 3), 16), parseInt(h.slice(3, 5), 16), parseInt(h.slice(5, 7), 16)];
 
@@ -1146,7 +1155,9 @@ img.catimg{display:block;width:100%;height:auto}
   function catArtURL(g, pose, statue) {
     const P = POSES[pose], a = P && ART[P.art];
     if (!a || !a.ready) return null;
-    const key = [pose, g.fur, statue ? 1 : 0].join('|');
+    const accA = !statue && P.acc && ACC_POS[P.acc][g.acc] && ART['acc_' + g.acc];
+    const acc = accA && accA.ready ? g.acc : '';
+    const key = [pose, g.fur, statue ? 1 : 0, acc].join('|');
     if (CAT_CACHE.has(key)) return CAT_CACHE.get(key);
     const img = a.img, sc = Math.min(1, 320 / Math.max(img.naturalWidth, img.naturalHeight));
     const w = Math.round(img.naturalWidth * sc), h = Math.round(img.naturalHeight * sc);
@@ -1180,7 +1191,21 @@ img.catimg{display:block;width:100%;height:auto}
       }
     }
     ctx.putImageData(id, 0, 0);
-    const url = cv.toDataURL('image/png');
+    let out = cv;
+    if (P.acc && !statue) {
+      // siempre con el mismo espacio arriba, tenga o no accesorio, para que el gato no cambie de tamaño
+      const pad = Math.round(h * ACC_PAD);
+      out = document.createElement('canvas'); out.width = w; out.height = h + pad;
+      const o = out.getContext('2d');
+      o.drawImage(cv, 0, pad);
+      if (acc) {
+        const [ax, ay, aw, rot] = ACC_POS[P.acc][acc], ai = accA.img;
+        const dw = aw * w, dh = dw * ai.naturalHeight / ai.naturalWidth;
+        o.save(); o.translate(ax * w, pad + ay * h); o.rotate(-rot * Math.PI / 180);
+        o.drawImage(ai, -dw / 2, -dh / 2, dw, dh); o.restore();
+      }
+    }
+    const url = out.toDataURL('image/png');
     CAT_CACHE.set(key, url);
     return url;
   }

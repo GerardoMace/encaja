@@ -213,33 +213,53 @@
   },
   "gato_caminar_1": {
    "file": "gato_caminar_1.png",
-   "w": 280,
-   "h": 243
+   "w": 238,
+   "h": 217
   },
   "gato_caminar_2": {
    "file": "gato_caminar_2.png",
-   "w": 280,
-   "h": 243
+   "w": 238,
+   "h": 217
   },
   "gato_caminar_3": {
    "file": "gato_caminar_3.png",
-   "w": 280,
-   "h": 243
+   "w": 238,
+   "h": 217
   },
   "gato_caminar_4": {
    "file": "gato_caminar_4.png",
-   "w": 280,
-   "h": 243
+   "w": 238,
+   "h": 217
   },
-  "gato_caminar_5": {
-   "file": "gato_caminar_5.png",
-   "w": 280,
-   "h": 243
+  "acc_cascabel": {
+   "file": "acc_cascabel.png",
+   "w": 256,
+   "h": 212
   },
-  "gato_caminar_6": {
-   "file": "gato_caminar_6.png",
-   "w": 280,
-   "h": 243
+  "acc_mono": {
+   "file": "acc_mono.png",
+   "w": 256,
+   "h": 163
+  },
+  "acc_usekh": {
+   "file": "acc_usekh.png",
+   "w": 256,
+   "h": 198
+  },
+  "acc_luna": {
+   "file": "acc_luna.png",
+   "w": 196,
+   "h": 234
+  },
+  "acc_bufanda": {
+   "file": "acc_bufanda.png",
+   "w": 240,
+   "h": 248
+  },
+  "acc_nemes": {
+   "file": "acc_nemes.png",
+   "w": 228,
+   "h": 218
   }
  }
 }
