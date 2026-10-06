@@ -1,0 +1,115 @@
+{
+ "v": 1,
+ "assets": {
+  "esfinge": {
+   "file": "esfinge.png",
+   "w": 470,
+   "h": 640
+  },
+  "esfinge_piedra": {
+   "file": "esfinge_piedra.png",
+   "w": 468,
+   "h": 640
+  },
+  "sarcofago": {
+   "file": "sarcofago.png",
+   "w": 215,
+   "h": 384
+  },
+  "altar": {
+   "file": "altar.png",
+   "w": 366,
+   "h": 384
+  },
+  "estanque": {
+   "file": "estanque.png",
+   "w": 512,
+   "h": 337
+  },
+  "obelisco": {
+   "file": "obelisco.png",
+   "w": 262,
+   "h": 512
+  },
+  "estandarte": {
+   "file": "estandarte.png",
+   "w": 227,
+   "h": 256
+  },
+  "pescado": {
+   "file": "pescado.png",
+   "w": 192,
+   "h": 192
+  },
+  "esqueleto": {
+   "file": "esqueleto.png",
+   "w": 192,
+   "h": 192
+  },
+  "raton": {
+   "file": "raton.png",
+   "w": 192,
+   "h": 192
+  },
+  "pollo": {
+   "file": "pollo.png",
+   "w": 192,
+   "h": 192
+  },
+  "estambre": {
+   "file": "estambre.png",
+   "w": 192,
+   "h": 192
+  },
+  "hierba_gatera": {
+   "file": "hierba_gatera.png",
+   "w": 192,
+   "h": 192
+  },
+  "icono_ofrenda": {
+   "file": "icono_ofrenda.png",
+   "w": 96,
+   "h": 96
+  },
+  "gato_frente": {
+   "file": "gato_frente.png",
+   "w": 410,
+   "h": 512
+  },
+  "gato_lado_1": {
+   "file": "gato_lado_1.png",
+   "w": 512,
+   "h": 426
+  },
+  "gato_colgado": {
+   "file": "gato_colgado.png",
+   "w": 221,
+   "h": 512
+  },
+  "gato_estira": {
+   "file": "gato_estira.png",
+   "w": 479,
+   "h": 512
+  },
+  "gato_acostado": {
+   "file": "gato_acostado.png",
+   "w": 512,
+   "h": 392
+  },
+  "gato_sentado_lado": {
+   "file": "gato_sentado_lado.png",
+   "w": 404,
+   "h": 512
+  },
+  "gato_agazapado": {
+   "file": "gato_agazapado.png",
+   "w": 512,
+   "h": 510
+  },
+  "gato_dormido": {
+   "file": "gato_dormido.png",
+   "w": 512,
+   "h": 355
+  }
+ }
+}

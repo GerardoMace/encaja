@@ -5,7 +5,11 @@ borra la marca de agua y manchas sueltas, recorta, ajusta el tamaño y escribe
 arte/manifest.json, que el juego lee al arrancar.
 
 Uso:  python procesar_arte.py [carpeta_origen] [carpeta_destino]
+      python procesar_arte.py --hoja imagen.png prefijo [carpeta_destino]   (solo cortar una hoja, sin nombres)
 Por defecto: origen G:/Mi unidad/videogame/arte, destino CatEvolution/arte
+
+Las imágenes pueden venir sueltas (esfinge.png) o en hojas (hoja_egipto.png): cada hoja
+trae varios objetos en un orden fijo (ver HOJAS) y el programa los separa y los nombra.
 """
 import json
 import sys
@@ -16,8 +20,21 @@ from PIL import Image, ImageDraw
 from scipy import ndimage
 
 AQUI = Path(__file__).resolve().parent
-DESTINO = Path(sys.argv[2]) if len(sys.argv) > 2 else AQUI.parent / 'arte'
-ORIGEN = Path(sys.argv[1]) if len(sys.argv) > 1 else Path('G:/Mi unidad/videogame/arte')
+_args = [] if '--hoja' in sys.argv else sys.argv[1:]
+DESTINO = Path(_args[1]) if len(_args) > 1 else AQUI.parent / 'arte'
+ORIGEN = Path(_args[0]) if _args else Path('G:/Mi unidad/videogame/arte')
+
+# Hojas de Gemini: objetos de arriba a abajo y de izquierda a derecha, en este orden
+HOJAS = {
+    'hoja_gatos': ['gato_frente', 'gato_lado_1', 'gato_estira', 'gato_acostado', 'gato_sentado_lado', 'gato_agazapado'],
+    'hoja_gatos_2': ['gato_lado_2', 'gato_colgado', 'gato_dormido'],
+    'hoja_ofrendas': ['pescado', 'esqueleto', 'raton', 'pollo', 'estambre', 'hierba_gatera'],
+    'hoja_piramide': ['bloque_caliza', 'bloque_granito', 'bloque_lapislazuli', 'bloque_turquesa', 'bloque_oro', 'bloque_basalto', 'icono_piedra'],
+    'hoja_egipto': ['esfinge', 'esfinge_piedra', 'sarcofago', 'altar', 'obelisco', 'estandarte', 'estanque', 'icono_ofrenda'],
+    'hoja_casa_nieve': ['arbol_gato', 'canasta', 'plato', 'muneco_nieve', 'iglu', 'fogata'],
+}
+# en la hoja caminan hacia la izquierda; el juego los usa mirando a la derecha
+ESPEJO = {'gato_lado_1', 'gato_lado_2'}
 
 # nombre: (tipo, tamaño máximo en px)
 #   recorte = quitar fondo blanco y recortar al objeto
@@ -47,13 +64,15 @@ ASSETS = {
     'icono_ofrenda': ('cuadro', 96), 'icono_piedra': ('cuadro', 96), 'icono_app': ('icono', 512),
     # gato base
     'gato_frente': ('recorte', 512), 'gato_lado_1': ('recorte', 512), 'gato_lado_2': ('recorte', 512),
-    'gato_colgado': ('recorte', 512),
+    'gato_colgado': ('recorte', 512), 'gato_estira': ('recorte', 512), 'gato_acostado': ('recorte', 512),
+    'gato_sentado_lado': ('recorte', 512), 'gato_agazapado': ('recorte', 512), 'gato_dormido': ('recorte', 512),
 }
 CLAVE = (255, 0, 255)
 
 
-def quitar_fondo(img):
-    """Fondo blanco conectado a las orillas → transparente. Devuelve RGBA."""
+def quitar_fondo(img, solo_principal=True):
+    """Fondo blanco conectado a las orillas → transparente. Devuelve RGBA.
+    solo_principal: borra la marca de agua y manchas sueltas (no se usa al cortar hojas)."""
     rgb = img.convert('RGB')
     w, h = rgb.size
     marcado = rgb.copy()
@@ -69,15 +88,19 @@ def quitar_fondo(img):
     fondo = (a[..., 0] == 255) & (a[..., 1] == 0) & (a[..., 2] == 255)
     original = np.array(rgb).astype(np.int32)
     alfa = np.where(fondo, 0, 255).astype(np.uint8)
-    # orilla suave: píxeles claros pegados al fondo quedan semitransparentes
-    borde = ndimage.binary_dilation(fondo, iterations=2) & ~fondo
+    # orilla sin halo: en la franja pegada al fondo, lo claro se vuelve transparente (el contorno
+    # del dibujo es oscuro) y lo semitransparente toma el color del contorno
+    borde = ndimage.binary_dilation(fondo, iterations=4) & ~fondo
     brillo = original.mean(axis=2)
-    suave = np.clip((255 - brillo) / 55 * 255, 0, 255).astype(np.uint8)
+    suave = np.clip((200 - brillo) / 120 * 255, 0, 255).astype(np.uint8)
     alfa = np.where(borde, np.minimum(alfa, suave), alfa)
+    tinta = borde & (alfa < 255)
+    original[tinta] = (45, 30, 56)
+    rgb = Image.fromarray(original.astype(np.uint8), 'RGB')
     # quedarse con el objeto principal: borra la marca de agua y manchas sueltas
     solido = alfa > 0
     etiquetas, n = ndimage.label(solido)
-    if n > 1:
+    if n > 1 and solo_principal:
         tam = ndimage.sum(solido, etiquetas, range(1, n + 1))
         mayor = tam.max()
         conservar = [i + 1 for i, t in enumerate(tam) if t >= mayor * 0.04]
@@ -137,8 +160,29 @@ def main():
         pass
     DESTINO.mkdir(parents=True, exist_ok=True)
     manifiesto = {'v': 1, 'assets': {}}
-    hechos, faltan = [], []
+    hechos, faltan, avisos = [], [], []
+    piezas = {}
+    for hoja, nombres in HOJAS.items():
+        archivo = buscar(hoja)
+        if not archivo:
+            continue
+        sueltas = piezas_de_hoja(Image.open(archivo))
+        if len(sueltas) != len(nombres):
+            cortar_hoja(archivo, hoja, ORIGEN / 'recortes')
+            avisos.append(f'{hoja}: se esperaban {len(nombres)} objetos y salieron {len(sueltas)}. '
+                          f'No les puse nombre; quedaron numerados en recortes/ para revisarlos.')
+            continue
+        for nombre, pieza in zip(nombres, sueltas):
+            piezas[nombre] = pieza.transpose(Image.FLIP_LEFT_RIGHT) if nombre in ESPEJO else pieza
     for nombre, (tipo, tam) in ASSETS.items():
+        if nombre in piezas and tipo in ('recorte', 'cuadro', 'par'):
+            pieza = piezas[nombre]
+            salida = a_cuadro(pieza, tam) if tipo == 'cuadro' else ajustar(pieza, tam)
+            archivo = nombre + '.png'
+            salida.save(DESTINO / archivo, optimize=True)
+            manifiesto['assets'][nombre] = {'file': archivo, 'w': salida.width, 'h': salida.height}
+            hechos.append(f'{nombre} ({salida.width}×{salida.height}, de una hoja)')
+            continue
         origen = buscar(nombre)
         if not origen:
             faltan.append(nombre)
@@ -184,7 +228,59 @@ def main():
         print('  ✓', h)
     if faltan:
         print(f'Faltan {len(faltan)}:', ', '.join(faltan))
+    for a in avisos:
+        print('  ⚠', a)
+
+
+def piezas_de_hoja(img):
+    """Separa una hoja en objetos (RGBA recortados), de arriba a abajo y de izquierda a derecha."""
+    rgba = quitar_fondo(img, solo_principal=False)
+    datos = np.array(rgba)
+    solido = datos[..., 3] > 0
+    # junta los pedacitos cercanos (bigotes, colas sueltas) con su objeto
+    unido = ndimage.binary_dilation(solido, iterations=max(6, img.width // 180))
+    etiquetas, n = ndimage.label(unido)
+    piezas = []
+    for i, (ys, xs) in enumerate(ndimage.find_objects(etiquetas), start=1):
+        if (solido & (etiquetas == i)).sum() < solido.sum() * 0.01:
+            continue
+        piezas.append({'i': i, 'ys': ys, 'xs': xs, 'cy': (ys.start + ys.stop) / 2, 'cx': (xs.start + xs.stop) / 2})
+    # filas: objetos cuyo centro está cerca en altura
+    filas = []
+    for p in sorted(piezas, key=lambda q: q['cy']):
+        if filas and p['cy'] - filas[-1][0]['cy'] < img.height * 0.15:
+            filas[-1].append(p)
+        else:
+            filas.append([p])
+    orden = [p for fila in filas for p in sorted(fila, key=lambda q: q['cx'])]
+    salida = []
+    for p in orden:
+        recorte = datos[p['ys'], p['xs']].copy()
+        recorte[..., 3] = np.where(etiquetas[p['ys'], p['xs']] == p['i'], recorte[..., 3], 0)
+        salida.append(recortar(Image.fromarray(recorte, 'RGBA')))
+    return salida
+
+
+def cortar_hoja(archivo, prefijo, destino):
+    """Guarda cada objeto de una hoja como prefijo_1.png, prefijo_2.png…"""
+    destino.mkdir(parents=True, exist_ok=True)
+    salida = []
+    for k, pieza in enumerate(piezas_de_hoja(Image.open(archivo)), start=1):
+        nombre = f'{prefijo}_{k}.png'
+        ajustar(pieza, 640).save(destino / nombre, optimize=True)
+        salida.append(f'{nombre} ({pieza.width}×{pieza.height})')
+    return salida
 
 
 if __name__ == '__main__':
-    main()
+    if len(sys.argv) > 1 and sys.argv[1] == '--hoja':
+        # python procesar_arte.py --hoja imagen.png prefijo [carpeta_destino]
+        try:
+            sys.stdout.reconfigure(encoding='utf-8')
+        except (AttributeError, ValueError):
+            pass
+        dest = Path(sys.argv[4]) if len(sys.argv) > 4 else Path(sys.argv[2]).parent / 'recortes'
+        for linea in cortar_hoja(Path(sys.argv[2]), sys.argv[3], dest):
+            print('  ✓', linea)
+    else:
+        main()
