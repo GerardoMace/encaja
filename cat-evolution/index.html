@@ -5,6 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="theme-color" content="#131b4a">
 <meta name="description" content="Cat Evolution: despierta estatuas de gatos, crúzalos en distintos hábitats y descubre mutaciones.">
+<link rel="icon" href="arte/icono_app.png">
+<link rel="apple-touch-icon" href="arte/icono_app.png">
 <style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}*,*::before,*::after{box-sizing:border-box}[hidden]{display:none!important}</style>
 <title>Cat Evolution</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -277,7 +279,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
 .elder.show{animation:elderIn .45s cubic-bezier(.2,1.4,.4,1)}
 .elder-av{width:62px;flex:none}
 .elder p{margin:0;font-weight:800;font-size:.92rem;line-height:1.35}
-@keyframes elderIn{from{transform:translate(-50%,-20px);opacity:0}to{transform:translate(-50%,0);opacity:1}}
+@keyframes elderIn{from{transform:translate(-50%,-24px) scale(.94)}to{transform:translate(-50%,0)}}
 .snow{position:absolute;top:-3%;width:6px;height:6px;border-radius:50%;background:#fff;opacity:.9;animation:snowfall 7s linear infinite}
 @keyframes snowfall{from{top:-3%;transform:translateX(0)}50%{transform:translateX(14px)}to{top:103%;transform:translateX(-6px)}}
 .movebar{display:flex;flex-wrap:wrap;align-items:center;gap:8px;background:var(--panel);border-radius:12px;padding:10px 12px}
@@ -329,6 +331,10 @@ img.catimg{display:block;width:100%;height:auto}
 .walker.lifted .hang img.catimg{transform-origin:50% 3%;animation:sway 1.1s ease-in-out infinite alternate}
 @keyframes stepimg{from{transform:translateY(0) rotate(-2.5deg)}to{transform:translateY(-4%) rotate(2.5deg)}}
 @media (prefers-reduced-motion:reduce){.walker.walking .side img.catimg,.walker.lifted .hang img.catimg{animation:none}}
+/* Resplandor del Abuelo cuando no hay imagen con ojos brillantes */
+.abuelo.art.glow img:first-child{animation:aura 2.6s ease-in-out}
+@keyframes aura{0%,100%{filter:none}20%,75%{filter:drop-shadow(0 0 6px #e9ff6a) drop-shadow(0 0 16px #9dff2a) brightness(1.08)}}
+@media (prefers-reduced-motion:reduce){.abuelo.art.glow img:first-child{animation:none}}
 /* Navegación */
 .tabs{
   position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;justify-content:center;
@@ -1255,6 +1261,29 @@ img.catimg{display:block;width:100%;height:auto}
     statues: [{ x: .78, y: .9 }, { x: .37, y: .7 }, { x: .63, y: .7 }, { x: .5, y: .86 }, { x: .3, y: .8 }, { x: .7, y: .79 }],
   };
   const FLOOR = { x0: .17, x1: .83, y0: .57, y1: .93 };
+  const LAYOUT_BASE = { sphinx: { ...SPOTS.sphinx }, sarc: SPOTS.sarc.map(o => ({ ...o })), altar: { ...SPOTS.altar }, statues: SPOTS.statues.map(o => ({ ...o })), floor: { ...FLOOR },
+    deco: { ob: { xs: [.09, .91], y: .52, w: .09 }, ban: { xs: [.27, .73], y: .4, w: .06 }, pond: { x: .64, y: .995, w: .32 } } };
+  // Medidas sobre cada fondo de Gemini (fracciones de la escena)
+  const LAYOUT_ART = {
+    egipto: {
+      sphinx: { x: .5, y: .6, w: .26 },
+      sarc: [{ x: .1, y: .74, w: .12 }, { x: .9, y: .74, w: .12 }, { x: .12, y: .9, w: .11 }, { x: .88, y: .9, w: .11 }],
+      altar: { x: .27, y: .975, w: .13 },
+      statues: [{ x: .58, y: .88 }, { x: .36, y: .77 }, { x: .64, y: .77 }, { x: .42, y: .93 }, { x: .28, y: .85 }, { x: .72, y: .82 }],
+      floor: { x0: .2, x1: .8, y0: .66, y1: .94 },
+      deco: { ob: { xs: [.05, .95], y: .66, w: .1 }, ban: { xs: [.36, .64], y: .5, w: .06 }, pond: { x: .78, y: .995, w: .28 } },
+    },
+  };
+  let DECO = LAYOUT_BASE.deco;
+  function applyLayout(hab, art) {
+    const L = (art && LAYOUT_ART[hab]) || LAYOUT_BASE;
+    Object.assign(SPOTS.sphinx, L.sphinx);
+    L.sarc.forEach((o, i) => Object.assign(SPOTS.sarc[i], o));
+    Object.assign(SPOTS.altar, L.altar);
+    L.statues.forEach((o, i) => Object.assign(SPOTS.statues[i], o));
+    Object.assign(FLOOR, L.floor);
+    DECO = L.deco;
+  }
   const maxWalkers = () => (S.up && S.up.patio ? 24 : 14);
   const walkers = new Map();   // id de gato → { x, y, tx, ty, walking, until, face, el, flip }
   const spawnAt = {};          // dónde aparece un gato recién despertado o recién nacido
@@ -1332,6 +1361,7 @@ img.catimg{display:block;width:100%;height:auto}
     mode = skyMode();
     const P = PALETTES[mode], H = S.hab;
     const bgArt = artURL(`fondo_${H}_${mode}`) || artURL(`fondo_${H}_dia`);
+    applyLayout(H, !!bgArt);
     const motes = H === 'nieve'
       ? Array.from({ length: 16 }, (_, i) => `<i class="snow" style="left:${(i * 61) % 100}%;animation-delay:${(i * .7).toFixed(1)}s;animation-duration:${(6 + (i % 5)).toFixed(0)}s"></i>`).join('')
       : Array.from({ length: 7 }, (_, i) => `<i class="mote" style="left:${12 + i * 12}%;top:${60 + (i * 37) % 32}%;animation-delay:${(i * 1.4).toFixed(1)}s"></i>`).join('');
@@ -1377,10 +1407,10 @@ img.catimg{display:block;width:100%;height:auto}
       });
     }
     if (S.hab === 'egipto' && (artURL('fondo_egipto_' + mode) || artURL('fondo_egipto_dia'))) {
-      if (S.up && S.up.obeliscos) [.09, .91].forEach(x => { html += `<div class="obj" aria-hidden="true" style="left:${x * 100}%;top:52%;width:9%;z-index:2">${obeliskArt()}</div>`; });
-      if (S.up && S.up.estandartes) [.27, .73].forEach(x => { html += `<div class="obj" aria-hidden="true" style="left:${x * 100}%;top:40%;width:6%;z-index:2">${bannerArt()}</div>`; });
+      if (S.up && S.up.obeliscos) DECO.ob.xs.forEach(x => { html += `<div class="obj" aria-hidden="true" style="left:${x * 100}%;top:${DECO.ob.y * 100}%;width:${DECO.ob.w * 100}%;z-index:2">${obeliskArt()}</div>`; });
+      if (S.up && S.up.estandartes) DECO.ban.xs.forEach(x => { html += `<div class="obj" aria-hidden="true" style="left:${x * 100}%;top:${DECO.ban.y * 100}%;width:${DECO.ban.w * 100}%;z-index:2">${bannerArt()}</div>`; });
     }
-    if (S.hab === 'egipto' && S.up && S.up.estanque) html += `<div class="obj pond" aria-hidden="true" style="left:64%;top:99.5%;width:32%;z-index:5">${artURL('estanque') ? `<img src="${artURL('estanque')}" alt="">` : `<svg viewBox="0 0 120 40"><ellipse cx="60" cy="22" rx="58" ry="17" fill="#c9a66b"/><ellipse cx="60" cy="21" rx="52" ry="14" fill="#3d93d6"/><path d="M26 18h14M70 26h18" stroke="#bfe6ff" stroke-width="2" stroke-linecap="round" opacity=".7"/><ellipse cx="44" cy="24" rx="9" ry="4" fill="#3f9b5a"/><ellipse cx="84" cy="16" rx="8" ry="3.5" fill="#3f9b5a"/><path d="M44 22c-4-2-5-7-3-10c2 2 3 5 3 10zm0 0c4-2 5-7 3-10c-2 2-3 5-3 10z" fill="#ec6fd8"/></svg>`}</div>`;
+    if (S.hab === 'egipto' && S.up && S.up.estanque) html += `<div class="obj pond" aria-hidden="true" style="left:${DECO.pond.x * 100}%;top:${DECO.pond.y * 100}%;width:${DECO.pond.w * 100}%;z-index:5">${artURL('estanque') ? `<img src="${artURL('estanque')}" alt="">` : `<svg viewBox="0 0 120 40"><ellipse cx="60" cy="22" rx="58" ry="17" fill="#c9a66b"/><ellipse cx="60" cy="21" rx="52" ry="14" fill="#3d93d6"/><path d="M26 18h14M70 26h18" stroke="#bfe6ff" stroke-width="2" stroke-linecap="round" opacity=".7"/><ellipse cx="44" cy="24" rx="9" ry="4" fill="#3f9b5a"/><ellipse cx="84" cy="16" rx="8" ry="3.5" fill="#3f9b5a"/><path d="M44 22c-4-2-5-7-3-10c2 2 3 5 3 10zm0 0c4-2 5-7 3-10c-2 2-3 5-3 10z" fill="#ec6fd8"/></svg>`}</div>`;
     world.innerHTML = html;
     $('obj-sphinx').addEventListener('click', () => {
       ensureAudio();

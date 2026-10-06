@@ -1,6 +1,11 @@
 {
  "v": 1,
  "assets": {
+  "fondo_egipto_dia": {
+   "file": "fondo_egipto_dia.jpg",
+   "w": 800,
+   "h": 1120
+  },
   "esfinge": {
    "file": "esfinge.png",
    "w": 470,
@@ -68,13 +73,8 @@
   },
   "abuelo": {
    "file": "abuelo.png",
-   "w": 487,
-   "h": 512
-  },
-  "abuelo_brillo": {
-   "file": "abuelo_brillo.png",
-   "w": 487,
-   "h": 512
+   "w": 512,
+   "h": 470
   },
   "pescado": {
    "file": "pescado.png",
@@ -145,6 +145,11 @@
    "file": "icono_piedra.png",
    "w": 96,
    "h": 96
+  },
+  "icono_app": {
+   "file": "icono_app.png",
+   "w": 512,
+   "h": 512
   },
   "gato_frente": {
    "file": "gato_frente.png",
