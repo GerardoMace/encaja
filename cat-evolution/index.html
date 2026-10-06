@@ -247,6 +247,15 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
 .powinfo div{background:var(--panel);border-radius:12px;padding:10px 12px}
 .powinfo b{display:block}
 .powinfo small{color:var(--muted);font-weight:700}
+/* Arte final (imágenes de Gemini) */
+.scene .bg img{width:100%;height:100%;object-fit:cover;display:block}
+.obj img{display:block;width:100%;height:auto;pointer-events:none}
+.obj.sarc-obj img{filter:drop-shadow(0 0 9px var(--glow,transparent))}
+.obj.sarc-obj.ready img{animation:wobble 1.2s infinite}
+.obj.sarc-obj.empty img{opacity:.6}
+.purse img{width:22px;height:22px;display:block}
+.art-img{display:block;width:100%;height:auto}
+.art-img.cracked{filter:contrast(1.15) brightness(.92)}
 /* Navegación */
 .tabs{
   position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;justify-content:center;
@@ -581,6 +590,8 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
   }
 
   function sarcSVG() {
+    const u = artURL('sarcofago');
+    if (u) return `<img class="sarc" src="${u}" alt="">`;
     return `<svg class="sarc" viewBox="0 0 120 180" aria-hidden="true">
       <path d="M60 6C88 6 104 26 104 52L96 166Q60 178 24 166L16 52C16 26 32 6 60 6Z" fill="#f4c24f" stroke="#2a1f35" stroke-width="4"/>
       <path d="M22 50Q60 20 98 50L94 88Q60 72 26 88Z" fill="#1f5fbf"/>
@@ -689,6 +700,49 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     return tips[S.tip % tips.length];
   }
 
+  // ================= Arte final (imágenes de Gemini; si falta una, se usa el dibujo con código) =================
+  const ART = {};
+  const PIECE_ART = ['escarabajo', 'ojo_horus', 'pescado', 'ankh', 'loto'];
+  const BLOCK_ART = ['bloque_caliza', 'bloque_granito', 'bloque_lapislazuli', 'bloque_turquesa', 'bloque_oro', 'bloque_basalto'];
+  const artURL = n => (ART[n] && ART[n].ready ? ART[n].src : null);
+  function loadArt() {
+    fetch('arte/manifest.json', { cache: 'no-cache' })
+      .then(r => (r.ok ? r.json() : null))
+      .then(m => {
+        if (!m || !m.assets) return;
+        const list = Object.entries(m.assets);
+        let pending = list.length;
+        const done = () => { if (--pending === 0) artReady(); };
+        list.forEach(([name, a]) => {
+          const img = new Image();
+          img.onload = () => { ART[name] = { src: 'arte/' + a.file, img, ready: true }; done(); };
+          img.onerror = done;
+          img.src = 'arte/' + a.file;
+        });
+      })
+      .catch(() => {});
+  }
+  function artReady() {
+    Object.keys(TILE_CACHE).forEach(k => delete TILE_CACHE[k]);
+    [['purse', 'icono_ofrenda'], ['purse-stone', 'icono_piedra']].forEach(([id, n]) => {
+      const u = artURL(n), svg = $(id).querySelector('svg');
+      if (u && svg) svg.outerHTML = `<img src="${u}" alt="">`;
+    });
+    if (!M && !PG) renderAll();
+  }
+  function sphinxArt(statue, cracks) {
+    const u = artURL(statue ? 'esfinge_piedra' : 'esfinge');
+    return u ? `<img class="art-img${cracks ? ' cracked' : ''}" src="${u}" alt="">` : catSVG(SPHINX, { statue, cracks });
+  }
+  function obeliskArt() {
+    const u = artURL('obelisco');
+    return u ? `<img src="${u}" alt="">` : `<svg viewBox="0 0 40 120" aria-hidden="true"><path d="M8 118L11 22L20 6L29 22L32 118Z" fill="#e5c88d" stroke="#2a1f35" stroke-width="3" stroke-linejoin="round"/><path d="M20 6L29 22H11Z" fill="#f4c24f"/><path d="M20 30v80" stroke="#c9a669" stroke-width="3"/></svg>`;
+  }
+  function bannerArt() {
+    const u = artURL('estandarte');
+    return u ? `<img src="${u}" alt="">` : `<svg viewBox="0 0 30 60" aria-hidden="true"><path d="M3 2h24v54l-12-10-12 10z" fill="#1f5fbf" stroke="#2a1f35" stroke-width="2.5" stroke-linejoin="round"/><path d="M3 12h24M3 24h24" stroke="#f4c24f" stroke-width="4"/></svg>`;
+  }
+
   // ================= Templo vivo =================
   // Paleta según la hora real del jugador: día, atardecer o noche
   const PALETTES = {
@@ -765,6 +819,8 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     </svg>`;
   }
   function altarSceneSVG() {
+    const u = artURL('altar');
+    if (u) return `<img src="${u}" alt="">`;
     return `<svg viewBox="0 0 100 92" aria-hidden="true">
       <rect x="10" y="72" width="80" height="16" rx="3" fill="#c9a66b" stroke="#2a1f35" stroke-width="2.5"/>
       <rect x="20" y="50" width="60" height="24" rx="3" fill="#e2bf7e" stroke="#2a1f35" stroke-width="2.5"/>
@@ -780,13 +836,14 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     const el = $('tab-templo');
     mode = skyMode();
     const P = PALETTES[mode];
+    const bgArt = artURL('fondo_' + mode) || artURL('fondo_dia');
     const motes = Array.from({ length: 7 }, (_, i) => `<i class="mote" style="left:${12 + i * 12}%;top:${60 + (i * 37) % 32}%;animation-delay:${(i * 1.4).toFixed(1)}s"></i>`).join('');
     el.innerHTML = `
       <div class="scene ${mode}" id="scene">
-        <div class="bg">${sceneBG(P)}</div>
+        <div class="bg">${bgArt ? `<img src="${bgArt}" alt="">` : sceneBG(P)}</div>
         <div class="world" id="world"></div>
         <div class="fx" aria-hidden="true">${motes}</div>
-        <div class="fg">${sceneFG(P)}</div>
+        ${bgArt ? '' : `<div class="fg">${sceneFG(P)}</div>`}
         <p class="say"><small id="say-who">La Esfinge</small><span id="guide-text"></span></p>
       </div>
       ${S.sphinxAwake ? `<div class="actions temple-actions">
@@ -807,7 +864,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
   function buildWorld() {
     const world = $('world');
     let html = objHTML('sphinx' + (S.sphinxAwake ? '' : ' asleep'), SPOTS.sphinx,
-      `<span class="tag gold">${S.sphinxAwake ? '' : '¡Tócame!'}</span><div id="sphinx-art">${catSVG(SPHINX, { statue: !S.sphinxAwake })}</div>`,
+      `<span class="tag gold">${S.sphinxAwake ? '' : '¡Tócame!'}</span><div id="sphinx-art">${sphinxArt(!S.sphinxAwake)}</div>`,
       S.sphinxAwake ? 'La Esfinge: toca para otro consejo' : 'Despertar a la esfinge', 'id="obj-sphinx"');
     if (S.sphinxAwake) {
       S.slots.forEach((s, i) => { html += objHTML('sarc-obj', SPOTS.sarc[i], `<span class="tag" id="sarc-tag-${i}"></span>${sarcSVG()}`, 'Sarcófago de cría', `data-slot="${i}"`); });
@@ -818,7 +875,11 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
         html += objHTML('statue', { ...sp, w: .16 }, `<span class="tag">Despertar · ${COST.awaken}</span>${catSVG(c.genes, { statue: true })}`, 'Estatua dormida: toca para despertarla', `data-statue="${c.id}"`);
       });
     }
-    if (S.up && S.up.estanque) html += `<div class="obj pond" aria-hidden="true" style="left:64%;top:99.5%;width:32%;z-index:5"><svg viewBox="0 0 120 40"><ellipse cx="60" cy="22" rx="58" ry="17" fill="#c9a66b"/><ellipse cx="60" cy="21" rx="52" ry="14" fill="#3d93d6"/><path d="M26 18h14M70 26h18" stroke="#bfe6ff" stroke-width="2" stroke-linecap="round" opacity=".7"/><ellipse cx="44" cy="24" rx="9" ry="4" fill="#3f9b5a"/><ellipse cx="84" cy="16" rx="8" ry="3.5" fill="#3f9b5a"/><path d="M44 22c-4-2-5-7-3-10c2 2 3 5 3 10zm0 0c4-2 5-7 3-10c-2 2-3 5-3 10z" fill="#ec6fd8"/></svg></div>`;
+    if (artURL('fondo_' + mode) || artURL('fondo_dia')) {
+      if (S.up && S.up.obeliscos) [.09, .91].forEach(x => { html += `<div class="obj" aria-hidden="true" style="left:${x * 100}%;top:52%;width:9%;z-index:2">${obeliskArt()}</div>`; });
+      if (S.up && S.up.estandartes) [.27, .73].forEach(x => { html += `<div class="obj" aria-hidden="true" style="left:${x * 100}%;top:40%;width:6%;z-index:2">${bannerArt()}</div>`; });
+    }
+    if (S.up && S.up.estanque) html += `<div class="obj pond" aria-hidden="true" style="left:64%;top:99.5%;width:32%;z-index:5">${artURL('estanque') ? `<img src="${artURL('estanque')}" alt="">` : `<svg viewBox="0 0 120 40"><ellipse cx="60" cy="22" rx="58" ry="17" fill="#c9a66b"/><ellipse cx="60" cy="21" rx="52" ry="14" fill="#3d93d6"/><path d="M26 18h14M70 26h18" stroke="#bfe6ff" stroke-width="2" stroke-linecap="round" opacity=".7"/><ellipse cx="44" cy="24" rx="9" ry="4" fill="#3f9b5a"/><ellipse cx="84" cy="16" rx="8" ry="3.5" fill="#3f9b5a"/><path d="M44 22c-4-2-5-7-3-10c2 2 3 5 3 10zm0 0c4-2 5-7 3-10c-2 2-3 5-3 10z" fill="#ec6fd8"/></svg>`}</div>`;
     world.innerHTML = html;
     $('obj-sphinx').addEventListener('click', () => {
       ensureAudio();
@@ -984,18 +1045,18 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
     if (!art || art.dataset.busy) return;
     art.dataset.busy = '1';
     const tag = document.querySelector('#obj-sphinx .tag'); if (tag) tag.textContent = '';
-    art.innerHTML = catSVG(SPHINX, { statue: true, cracks: true });
+    art.innerHTML = sphinxArt(true, true);
     art.classList.add('waking'); sfx.rumble(); buzz([30, 60, 30, 60, 80]);
     setTimeout(() => {
       art.classList.remove('waking');
-      art.innerHTML = catSVG(SPHINX); art.classList.add('flash'); sfx.awake();
+      art.innerHTML = sphinxArt(false); art.classList.add('flash'); sfx.awake();
       setTimeout(() => {
         S.sphinxAwake = true;
         addCat({ fur: 'naranja', pat: 'atigrado', eyes: 'ambar', acc: 'cascabel' });
         addCat({ fur: 'negro', pat: 'liso', eyes: 'verde', acc: 'ninguno' });
         S.ofrendas = 40; S.altarAt = Date.now();
         save(); renderAll();
-        openSheet(`<div class="center"><div class="hero">${catSVG(SPHINX)}</div>
+        openSheet(`<div class="center"><div class="hero">${sphinxArt(false)}</div>
           <div class="big-name">¡Despertaste a la Esfinge!</div>
           <p class="note">"Hace siglos que los gatos de este templo duermen convertidos en piedra. Te dejé 2 estatuas aquí en el templo y 40 ofrendas. Toca las estatuas para despertarlas, crúzalas… y descubre qué nace."</p>
           <button class="btn gold" id="go-temple" type="button">¡Vamos!</button></div>`);
@@ -1453,7 +1514,9 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
       back = `<circle cx="50" cy="50" r="48" fill="#ffe08a" opacity=".55"/><circle cx="50" cy="50" r="48" fill="none" stroke="#fff6c4" stroke-width="4" stroke-dasharray="6 8"/>`;
       front = `<path d="M84 8l3 8 8 3-8 3-3 8-3-8-8-3 8-3z" fill="#fff" stroke="${ink}" stroke-width="2"/>`;
     }
-    return (TILE_CACHE[key] = `<svg viewBox="0 0 100 100" aria-hidden="true">${back}${k >= 0 ? pieceArt(k) : bastetArt()}${front}</svg>`);
+    const u = artURL(k >= 0 ? PIECE_ART[k] : 'gato_bastet');
+    const art = u ? `<image href="${u}" x="3" y="3" width="94" height="94"/>` : (k >= 0 ? pieceArt(k) : bastetArt());
+    return (TILE_CACHE[key] = `<svg viewBox="0 0 100 100" aria-hidden="true">${back}${art}${front}</svg>`);
   }
   const sandIcon = `<svg viewBox="0 0 100 100" aria-hidden="true"><rect x="8" y="8" width="84" height="84" rx="18" fill="#e2bf7e" stroke="#2a1f35" stroke-width="5"/><circle cx="32" cy="34" r="5" fill="#c79a52"/><circle cx="64" cy="30" r="4" fill="#c79a52"/><circle cx="50" cy="58" r="6" fill="#c79a52"/><circle cx="28" cy="70" r="4" fill="#c79a52"/><circle cx="72" cy="68" r="5" fill="#c79a52"/></svg>`;
 
@@ -1905,6 +1968,8 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
   function drawStone(x, y, s, ci, alpha) {
     const ctx = PL.ctx, C = STONES[ci], g = s * .05, r = s * .14;
     ctx.globalAlpha = alpha === undefined ? 1 : alpha;
+    const im = ART[BLOCK_ART[ci]];
+    if (im && im.ready) { ctx.drawImage(im.img, x + g * .4, y + g * .4, s - g * .8, s - g * .8); ctx.globalAlpha = 1; return; }
     ctx.fillStyle = C.lo; prr(ctx, x + g, y + g, s - 2 * g, s - 2 * g, r); ctx.fill();
     ctx.fillStyle = C.base; prr(ctx, x + g, y + g, s - 2 * g, s - 2 * g - s * .1, r); ctx.fill();
     ctx.fillStyle = C.hi; prr(ctx, x + g + s * .1, y + g + s * .06, s - 2 * g - s * .2, s * .1, s * .05); ctx.fill();
@@ -2201,6 +2266,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
 
   // ================= Arranque =================
   function start(data) {
+    loadArt();
     const d = data && data.v === 1 && Array.isArray(data.cats) ? data : load();
     if (d) S = { ...freshState(), ...d };
     renderAll();
