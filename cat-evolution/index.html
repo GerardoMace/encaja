@@ -1255,7 +1255,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
   const WALK_EARS = [[.85, .06, .07, .08]], WALK_TAIL = [[.1, .22, .09, .25]];
   const WALK_HEAD = [.84, .25, .17, .25], WALK_MUZ = [.95, .36], WALK_PAWS = [[.1, 1, .9]];
   const POSES = {
-    frente:    { art: 'gato_frente', acc: 'frente', size: .68, legCut: .83, ears: [[.17, .08, .1, .1], [.83, .08, .1, .1]], tail: [[.07, .78, .08, .17]], head: [.5, .3, .48, .29], muz: [.5, .46], belly: .6, paws: [[.24, .44, .92], [.47, .64, .92], [.66, .82, .92]],       neck: [.5, .6, .46, 0],      crown: [.5, .04],  eyes: [[.32, .4], [.72, .4]], eyeR: .07, wing: 1 },
+    frente:    { art: 'gato_frente', acc: 'frente', size: .68, legCut: .83, maskX: .535, ears: [[.17, .08, .1, .1], [.83, .08, .1, .1]], tail: [[.07, .78, .08, .17]], head: [.5, .3, .48, .29], muz: [.5, .46], belly: .6, paws: [[.24, .44, .92], [.47, .64, .92], [.66, .82, .92]],       neck: [.5, .6, .46, 0],      crown: [.5, .04],  eyes: [[.32, .4], [.72, .4]], eyeR: .07, wing: 1 },
     lado:      { art: 'gato_lado_1',       neck: [.79, .47, .22, -.55], crown: [.84, .03], eyes: [[.86, .32]], eyeR: .05 },
     acostado:  { art: 'gato_acostado', acc: 'acostado', size: .9, ears: [[.59, .09, .06, .09], [.93, .09, .06, .09]], tail: [[.17, .88, .2, .12]], head: [.75, .32, .25, .3], muz: [.75, .45], belly: .7, paws: [[.38, .5, .86], [.66, .84, .84]],     neck: [.73, .6, .3, 0],      crown: [.73, .04], eyes: [[.62, .37], [.83, .37]], eyeR: .055, wing: 1 },
     sentado:   { art: 'gato_sentado_lado', acc: 'sentado', size: .8, legCut: .86, ears: [[.6, .07, .08, .08], [.75, .05, .07, .07]], tail: [[.3, .9, .3, .08]], head: [.74, .22, .26, .22], muz: [.92, .34], belly: .62, paws: [[.62, .82, .9]], neck: [.68, .43, .26, -.45], crown: [.74, .03], eyes: [[.79, .29]], eyeR: .05 },
@@ -1389,7 +1389,8 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       }
       if (part === 'mask' && P.muz && H) {
         // máscara: óvalo más definido alrededor del hocico, que sube entre los ojos hacia la frente
-        const dm = Math.hypot((u - P.muz[0]) / (H[2] * .78), (v - P.muz[1] + H[3] * .28) / (H[3] * .66)) + wob * .5;
+        // maskX = centro real de la cara (de frente la cola hace la caja más ancha); ahí la máscara va simétrica, sin ondas
+        const dm = Math.hypot((u - (P.maskX || P.muz[0])) / (H[2] * .78), (v - P.muz[1] + H[3] * .28) / (H[3] * .66)) + (P.maskX ? 0 : wob * .5);
         k = Math.max(k, sstep(1.0, .93, dm) * .96);
       }
       if (part === 'paws') {
