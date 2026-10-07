@@ -600,7 +600,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     nevado: { b: '#eef6fb', g: ['#ffffff', '#bcdcf0'] },
     // manchas: dos colores mezclados en parches irregulares; blanco = parte del pelaje que se queda blanca
     // bias = cuánto negro (+) o naranja (−); fleck = motitas nítidas del otro color; white = parches blancos
-    carey: { b: '#7a4a2a', spots: { dark: '#463a41', light: '#e5822b', bias: .14, fleck: 1, white: 0 } },
+    carey: { b: '#7a4a2a', spots: { dark: '#463a41', light: '#e8852c', mid: '#a0552a', bias: .07, fleck: 1, white: 0, touches: true } },
     calico: { b: '#e2802c', spots: { dark: '#463a41', light: '#ea8a35', bias: -.04, fleck: 0, white: 1 } },
   };
   const IRIS = { verde: '#69c34d', ambar: '#f0a32e', azul: '#4aa9ec', kohl: '#e8b33a', hielo: '#7fdcff' };
@@ -1244,20 +1244,20 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
   // ================= Gato real (arte de Gemini): el gato blanco se pinta según sus genes =================
   // Posiciones en fracción de la imagen: neck = [x, y, ancho, giro] del collar, crown = punto sobre la cabeza,
   // eyes = centros de los ojos, eyeR = radio del ojo (fracción del lado menor)
-  const WALK_HEAD = [.84, .25, .17, .25], WALK_MUZ = [.95, .36];
+  const WALK_HEAD = [.84, .25, .17, .25], WALK_MUZ = [.95, .36], WALK_PAWS = [[.1, 1, .9]];
   const POSES = {
-    frente:    { art: 'gato_frente', acc: 'frente', size: .68, head: [.5, .3, .48, .29], muz: [.5, .46], belly: .6,       neck: [.5, .6, .46, 0],      crown: [.5, .04],  eyes: [[.32, .4], [.72, .4]], eyeR: .07, wing: 1 },
+    frente:    { art: 'gato_frente', acc: 'frente', size: .68, head: [.5, .3, .48, .29], muz: [.5, .46], belly: .6, paws: [[.24, .44, .92], [.47, .64, .92], [.66, .82, .92]],       neck: [.5, .6, .46, 0],      crown: [.5, .04],  eyes: [[.32, .4], [.72, .4]], eyeR: .07, wing: 1 },
     lado:      { art: 'gato_lado_1',       neck: [.79, .47, .22, -.55], crown: [.84, .03], eyes: [[.86, .32]], eyeR: .05 },
-    acostado:  { art: 'gato_acostado', acc: 'acostado', size: .9, head: [.75, .32, .25, .3], muz: [.75, .45], belly: .7,     neck: [.73, .6, .3, 0],      crown: [.73, .04], eyes: [[.62, .37], [.83, .37]], eyeR: .055, wing: 1 },
-    sentado:   { art: 'gato_sentado_lado', acc: 'sentado', size: .8, head: [.74, .22, .26, .22], muz: [.92, .34], belly: .62, neck: [.68, .43, .26, -.45], crown: [.74, .03], eyes: [[.79, .29]], eyeR: .05 },
+    acostado:  { art: 'gato_acostado', acc: 'acostado', size: .9, head: [.75, .32, .25, .3], muz: [.75, .45], belly: .7, paws: [[.38, .5, .86], [.66, .84, .84]],     neck: [.73, .6, .3, 0],      crown: [.73, .04], eyes: [[.62, .37], [.83, .37]], eyeR: .055, wing: 1 },
+    sentado:   { art: 'gato_sentado_lado', acc: 'sentado', size: .8, head: [.74, .22, .26, .22], muz: [.92, .34], belly: .62, paws: [[.62, .82, .9]], neck: [.68, .43, .26, -.45], crown: [.74, .03], eyes: [[.79, .29]], eyeR: .05 },
     estira:    { art: 'gato_estira',       eyes: [[.19, .64], [.39, .64]], eyeR: .05 },
     agazapado: { art: 'gato_agazapado',    eyes: [[.13, .5], [.33, .5]], eyeR: .05 },
-    dormido:   { art: 'gato_dormido', size: .85, head: [.3, .55, .28, .3], muz: [.37, .67], belly: .74 },
-    colgado:   { art: 'gato_colgado', noTint: .18, head: [.3, .13, .32, .14], muz: [.3, .21], belly: .48 },   // arriba está la mano que lo sostiene: no se pinta
+    dormido:   { art: 'gato_dormido', size: .85, head: [.3, .55, .28, .3], muz: [.37, .67], belly: .74, paws: [[.22, .4, .89]] },
+    colgado:   { art: 'gato_colgado', noTint: .18, head: [.3, .13, .32, .14], muz: [.3, .21], belly: .48, paws: [[.1, .42, .5], [.3, .62, .68]] },   // arriba está la mano que lo sostiene: no se pinta
     // cuadros de la caminata (todos del mismo tamaño, alineados por la nariz)
-    caminar1: { art: 'gato_caminar_1', acc: 'caminar', head: WALK_HEAD, muz: WALK_MUZ, belly: .64 }, caminar2: { art: 'gato_caminar_2', acc: 'caminar', head: WALK_HEAD, muz: WALK_MUZ, belly: .64 },
-    caminar3: { art: 'gato_caminar_3', acc: 'caminar', head: WALK_HEAD, muz: WALK_MUZ, belly: .64 }, caminar4: { art: 'gato_caminar_4', acc: 'caminar', head: WALK_HEAD, muz: WALK_MUZ, belly: .64 },
-    caminar5: { art: 'gato_caminar_5', acc: 'caminar', head: WALK_HEAD, muz: WALK_MUZ, belly: .64 }, caminar6: { art: 'gato_caminar_6', acc: 'caminar', head: WALK_HEAD, muz: WALK_MUZ, belly: .64 },
+    caminar1: { art: 'gato_caminar_1', acc: 'caminar', head: WALK_HEAD, muz: WALK_MUZ, belly: .64, paws: WALK_PAWS }, caminar2: { art: 'gato_caminar_2', acc: 'caminar', head: WALK_HEAD, muz: WALK_MUZ, belly: .64, paws: WALK_PAWS },
+    caminar3: { art: 'gato_caminar_3', acc: 'caminar', head: WALK_HEAD, muz: WALK_MUZ, belly: .64, paws: WALK_PAWS }, caminar4: { art: 'gato_caminar_4', acc: 'caminar', head: WALK_HEAD, muz: WALK_MUZ, belly: .64, paws: WALK_PAWS },
+    caminar5: { art: 'gato_caminar_5', acc: 'caminar', head: WALK_HEAD, muz: WALK_MUZ, belly: .64, paws: WALK_PAWS }, caminar6: { art: 'gato_caminar_6', acc: 'caminar', head: WALK_HEAD, muz: WALK_MUZ, belly: .64, paws: WALK_PAWS },
   };
   const WALK_FRAMES = 6, WALK_MS = 175;
   // las poses de Gemini no vienen a la misma escala: se achican para que la cabeza mida lo mismo que al caminar
@@ -1344,7 +1344,27 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     // carey: las orillas de los parches se mezclan en rayitas de pelo (atigrado), a lo largo del cuerpo
     if (Sp.fleck) f += .42 * pnoise(wx * 5, wy * 19, seed + 51) + .18 * pnoise(wx * 11, wy * 34, seed + 52);
     const dark = sstep(-e * 5, e * 5, f);
-    return [dark, white];
+    // carey: donde se juntan negro y naranja hay pelo canela, y sobre lo negro, pelitos ámbar
+    let mid = 0;
+    if (Sp.mid) {
+      mid = (1 - sstep(.05, .2, Math.abs(f))) * .85;
+      const tick = pnoise(wx * 9, wy * 32, seed + 53);
+      mid = Math.max(mid, sstep(.3 - e * 8, .3 + e * 8, tick) * dark * .9);
+    }
+    // carey con blanco (como 3 de cada 5): barbilla, un poco de pecho y calcetines; solo toques, para no parecer calicó
+    if (Sp.touches && seed % 5 < 3) {
+      for (const [a, b, top] of P.paws || []) {
+        if (u < a || u > b) continue;
+        const sock = top + .03 * pnoise(X * 7, Y * 7, seed + 61);
+        white = Math.max(white, sstep(sock - e * 2, sock + e * 2, v));
+      }
+      if (P.muz && H) {
+        const dx = (u - P.muz[0]) / H[2], dy = (v - P.muz[1]) / H[3];
+        const r = Math.hypot(dx * 1.5, dy * (dy > 0 ? .75 : 2.4)) - (.34 + .1 * pnoise(dx * 2.6 + 3, dy * 2.6 + 3, seed + 63));
+        white = Math.max(white, sstep(e * 5, -e * 5, r));
+      }
+    }
+    return [dark, white, mid];
   }
   function catArtURL(g, pose, statue) {
     const P = POSES[pose]; if (!P) return null;
@@ -1376,7 +1396,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       }
     }
     const fw = Math.max(1, fx1 - fx0), fh = Math.max(1, fy1 - fy0), fs = Math.max(fw, fh);
-    const SPd = F.spots && hexRGB(F.spots.dark), SPl = F.spots && hexRGB(F.spots.light);
+    const SPd = F.spots && hexRGB(F.spots.dark), SPl = F.spots && hexRGB(F.spots.light), SPm = F.spots && F.spots.mid && hexRGB(F.spots.mid);
     const topHex = F.g ? F.g[0] : F.b, dg = DEGRADADO[g.pat];
     const top = hexRGB(topHex), bot = hexRGB(dg == null ? (F.g ? F.g[1] : F.b) : typeof dg === 'number' ? shade(topHex, dg) : dg);
     const tone = g.eyes || 'normal';
@@ -1390,9 +1410,10 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
         const i = (y * w + x) * 4; if (!d[i + 3]) continue;
         let cb = c0, wh = 0;
         if (F.spots && !statue) {
-          const [dk, wt] = spotMix(F.spots, P, (x - fx0) / fw, (y - fy0) / fh, fw / fs, fh / fs, seed, .5 / fs);
+          const [dk, wt, md] = spotMix(F.spots, P, (x - fx0) / fw, (y - fy0) / fh, fw / fs, fh / fs, seed, .5 / fs);
           if (wt >= .999) continue;   // parche blanco: se queda como lo dibujó Gemini
           cb = [SPl[0] + (SPd[0] - SPl[0]) * dk, SPl[1] + (SPd[1] - SPl[1]) * dk, SPl[2] + (SPd[2] - SPl[2]) * dk];
+          if (md) cb = [cb[0] + (SPm[0] - cb[0]) * md, cb[1] + (SPm[1] - cb[1]) * md, cb[2] + (SPm[2] - cb[2]) * md];
           wh = wt;
         }
         const c = statue ? cb : toneColor(cb, tone, x / w, v);
