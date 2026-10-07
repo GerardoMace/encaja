@@ -1350,7 +1350,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       sarc: [{ x: .1, y: .74, w: .12 }, { x: .9, y: .74, w: .12 }, { x: .12, y: .9, w: .11 }, { x: .88, y: .9, w: .11 }],
       altar: { x: .27, y: .975, w: .13 },
       statues: [{ x: .58, y: .88 }, { x: .36, y: .77 }, { x: .64, y: .77 }, { x: .42, y: .93 }, { x: .28, y: .85 }, { x: .72, y: .82 }],
-      floor: { x0: .2, x1: .8, y0: .66, y1: .94 },
+      floor: { x0: .2, x1: .8, y0: .71, y1: .95 },   // empieza abajo de las bases de las columnas
       deco: { ob: { xs: [.05, .95], y: .66, w: .1 }, ban: { xs: [.36, .64], y: .5, w: .06 }, pond: { x: .78, y: .995, w: .28 } },
     },
     casa: {
@@ -1535,6 +1535,10 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
         delete spawnAt[c.id];
         walkers.set(c.id, w);
       }
+      // si el fondo cargó después (o cambió el hábitat), el gato se regresa al piso de este fondo
+      const inF = (v, a, b) => Math.max(a, Math.min(b, v));
+      w.x = inF(w.x, FLOOR.x0, FLOOR.x1); w.y = inF(w.y, FLOOR.y0, FLOOR.y1);
+      w.tx = inF(w.tx, FLOOR.x0, FLOOR.x1); w.ty = inF(w.ty, FLOOR.y0, FLOOR.y1);
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'walker' + (w.walking ? ' walking' : '');
