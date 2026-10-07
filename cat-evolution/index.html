@@ -191,6 +191,11 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
   background:#1a2360;touch-action:none;overflow:hidden;box-shadow:0 0 0 5px #c9a66b,0 0 0 8px #2a1f35,0 16px 36px rgba(0,0,0,.4);
 }
 .mcell{position:absolute;width:12.5%;height:12.5%}
+.mboard.esp{box-shadow:0 0 0 5px #f4c24f,0 0 0 8px #2a1f35,0 0 26px 8px rgba(244,194,79,.45),0 16px 36px rgba(0,0,0,.4)}
+.mboard.esp-calico{background:radial-gradient(28% 22% at 18% 24%,#e08a3c 98%,transparent),radial-gradient(24% 26% at 74% 30%,#2c2630 98%,transparent),radial-gradient(30% 24% at 62% 78%,#e08a3c 98%,transparent),radial-gradient(22% 20% at 22% 74%,#2c2630 98%,transparent),#f3eadc}
+.mboard.esp-carey{background:radial-gradient(30% 26% at 20% 26%,#d9772e 98%,transparent),radial-gradient(26% 30% at 70% 22%,#a85a26 98%,transparent),radial-gradient(34% 26% at 64% 72%,#d9772e 98%,transparent),radial-gradient(24% 22% at 24% 76%,#b4652a 98%,transparent),#2c2630}
+.mboard.esp .mcell{background:rgba(26,35,96,.62)}
+.mboard.esp .mcell.alt{background:rgba(26,35,96,.5)}
 .mcell.alt{background:rgba(255,255,255,.05)}
 .mcell.sand{background:radial-gradient(circle at 30% 30%,#c79a52 0 6%,transparent 7%),radial-gradient(circle at 70% 65%,#c79a52 0 5%,transparent 6%),#e2bf7e;box-shadow:inset 0 0 0 2px #c9a66b}
 .mcell.swept{animation:swept .5s ease-out}
@@ -329,6 +334,9 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
 @media (prefers-reduced-motion:reduce){.walker.lifted .hang svg,.walker.land .front svg,.dust,.hero-heart,.hero.playing .cat{animation:none}}
 /* Gato real (imágenes pintadas) */
 img.catimg{display:block;width:100%;height:auto}
+.sex{font-weight:900;font-size:.95em}
+.sex.m{color:#5fb4ff}
+.sex.f{color:#ff8fc0}
 .walker .front img.catimg{position:absolute;left:0;bottom:0}
 .walker.walking .side img.catimg{animation:stepimg .32s ease-in-out infinite alternate;transform-origin:50% 100%}
 .walker.lifted .hang img.catimg{transform-origin:50% 3%;animation:sway 1.1s ease-in-out infinite alternate}
@@ -503,7 +511,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     verde: 'Verdes', ambar: 'Ámbar', azul: 'Azules', heterocromia: 'Heterocromía', kohl: 'Delineado de Horus', galaxia: 'Galaxia',
     ninguno: 'Ninguno', cascabel: 'Cascabel', mono: 'Moño de gala', usekh: 'Collar usekh', luna: 'Tiara lunar', nemes: 'Tocado nemes',
     nevado: 'Nevado', escarcha: 'Escarcha', hielo: 'Ojos de hielo', bufanda: 'Bufanda',
-    carey: 'Carey', calico: 'Calicó',
+    carey: 'Carey', calico: 'Calicó', macho_carey: 'Macho carey',
     parejo: 'Parejo', humo: 'Humo', claro: 'Claro', canela: 'Canela', perla: 'Perla', oro: 'Oro', aurora: 'Aurora',
     normal: 'Normal', pastel: 'Pastel', oscuro: 'Oscuro', satinado: 'Satinado', bronceado: 'Bronceado', iridiscente: 'Iridiscente', glaciar: 'Glaciar',
   };
@@ -519,7 +527,21 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
   GENE_KEYS.forEach(k => Object.entries(GENES[k].mut).forEach(([fam, v]) => { MUT_FAMILY[v] = fam; }));
   const CAT_NAMES = ['Cleo', 'Nefer', 'Ramsés', 'Tut', 'Isis', 'Osiris', 'Anubis', 'Horus', 'Seti', 'Amira', 'Nilo', 'Kaia', 'Luna', 'Momo', 'Churro', 'Canela', 'Mango', 'Kiwi', 'Oreo', 'Nala', 'Pelusa', 'Tamal', 'Concha', 'Michi', 'Bigotes', 'Dátil', 'Papiro', 'Menta', 'Chispa', 'Miel', 'Coco', 'Simón', 'Pixel', 'Nube', 'Duna', 'Cairo', 'Giza', 'Zafiro', 'Perla', 'Ónix', 'Sol', 'Tofu', 'Nacho', 'Pistache'];
 
-  const rarityOf = g => { const n = GENE_KEYS.filter(k => MUT_FAMILY[g[k]]).length; return n === 0 ? 'comun' : n === 1 ? 'raro' : n === 2 ? 'epico' : 'legend'; };
+  // Cruces secretos: pelajes que solo nacen de cierta pareja y se desbloquean en Ofrendas
+  const SECRET = {
+    calico: { name: 'Calicó', level: 30, fact: 'En Japón al calicó le dicen mike-neko, "gato de tres pelos", y los marineros lo llevaban en sus barcos para la buena suerte.' },
+    carey: { name: 'Carey', level: 50, fact: 'El carey se llama así por la tortuga de caparazón manchado. Casi todos son hembras: un macho carey nace una vez entre miles.' },
+  };
+  const isTortie = g => g.fur === 'carey' || g.fur === 'calico';
+  const maleTortie = g => isTortie(g) && g.sex === 'm';
+  const MALE_TORTIE = 1 / 150;   // probabilidad de que un carey o calicó nazca macho
+  const rarityOf = g => {
+    if (maleTortie(g)) return 'legend';
+    const n = GENE_KEYS.filter(k => MUT_FAMILY[g[k]]).length + (isTortie(g) ? 1 : 0);
+    return n === 0 ? 'comun' : n === 1 ? 'raro' : n === 2 ? 'epico' : 'legend';
+  };
+  const newSeed = () => Math.floor(Math.random() * 100000);
+  const sexIcon = g => g && g.sex ? `<span class="sex ${g.sex}" aria-label="${g.sex === 'm' ? 'macho' : 'hembra'}">${g.sex === 'm' ? '♂' : '♀'}</span>` : '';
   function styleOf(g) {
     const c = {};
     GENE_KEYS.forEach(k => { const f = MUT_FAMILY[g[k]]; if (f) c[f] = (c[f] || 0) + 1; });
@@ -549,12 +571,23 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       const k = pick(GENE_KEYS);
       g[k] = GENES[k].mut[Math.random() < .6 ? 'elegante' : 'egipcio'];
     }
+    // cruces secretos: naranja × negro (o un padre carey/calicó) pueden dar manchas, si ya se desbloquearon
+    const furs = [a.genes.fur, b.genes.fur], un = S.unlock || {};
+    const torParent = furs.find(f => f === 'carey' || f === 'calico');
+    const ob = furs.includes('naranja') && furs.includes('negro');
+    if ((ob || torParent) && Math.random() < (torParent ? .4 : .3)) {
+      const opts = [un.calico && 'calico', un.carey && 'carey'].filter(Boolean);
+      if (opts.length) g.fur = torParent && opts.includes(torParent) && Math.random() < .7 ? torParent : pick(opts);
+    }
+    g.seed = newSeed();
+    g.sex = isTortie(g) ? (Math.random() < MALE_TORTIE ? 'm' : 'f') : (Math.random() < .5 ? 'm' : 'f');
     return g;
   }
   function randomStatueGenes(fav) {
     const g = {};
     GENE_KEYS.forEach(k => { g[k] = pick(GENES[k].common); });
     if (Math.random() < .12) { const k = pick(GENE_KEYS); g[k] = GENES[k].mut[pickFamily(fav ? { [fav]: 2.4 } : null)]; }
+    g.seed = newSeed(); g.sex = Math.random() < .5 ? 'm' : 'f';
     return g;
   }
 
@@ -807,7 +840,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
   const KEY = 'catevolution.v1';
   const SPHINX = { fur: 'arena', pat: 'parejo', eyes: 'normal', acc: 'nemes' };
   function freshState() {
-    return { v: 1, sphinxAwake: false, ofrendas: 0, altarAt: Date.now(), cats: [], hab: 'egipto', habs: freshHabs(), found: [], births: 0, nextId: 1, tab: 'templo', tip: 0, match: { level: 1, best: {} }, stone: 0, up: {}, pyrBest: 0 };
+    return { v: 1, sphinxAwake: false, ofrendas: 0, altarAt: Date.now(), cats: [], hab: 'egipto', habs: freshHabs(), found: [], births: 0, nextId: 1, tab: 'templo', tip: 0, match: { level: 1, best: {} }, stone: 0, up: {}, pyrBest: 0, unlock: {} };
   }
   let S = freshState();
   function load() { try { const d = JSON.parse(localStorage.getItem(KEY)); if (d && d.v === 1 && Array.isArray(d.cats)) return d; } catch (e) {} return null; }
@@ -829,6 +862,8 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
   function discover(genes) {
     const fresh = [];
     GENE_KEYS.forEach(k => { const v = genes[k]; if (MUT_FAMILY[v] && !S.found.includes(v)) { S.found.push(v); fresh.push(v); } });
+    if (isTortie(genes) && !S.found.includes(genes.fur)) { S.found.push(genes.fur); fresh.push(genes.fur); }
+    if (maleTortie(genes) && !S.found.includes('macho_carey')) { S.found.push('macho_carey'); fresh.push('macho_carey'); }
     return fresh;
   }
   const altarAmount = () => Math.min(ALTAR.cap, Math.floor((Date.now() - S.altarAt) / ALTAR.everyMs));
@@ -1867,7 +1902,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
         ${S.sphinxAwake ? `<div class="actions" style="margin:4px 0 12px"><button class="btn turq" id="g-breed" type="button">Criar gatitos · ${COST.breed}</button><button class="btn gold" id="g-dig" type="button">Excavar estatua · ${COST.dig}</button></div>` : ''}
         <div class="grid">${cats.map(cardHTML).join('') || '<p class="note">Aún no tienes gatos.</p>'}</div>
       </div>
-      <div class="block"><h2>Libro de mutaciones</h2><div class="book">${fams}</div></div>
+      <div class="block"><h2>Libro de mutaciones</h2><div class="book">${fams}${secretBook()}</div></div>
       <button class="reset" id="btn-reset" type="button">Borrar mi progreso</button>`;
     el.querySelectorAll('[data-cat]').forEach(b => b.addEventListener('click', () => openCat(Number(b.dataset.cat))));
     let armed = false;
@@ -1878,6 +1913,16 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     if ($('g-breed')) { $('g-breed').addEventListener('click', openBreed); $('g-dig').addEventListener('click', dig); }
     const dg = $('dot-gatos'); if (dg) dg.hidden = !S.cats.some(c => !c.awake);
   }
+  function secretBook() {
+    const un = S.unlock || {};
+    const items = [
+      ...Object.entries(SECRET).sort((a, b) => a[1].level - b[1].level).map(([k, x]) => S.found.includes(k) ? `<li>${x.name}<small>Naranja × negro</small></li>`
+        : un[k] ? `<li class="no">???<small>Ya puede nacer</small></li>` : `<li class="no">🔒<small>Nivel ${x.level} de Ofrendas</small></li>`),
+      S.found.includes('macho_carey') ? '<li>Macho carey<small>Legendario</small></li>' : '<li class="no">???<small>Ultrarraro</small></li>',
+    ];
+    const got = ['calico', 'carey', 'macho_carey'].filter(k => S.found.includes(k)).length;
+    return `<div class="fam"><h3 style="color:#ffb36b">Cruces secretos<span>${got}/3</span></h3><ul>${items.join('')}</ul></div>`;
+  }
   function cardHTML(c) {
     if (!c.awake) return `<button class="card stone" data-cat="${c.id}" type="button">
       <div class="art">${catSVG(c.genes, { statue: true })}</div>
@@ -1885,7 +1930,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     const r = rarityOf(c.genes);
     return `<button class="card ${r === 'legend' ? 'legend' : r === 'epico' ? 'epico' : ''}" data-cat="${c.id}" type="button" style="--halo:${RARITY[r].halo}">
       <div class="art">${catSVG(c.genes)}</div>
-      <span class="name">${esc(c.name)}</span><span class="meta">${badge(r)} ${styleOf(c.genes)} · ${HABITATS[c.hab || 'egipto'].short}</span></button>`;
+      <span class="name">${esc(c.name)} ${sexIcon(c.genes)}</span><span class="meta">${badge(r)} ${styleOf(c.genes)} · ${HABITATS[c.hab || 'egipto'].short}</span></button>`;
   }
 
   function genesHTML(g) {
@@ -1909,8 +1954,8 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       art.innerHTML = sphinxArt(false); art.classList.add('flash'); sfx.awake();
       setTimeout(() => {
         S.sphinxAwake = true;
-        addCat({ fur: 'naranja', pat: 'humo', eyes: 'normal', acc: 'cascabel' });
-        addCat({ fur: 'negro', pat: 'parejo', eyes: 'normal', acc: 'ninguno' });
+        addCat({ fur: 'naranja', pat: 'humo', eyes: 'normal', acc: 'cascabel', sex: 'm', seed: newSeed() });
+        addCat({ fur: 'negro', pat: 'parejo', eyes: 'normal', acc: 'ninguno', sex: 'f', seed: newSeed() });
         S.ofrendas = 40; S.altarAt = Date.now();
         save(); renderAll();
         openSheet(`<div class="center"><div class="hero" id="intro-abuelo">${abueloSVG()}</div>
@@ -1957,7 +2002,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       return;
     }
     const r = rarityOf(c.genes);
-    openSheet(`<div class="sheet-head"><h2 id="cat-title">${esc(c.name)} <button class="pencil" id="rename" type="button" aria-label="Cambiar nombre"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg></button></h2><button class="x" id="x" type="button" aria-label="Cerrar">×</button></div>
+    openSheet(`<div class="sheet-head"><h2 id="cat-title">${esc(c.name)} ${sexIcon(c.genes)} <button class="pencil" id="rename" type="button" aria-label="Cambiar nombre"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"/></svg></button></h2><button class="x" id="x" type="button" aria-label="Cerrar">×</button></div>
       <div class="hero halo" style="--halo:${RARITY[r].halo}55">${catSVG(c.genes)}</div>
       <div class="center">${badge(r)}<span class="note">Estilo ${styleOf(c.genes)} · Generación ${c.gen}${c.parents ? ` · Hijo de ${esc(c.parents[0])} y ${esc(c.parents[1])}` : ' · Despertado de una estatua'}</span></div>
       ${catActions(c)}
@@ -1988,7 +2033,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
   function showReveal(c, title, fresh) {
     const r = rarityOf(c.genes);
     openSheet(`<div class="center"><div class="hero halo flash" style="--halo:${RARITY[r].halo}66">${catSVG(c.genes)}</div>
-      ${badge(r)}<div class="big-name">${esc(title)}</div>
+      ${badge(r)}<div class="big-name">${esc(title)} ${sexIcon(c.genes)}</div>
       <span class="note">Estilo ${styleOf(c.genes)}${c.parents ? ` · Hijo de ${esc(c.parents[0])} y ${esc(c.parents[1])}` : ''}</span></div>
       ${fresh.map(v => `<div class="new-mut">¡Mutación nueva descubierta: ${NAMES_OF[v]}!</div>`).join('')}
       <label class="namefield"><span>Ponle nombre</span><input id="reveal-name" maxlength="14" value="${esc(c.name)}"></label>
@@ -2012,6 +2057,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     const awake = S.cats.filter(c => c.awake && c.hab === S.hab);
     const free = slotsOf().findIndex(s => !s);
     if (awake.length < 2) { toast(`Necesitas 2 gatos despiertos en ${HABITATS[S.hab].short}. Despierta estatuas o muda gatos desde su ficha.`); return; }
+    if (!awake.some(c => c.genes.sex === 'm') || !awake.some(c => c.genes.sex === 'f')) { toast(`Para criar necesitas un macho y una hembra despiertos en ${HABITATS[S.hab].short}.`); return; }
     if (free < 0) { toast(`Todos los ${HABITATS[S.hab].nest.toLowerCase()}s están ocupados. Espera a que nazcan los gatitos.`); return; }
     picked = picked.filter(id => awake.some(c => c.id === id)).slice(0, 2);
     drawBreed();
@@ -2019,20 +2065,21 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
   function drawBreed() {
     const awake = S.cats.filter(c => c.awake && c.hab === S.hab).sort((a, b) => b.id - a.id);
     const A = S.cats.find(c => c.id === picked[0]), B = S.cats.find(c => c.id === picked[1]);
-    const can = A && B && S.ofrendas >= COST.breed;
+    const pair = A && B && A.genes.sex !== B.genes.sex;
+    const can = pair && S.ofrendas >= COST.breed;
     openSheet(`<div class="sheet-head"><h2>Elige a los padres</h2><button class="x" id="x" type="button" aria-label="Cerrar">×</button></div>
       <div class="pair">
-        <div>${A ? catSVG(A.genes) : '<div class="ph"></div>'}${A ? esc(A.name) : 'Papá o mamá'}</div>
+        <div>${A ? catSVG(A.genes) : '<div class="ph"></div>'}${A ? esc(A.name) + ' ' + sexIcon(A.genes) : 'Papá o mamá'}</div>
         <span class="plus">+</span>
-        <div>${B ? catSVG(B.genes) : '<div class="ph"></div>'}${B ? esc(B.name) : 'Papá o mamá'}</div>
+        <div>${B ? catSVG(B.genes) : '<div class="ph"></div>'}${B ? esc(B.name) + ' ' + sexIcon(B.genes) : 'Papá o mamá'}</div>
       </div>
       <div class="pick">${awake.map(c => {
         const i = picked.indexOf(c.id), r = rarityOf(c.genes);
         return `<button class="card" data-pick="${c.id}" type="button" aria-pressed="${i >= 0}">${i >= 0 ? `<span class="tag">${i + 1}</span>` : ''}
-          <div class="art">${catSVG(c.genes)}</div><span class="name">${esc(c.name)}</span><span class="meta">${badge(r)}</span></button>`;
+          <div class="art">${catSVG(c.genes)}</div><span class="name">${esc(c.name)} ${sexIcon(c.genes)}</span><span class="meta">${badge(r)}</span></button>`;
       }).join('')}</div>
       <p class="note">El gatito hereda rasgos de los dos y puede salir con mutaciones nuevas. En ${HABITATS[S.hab].short} salen más mutaciones <b style="color:${FAMILY[habFam()].color}">${famPlural(habFam())}</b>.</p>
-      <button class="btn turq" id="do-breed" type="button" ${can ? '' : 'disabled'}>${!A || !B ? 'Elige 2 gatos' : S.ofrendas < COST.breed ? `Te faltan ${COST.breed - S.ofrendas} ofrendas` : `Al ${HABITATS[S.hab].nest.toLowerCase()} · ${COST.breed}`}</button>`);
+      <button class="btn turq" id="do-breed" type="button" ${can ? '' : 'disabled'}>${!A || !B ? 'Elige un macho y una hembra' : !pair ? 'Tienen que ser macho y hembra' : S.ofrendas < COST.breed ? `Te faltan ${COST.breed - S.ofrendas} ofrendas` : `Al ${HABITATS[S.hab].nest.toLowerCase()} · ${COST.breed}`}</button>`);
     $('x').addEventListener('click', closeSheet);
     document.querySelectorAll('[data-pick]').forEach(b => b.addEventListener('click', () => {
       const id = Number(b.dataset.pick), i = picked.indexOf(id);
@@ -2041,7 +2088,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     }));
     $('do-breed').addEventListener('click', () => {
       const free = slotsOf().findIndex(s => !s);
-      if (free < 0 || !A || !B || S.ofrendas < COST.breed) return;
+      if (free < 0 || !A || !B || A.genes.sex === B.genes.sex || S.ofrendas < COST.breed) return;
       setOfrendas(-COST.breed);
       const genes = breedGenes(A, B, S.births === 0 && !allSlots().some(Boolean), habFam());
       const rarity = rarityOf(genes);
@@ -2251,6 +2298,9 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     (r, c) => (r + c) % 2 === 0 && r >= 1 && r <= 6,
   ];
   function levelDef(n) {
+    // niveles especiales: desbloquean un cruce secreto
+    if (n === SECRET.calico.level) return { n, moves: 30, goal: 'collect', need: { 0: 24, 1: 24, 4: 24 }, special: 'calico' };
+    if (n === SECRET.carey.level) return { n, moves: 32, goal: 'collect', need: { 0: 28, 2: 28, 3: 28 }, special: 'carey' };
     const rng = mulberry32(n * 9301 + 49297);
     const moves = Math.max(16, 24 - Math.floor(n / 2));
     if (n >= 3 && n % 3 === 0) {
@@ -2446,13 +2496,13 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     el.innerHTML = `
       <div class="mhead">
         <button class="back" id="m-exit" type="button">‹ Salir</button>
-        <div class="mtitle"><small>Ofrendas</small><strong>Nivel ${n}</strong></div>
+        <div class="mtitle"><small>${def.special ? `Nivel especial · ${SECRET[def.special].name}` : 'Ofrendas'}</small><strong>Nivel ${n}</strong></div>
         <div class="mmoves"><b id="m-moves">${M.moves}</b><small>movs.</small></div>
       </div>
       <div class="mgoals" id="m-goals"></div>
       <div class="mstatus"><span class="mstars" id="m-stars"></span><span class="mscore">Puntos <b id="m-score">0</b></span></div>
       <div class="powers" id="m-powers" hidden></div>
-      <div class="mboard" id="mboard"></div>
+      <div class="mboard${def.special ? ' esp esp-' + def.special : ''}" id="mboard"></div>
       <p class="note" id="m-note">${M.baseNote}</p>`;
     const board = $('mboard');
     for (let i = 0; i < MN * MN; i++) {
@@ -2469,6 +2519,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     $('m-exit').addEventListener('click', exitMatch);
     renderMatchPowers();
     if (bonus) toast(`Tus gatos te dan +${bonus} movimientos`);
+    if (def.special && !(S.unlock || {})[def.special]) setTimeout(() => elderSay(`¡Nivel especial! ${SECRET[def.special].fact} Supéralo y podrán nacer gatos ${SECRET[def.special].name.toLowerCase()} en tu templo.`), 500);
     updateMatchHud();
     scheduleHint();
     window.scrollTo(0, 0);
@@ -2681,14 +2732,22 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       setOfrendas(reward);
       let sc = null;
       if (statue) sc = addCat(randomStatueGenes(habFam()));
+      // nivel especial: desbloquea su cruce secreto y regala una estatua de ese pelaje
+      const sp = M.def.special, newly = sp && !(S.unlock || {})[sp];
+      if (newly) {
+        S.unlock = { ...(S.unlock || {}), [sp]: true };
+        sc = addCat({ ...randomStatueGenes(habFam()), fur: sp, sex: 'f', seed: newSeed() });
+      }
       save(); sfx.legend(); buzz([20, 40, 20, 40, 60]);
       openSheet(`<div class="center">
         <div class="bigstars">${[1, 2, 3].map(i => `<i class="${i <= stars ? 'on' : ''}" style="animation-delay:${i * .15}s">★</i>`).join('')}</div>
         <div class="big-name">¡Nivel ${n} superado!</div>
         <span class="note">${M.score} puntos · te sobraron ${M.moves} movimientos</span></div>
         <div class="new-mut">+${reward} ofrendas${first ? ' (incluye 5 por primera vez)' : ''}</div>
-        ${sc ? `<div class="center"><div class="hero" style="width:140px">${catSVG(sc.genes, { statue: true })}</div><b>¡Encontraste una estatua!</b><span class="note">Ya está en tu templo, esperando que la despiertes.</span></div>` : ''}
+        ${newly ? `<div class="new-mut">¡Desbloqueaste el ${SECRET[sp].name}! Cruza un gato naranja con una gata negra (o al revés) y puede nacer uno.</div>` : ''}
+        ${sc ? `<div class="center"><div class="hero" style="width:140px">${catSVG(sc.genes, { statue: true })}</div><b>${newly ? `¡Una estatua ${SECRET[sp].name.toLowerCase()} de regalo!` : '¡Encontraste una estatua!'}</b><span class="note">Ya está en tu templo, esperando que la despiertes.</span></div>` : ''}
         <div class="actions"><button class="btn" id="m-home" type="button">Ir al templo</button><button class="btn gold" id="m-next" type="button">Nivel ${n + 1}</button></div>`);
+      if (newly) setTimeout(() => elderSay(`¡Ahora pueden nacer gatos ${SECRET[sp].name.toLowerCase()}! Y si algún día nace un macho… será una leyenda.`), 900);
       $('m-next').addEventListener('click', () => { closeSheet(); openMatch(n + 1, team); });
       $('m-home').addEventListener('click', () => { closeSheet(); closeMatch('templo'); });
     } else {
@@ -3167,6 +3226,9 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     HAB_ORDER.forEach(h => { if (!S.habs[h]) S.habs[h] = { open: h === 'egipto', slots: [] }; while (S.habs[h].slots.length < nests) S.habs[h].slots.push(null); });
     if (!S.hab || !S.habs[S.hab] || !S.habs[S.hab].open) S.hab = 'egipto';
     S.cats.forEach(c => { if (!c.hab) c.hab = 'egipto'; upgradeGenes(c.genes); });
+    if (!S.unlock) S.unlock = {};
+    S.cats.forEach((c, i) => { if (!c.genes.sex) c.genes.sex = i % 2 ? 'f' : 'm'; if (c.genes.seed == null) c.genes.seed = newSeed(); });
+    HAB_ORDER.forEach(h => S.habs[h].slots.forEach(sl => { if (sl && !sl.genes.sex) { sl.genes.sex = Math.random() < .5 ? 'm' : 'f'; sl.genes.seed = newSeed(); } }));
     HAB_ORDER.forEach(h => S.habs[h].slots.forEach(sl => sl && upgradeGenes(sl.genes)));
     S.found = [...new Set(S.found.map(v => OLD_GENES.pat[v] || OLD_GENES.eyes[v] || v))];
     renderAll();
