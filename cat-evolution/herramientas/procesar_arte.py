@@ -264,6 +264,9 @@ def main():
             salida.save(DESTINO / archivo, optimize=True)
         manifiesto['assets'][nombre] = {'file': archivo, 'w': salida.width, 'h': salida.height}
         hechos.append(f'{nombre} ({salida.width}×{salida.height})')
+    # mapas de partes (cabeza, cuerpo, cola, patas) para pintar pelajes con exactitud
+    import partes_gato
+    partes_gato.generar(DESTINO, manifiesto)
     # quita del destino lo que ya no está en el manifiesto
     validos = {a['file'] for a in manifiesto['assets'].values()} | {'manifest.json'}
     for p in DESTINO.iterdir():

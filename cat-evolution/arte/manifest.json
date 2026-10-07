@@ -620,6 +620,204 @@
    "file": "gato_dormido_bufanda.png",
    "w": 487,
    "h": 343
+  },
+  "partes_gato_frente": {
+   "file": "partes_gato_frente.png"
+  },
+  "partes_gato_frente_cascabel": {
+   "file": "partes_gato_frente_cascabel.png"
+  },
+  "partes_gato_frente_mono": {
+   "file": "partes_gato_frente_mono.png"
+  },
+  "partes_gato_frente_usekh": {
+   "file": "partes_gato_frente_usekh.png"
+  },
+  "partes_gato_frente_luna": {
+   "file": "partes_gato_frente_luna.png"
+  },
+  "partes_gato_frente_bufanda": {
+   "file": "partes_gato_frente_bufanda.png"
+  },
+  "partes_gato_sentado_lado": {
+   "file": "partes_gato_sentado_lado.png"
+  },
+  "partes_gato_sentado_lado_cascabel": {
+   "file": "partes_gato_sentado_lado_cascabel.png"
+  },
+  "partes_gato_sentado_lado_mono": {
+   "file": "partes_gato_sentado_lado_mono.png"
+  },
+  "partes_gato_sentado_lado_usekh": {
+   "file": "partes_gato_sentado_lado_usekh.png"
+  },
+  "partes_gato_sentado_lado_luna": {
+   "file": "partes_gato_sentado_lado_luna.png"
+  },
+  "partes_gato_sentado_lado_bufanda": {
+   "file": "partes_gato_sentado_lado_bufanda.png"
+  },
+  "partes_gato_acostado": {
+   "file": "partes_gato_acostado.png"
+  },
+  "partes_gato_acostado_cascabel": {
+   "file": "partes_gato_acostado_cascabel.png"
+  },
+  "partes_gato_acostado_mono": {
+   "file": "partes_gato_acostado_mono.png"
+  },
+  "partes_gato_acostado_usekh": {
+   "file": "partes_gato_acostado_usekh.png"
+  },
+  "partes_gato_acostado_luna": {
+   "file": "partes_gato_acostado_luna.png"
+  },
+  "partes_gato_acostado_bufanda": {
+   "file": "partes_gato_acostado_bufanda.png"
+  },
+  "partes_gato_dormido": {
+   "file": "partes_gato_dormido.png"
+  },
+  "partes_gato_dormido_cascabel": {
+   "file": "partes_gato_dormido_cascabel.png"
+  },
+  "partes_gato_dormido_mono": {
+   "file": "partes_gato_dormido_mono.png"
+  },
+  "partes_gato_dormido_usekh": {
+   "file": "partes_gato_dormido_usekh.png"
+  },
+  "partes_gato_dormido_luna": {
+   "file": "partes_gato_dormido_luna.png"
+  },
+  "partes_gato_dormido_bufanda": {
+   "file": "partes_gato_dormido_bufanda.png"
+  },
+  "partes_gato_colgado": {
+   "file": "partes_gato_colgado.png"
+  },
+  "partes_gato_colgado_cascabel": {
+   "file": "partes_gato_colgado_cascabel.png"
+  },
+  "partes_gato_colgado_mono": {
+   "file": "partes_gato_colgado_mono.png"
+  },
+  "partes_gato_colgado_usekh": {
+   "file": "partes_gato_colgado_usekh.png"
+  },
+  "partes_gato_colgado_luna": {
+   "file": "partes_gato_colgado_luna.png"
+  },
+  "partes_gato_colgado_bufanda": {
+   "file": "partes_gato_colgado_bufanda.png"
+  },
+  "partes_gato_caminar_1": {
+   "file": "partes_gato_caminar_1.png"
+  },
+  "partes_gato_caminar_1_cascabel": {
+   "file": "partes_gato_caminar_1_cascabel.png"
+  },
+  "partes_gato_caminar_1_mono": {
+   "file": "partes_gato_caminar_1_mono.png"
+  },
+  "partes_gato_caminar_1_usekh": {
+   "file": "partes_gato_caminar_1_usekh.png"
+  },
+  "partes_gato_caminar_1_luna": {
+   "file": "partes_gato_caminar_1_luna.png"
+  },
+  "partes_gato_caminar_1_bufanda": {
+   "file": "partes_gato_caminar_1_bufanda.png"
+  },
+  "partes_gato_caminar_2": {
+   "file": "partes_gato_caminar_2.png"
+  },
+  "partes_gato_caminar_2_cascabel": {
+   "file": "partes_gato_caminar_2_cascabel.png"
+  },
+  "partes_gato_caminar_2_mono": {
+   "file": "partes_gato_caminar_2_mono.png"
+  },
+  "partes_gato_caminar_2_usekh": {
+   "file": "partes_gato_caminar_2_usekh.png"
+  },
+  "partes_gato_caminar_2_luna": {
+   "file": "partes_gato_caminar_2_luna.png"
+  },
+  "partes_gato_caminar_2_bufanda": {
+   "file": "partes_gato_caminar_2_bufanda.png"
+  },
+  "partes_gato_caminar_3": {
+   "file": "partes_gato_caminar_3.png"
+  },
+  "partes_gato_caminar_3_cascabel": {
+   "file": "partes_gato_caminar_3_cascabel.png"
+  },
+  "partes_gato_caminar_3_mono": {
+   "file": "partes_gato_caminar_3_mono.png"
+  },
+  "partes_gato_caminar_3_usekh": {
+   "file": "partes_gato_caminar_3_usekh.png"
+  },
+  "partes_gato_caminar_3_luna": {
+   "file": "partes_gato_caminar_3_luna.png"
+  },
+  "partes_gato_caminar_3_bufanda": {
+   "file": "partes_gato_caminar_3_bufanda.png"
+  },
+  "partes_gato_caminar_4": {
+   "file": "partes_gato_caminar_4.png"
+  },
+  "partes_gato_caminar_4_cascabel": {
+   "file": "partes_gato_caminar_4_cascabel.png"
+  },
+  "partes_gato_caminar_4_mono": {
+   "file": "partes_gato_caminar_4_mono.png"
+  },
+  "partes_gato_caminar_4_usekh": {
+   "file": "partes_gato_caminar_4_usekh.png"
+  },
+  "partes_gato_caminar_4_luna": {
+   "file": "partes_gato_caminar_4_luna.png"
+  },
+  "partes_gato_caminar_4_bufanda": {
+   "file": "partes_gato_caminar_4_bufanda.png"
+  },
+  "partes_gato_caminar_5": {
+   "file": "partes_gato_caminar_5.png"
+  },
+  "partes_gato_caminar_5_cascabel": {
+   "file": "partes_gato_caminar_5_cascabel.png"
+  },
+  "partes_gato_caminar_5_mono": {
+   "file": "partes_gato_caminar_5_mono.png"
+  },
+  "partes_gato_caminar_5_usekh": {
+   "file": "partes_gato_caminar_5_usekh.png"
+  },
+  "partes_gato_caminar_5_luna": {
+   "file": "partes_gato_caminar_5_luna.png"
+  },
+  "partes_gato_caminar_5_bufanda": {
+   "file": "partes_gato_caminar_5_bufanda.png"
+  },
+  "partes_gato_caminar_6": {
+   "file": "partes_gato_caminar_6.png"
+  },
+  "partes_gato_caminar_6_cascabel": {
+   "file": "partes_gato_caminar_6_cascabel.png"
+  },
+  "partes_gato_caminar_6_mono": {
+   "file": "partes_gato_caminar_6_mono.png"
+  },
+  "partes_gato_caminar_6_usekh": {
+   "file": "partes_gato_caminar_6_usekh.png"
+  },
+  "partes_gato_caminar_6_luna": {
+   "file": "partes_gato_caminar_6_luna.png"
+  },
+  "partes_gato_caminar_6_bufanda": {
+   "file": "partes_gato_caminar_6_bufanda.png"
   }
  }
 }
