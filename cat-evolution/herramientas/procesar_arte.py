@@ -43,6 +43,9 @@ HOJAS = {
 # Las mismas hojas de gatos, editadas en Gemini para que el gato lleve un accesorio:
 # hoja_gatos_<acc> y hoja_caminar_<acc> → gato_frente_<acc>, gato_caminar_1_<acc>…
 ACCESORIOS = ['cascabel', 'mono', 'usekh', 'luna', 'bufanda']
+# pelajes que dibuja Gemini (no se pintan con código): mismas hojas, mismo nombre
+PELAJES_GEMINI = ['carey']
+ACCESORIOS = ACCESORIOS + PELAJES_GEMINI
 POSES_HOJA_GATOS = HOJAS['hoja_gatos']
 for _a in ACCESORIOS:
     HOJAS[f'hoja_gatos_{_a}'] = [f'{n}_{_a}' for n in POSES_HOJA_GATOS]

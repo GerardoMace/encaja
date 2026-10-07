@@ -1368,13 +1368,15 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
   }
   function catArtURL(g, pose, statue) {
     const P = POSES[pose]; if (!P) return null;
+    // pelaje dibujado por Gemini (carey): se usa tal cual, sin pintar
+    const furArt = !statue && ART[P.art + '_' + g.fur], gemFur = !!(furArt && furArt.ready);
     // primero el gato que Gemini dibujó ya con su accesorio; si no existe, el gato solo + el accesorio encima
     const own = !statue && g.acc && ART[P.art + '_' + g.acc];
-    const a = own && own.ready ? own : ART[P.art];
+    const a = gemFur ? furArt : own && own.ready ? own : ART[P.art];
     if (!a || !a.ready) return null;
-    const accA = !statue && !(own && own.ready) && P.acc && ACC_POS[P.acc][g.acc] && ART['acc_' + g.acc];
+    const accA = !statue && !gemFur && !(own && own.ready) && P.acc && ACC_POS[P.acc][g.acc] && ART['acc_' + g.acc];
     const acc = accA && accA.ready ? g.acc : (own && own.ready ? g.acc + '*' : '');
-    const key = [pose, g.fur, g.pat, g.eyes, statue ? 1 : 0, acc, g.seed || 0].join('|');
+    const key = gemFur ? [pose, g.fur, 'gemini'].join('|') : [pose, g.fur, g.pat, g.eyes, statue ? 1 : 0, acc, g.seed || 0].join('|');
     if (CAT_CACHE.has(key)) return CAT_CACHE.get(key);
     const img = a.img, sc = Math.min(1, 320 / Math.max(img.naturalWidth, img.naturalHeight));
     const w = Math.round(img.naturalWidth * sc), h = Math.round(img.naturalHeight * sc);
@@ -1402,7 +1404,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     const tone = g.eyes || 'normal';
     const stoneC = [205, 182, 136];
     for (let y = 0; y < h; y++) {
-      if (P.noTint && y < P.noTint * h) continue;
+      if (gemFur || (P.noTint && y < P.noTint * h)) continue;
       const v = Math.max(0, Math.min(1, (y - y0) / bh));
       const t = Math.max(0, Math.min(1, (v - .3) / .6)), m = t * t * (3 - 2 * t);   // el degradado empieza a media panza
       const c0 = [top[0] + (bot[0] - top[0]) * m, top[1] + (bot[1] - top[1]) * m, top[2] + (bot[2] - top[2]) * m];
