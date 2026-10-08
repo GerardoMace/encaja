@@ -11,6 +11,7 @@ from pathlib import Path
 import numpy as np
 from PIL import Image
 from scipy import ndimage
+from skimage.morphology import convex_hull_image
 
 AQUI = Path(__file__).resolve().parent
 ARTE = Path(sys.argv[1]) if len(sys.argv) > 1 else AQUI.parent / 'arte'
@@ -23,8 +24,15 @@ def colores_cascabel(a):
     r, g, b = a[..., 0], a[..., 1], a[..., 2]
     mx = a[..., :3].max(2); mn = a[..., :3].min(2); sat = (mx - mn) / np.maximum(mx, 1)
     rojo = (r > 120) & (r > g * 1.6) & (r > b * 1.5) & (sat > .45)
-    oro = (r > 150) & (g > 100) & (b < 120) & (sat > .4) & (r > b * 1.6)
+    oro = (r > 150) & (g > 100) & (b < 150) & (sat > .3) & (r > b * 1.4)
     return rojo | oro
+
+
+def redondos(a):
+    """Partes redondas del accesorio (el cascabel): se rellenan con su forma completa, también el lado iluminado."""
+    r, g, b = a[..., 0], a[..., 1], a[..., 2]
+    mx = a[..., :3].max(2); mn = a[..., :3].min(2); sat = (mx - mn) / np.maximum(mx, 1)
+    return (r > 150) & (g > 100) & (b < 150) & (sat > .3) & (r > b * 1.4)
 
 
 # accesorio → función que reconoce sus colores (por ahora, la prueba con el collar de cascabel)
@@ -39,6 +47,7 @@ def cargar(f, size=None):
 
 
 def mascara(acc, base, colores):
+    """Peso 0-1 de cada pixel del accesorio (1 = accesorio, bordes suaves de 1 pixel)."""
     d = np.abs(acc[..., :3] - base[..., :3]).sum(2)
     nucleo = colores(acc) & (d > 70)
     lab, k = ndimage.label(nucleo)
@@ -47,11 +56,41 @@ def mascara(acc, base, colores):
     # el contorno oscuro del accesorio, pegado a sus colores
     cerca = ndimage.binary_dilation(nucleo, iterations=3)
     m = nucleo | (cerca & (acc[..., :3].mean(2) < 110) & (d > 40))
-    m = ndimage.binary_closing(m, iterations=1) & (acc[..., 3] > 0)
-    # fuera pixeles sueltos
+    m = ndimage.binary_closing(m, iterations=2)
+    # partes redondas (cascabel): su forma completa, aunque el lado iluminado sea casi blanco
+    oro = redondos(acc) & (d > 40)
+    lab, k = ndimage.label(oro)
+    for i in range(1, k + 1):
+        comp = lab == i
+        if comp.sum() < 10:
+            continue
+        casco = convex_hull_image(comp)
+        m |= ndimage.binary_dilation(casco, iterations=1) & (d > 25)
+    # rellenar huecos: los brillos blancos del cascabel y las líneas de adentro también son del accesorio
+    m = ndimage.binary_fill_holes(m) & (acc[..., 3] > 0)
     lab, k = ndimage.label(m)
     tam = ndimage.sum(m, lab, range(1, k + 1))
-    return np.isin(lab, [i + 1 for i, t in enumerate(tam) if t >= 6])
+    m = np.isin(lab, [i + 1 for i, t in enumerate(tam) if t >= 6])
+    # borde suave: el pixel de la orilla se mezcla a la mitad
+    borde = m & ~ndimage.binary_erosion(m)
+    peso = m.astype(float)
+    peso[borde] = .55
+    return peso
+
+
+def alinear(a, p, evitar):
+    """Desplazamiento (dy, dx) que mejor encima las líneas del gato con accesorio sobre las del otro pelaje."""
+    tinta = lambda x: (x[..., :3].mean(2) < 100) & (x[..., 3] > 0)
+    ta, tp = tinta(a) & ~evitar, tinta(p)
+    cero = (ta & tp).sum()
+    mejor, dmejor = cero, (0, 0)
+    for dy in range(-3, 4):
+        for dx in range(-3, 4):
+            s = (np.roll(np.roll(ta, dy, 0), dx, 1) & tp).sum()
+            if s > mejor:
+                mejor, dmejor = s, (dy, dx)
+    # solo se mueve si encaja claramente mejor (5% más de línea encimada)
+    return dmejor if mejor > cero * 1.05 else (0, 0)
 
 
 def generar(arte, man):
@@ -63,9 +102,15 @@ def generar(arte, man):
                 if not (fa.exists() and fb.exists() and fp.exists()):
                     continue
                 a = cargar(fa); size = (a.shape[1], a.shape[0])
-                m = mascara(a, cargar(fb, size), colores)
+                peso = mascara(a, cargar(fb, size), colores)
                 p = cargar(fp, size)
-                p[m] = a[m]
+                dy, dx = alinear(a, p, ndimage.binary_dilation(peso > 0, iterations=4))
+                if dy or dx: print(f'  {pose}: el accesorio se movió {dx}, {dy} px para encajar')
+                a = np.roll(np.roll(a, dy, 0), dx, 1); peso = np.roll(np.roll(peso, dy, 0), dx, 1)
+                fuera = p[..., 3] < 128          # donde el accesorio sobresale del cuerpo: va completo, sin mezclar con el vacío
+                w = np.where(fuera, (peso > 0).astype(float), peso)[..., None]
+                p[..., :3] = (p[..., :3] * (1 - w) + a[..., :3] * w).round()
+                p[..., 3] = np.where(peso > 0, np.maximum(p[..., 3], a[..., 3]), p[..., 3])
                 nombre = f'gato_{pose}_{pel}_{acc}'
                 Image.fromarray(p.astype(np.uint8), 'RGBA').save(arte / f'{nombre}.png', optimize=True)
                 man['assets'][nombre] = {'file': f'{nombre}.png', 'w': size[0], 'h': size[1]}
