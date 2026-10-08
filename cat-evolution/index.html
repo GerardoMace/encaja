@@ -209,10 +209,11 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
 .blast.h{left:0;width:100%;height:12.5%}
 .blast.v{top:0;height:100%;width:12.5%}
 .blast.b{width:37.5%;height:37.5%;border-radius:50%}
+.blast.B{width:62.5%;height:62.5%;border-radius:50%}
 .blast.r{width:12.5%;height:12.5%;border-radius:50%;background:radial-gradient(circle,#fff6c4,rgba(244,194,79,0));animation:ring .6s ease-out forwards}
 .mfloat{position:absolute;z-index:6;transform:translate(-50%,-50%);pointer-events:none;font-family:var(--display);font-size:1.2rem;color:#fff;text-shadow:0 2px 0 #2a1f35,0 0 6px #2a1f35;animation:mfloat 1s ease-out forwards;white-space:nowrap}
 .mfloat.big{font-size:1.7rem;color:var(--gold)}
-.mini-pieces{display:flex;gap:6px}
+.mini-pieces{display:flex;flex-wrap:wrap;gap:6px}
 .mini-pieces svg{width:34px;height:34px}
 .bigstars{display:flex;gap:6px;font-size:3rem;color:#4a5394;line-height:1}
 .bigstars i{font-style:normal}
@@ -948,14 +949,17 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       'Si se te acaban las ofrendas, juega Ofrendas o espera a que el altar junte más.',
       'Juega Pirámide para ganar piedra: abre hábitats nuevos y compra mejoras.',
       'Lleva hasta 3 gatos a los minijuegos: cada uno te da un poder, y los que tienen más mutaciones traen más cargas.',
-      'En Ofrendas, 5 piezas en línea crean hierba gatera: borra todas las piezas de un tipo.',
+      'En Ofrendas, 5 piezas en línea crean una esfinge: borra todas las piezas de un tipo.',
     ];
     return tips[S.tip % tips.length];
   }
 
   // ================= Arte final (imágenes de Gemini; si falta una, se usa el dibujo con código) =================
   const ART = {};
-  const PIECE_ART = ['pescado', 'esqueleto', 'raton', 'pollo', 'estambre'];
+  const PIECE_ART = ['pescado', 'raton', 'pollo', 'estambre', 'escarabajo', 'perico'];
+  const STRIPE_ART = ['esqueleto', 'queso', 'pierna', 'hilo', 'escarabajo_oro', 'perico_color'];   // rayado (4 en línea)
+  const MUMMY_ART = PIECE_ART.map(n => n + '_momia');   // explosión (L o T)
+  const PIECE_COLOR = ['#4a9be8', '#b4a7d6', '#e0913a', '#ef5d8f', '#3fae5a', '#f2cf3a'];   // halo detrás de los especiales
   const BLOCK_ART = ['bloque_caliza', 'bloque_granito', 'bloque_lapislazuli', 'bloque_turquesa', 'bloque_oro', 'bloque_basalto'];
   const artURL = n => (ART[n] && ART[n].ready ? ART[n].src : null);
   function loadArt() {
@@ -2241,8 +2245,8 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
   }
 
   // ================= Motor de Ofrendas (match-3), sin DOM para poder probarlo =================
-  // Pieza = { k: tipo 0..4 (−1 = hierba gatera), sp: null | 'h' (fila) | 'v' (columna) | 'b' (explosión 3×3) | 'r' (hierba gatera) }
-  const MN = 8, NK = 5;
+  // Pieza = { k: tipo 0..5 (−1 = esfinge), sp: null | 'h' (fila) | 'v' (columna) | 'b' (explosión 3×3) | 'r' (esfinge) }
+  const MN = 8, NK = 6;
   function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
 
   function findGroups(g) {
@@ -2338,19 +2342,40 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     return true;
   }
 
+  // Dos especiales juntos, como en Candy Crush. Ya intercambiados: g[b] es la pieza que se movió (ahí es el centro).
+  //   esfinge + esfinge: todo el tablero · esfinge + rayado/explosión: todas las de ese tipo se vuelven ese especial
+  //   rayado + rayado: cruz ('x') · rayado + explosión: cruz de 3 de ancho ('X') · explosión + explosión: 5×5 ('B')
+  function comboSwap(g, a, b) {
+    const P = g[b], Q = g[a];
+    if (P.sp === 'r' && Q.sp === 'r') return { forced: new Set(g.map((_, i) => i)) };
+    if (P.sp === 'r' || Q.sp === 'r') {
+      const ri = P.sp === 'r' ? b : a, X = g[ri === b ? a : b], convert = [];
+      g[ri]._fired = true;
+      g.forEach((u, i) => {
+        if (!u || u.k !== X.k) return;
+        u.sp = X.sp === 'b' ? 'b' : convert.length % 2 ? 'v' : 'h';
+        convert.push(i);
+      });
+      return { forced: new Set([ri, ...convert]), convert };
+    }
+    const nb = (P.sp === 'b') + (Q.sp === 'b');
+    Q._fired = true;
+    P.sp = nb === 2 ? 'B' : nb === 1 ? 'X' : 'x';
+    return { forced: new Set([a, b]) };
+  }
+
   // Intenta un intercambio. Devuelve null si no hace nada, o el primer paso de la jugada.
   function trySwap(g, a, b) {
     const A = g[a], B = g[b];
     if (!A || !B) return null;
-    if (A.sp === 'r' || B.sp === 'r') {
+    if ((A.sp === 'r') !== (B.sp === 'r') && !(A.sp && B.sp)) {
       g[a] = B; g[b] = A;
-      if (A.sp === 'r' && B.sp === 'r') return { forced: new Set(g.map((_, i) => i)) };
       const ri = A.sp === 'r' ? b : a;
       g[ri]._target = (A.sp === 'r' ? B : A).k;
       return { forced: new Set([ri]) };
     }
     g[a] = B; g[b] = A;
-    if (A.sp && B.sp) return { forced: new Set([a, b]) };
+    if (A.sp && B.sp) return comboSwap(g, a, b);
     if (findGroups(g).length) return { swapPair: [a, b] };
     g[a] = A; g[b] = B;
     return null;
@@ -2387,11 +2412,18 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       const i = queue.pop(), t = g[i];
       if (!t || !t.sp || t._fired) continue;
       t._fired = true;
-      fired.push({ i, sp: t.sp });
       const r = Math.floor(i / MN), c = i % MN, area = [];
-      if (t.sp === 'h') for (let x = 0; x < MN; x++) area.push(r * MN + x);
-      if (t.sp === 'v') for (let y = 0; y < MN; y++) area.push(y * MN + c);
-      if (t.sp === 'b') for (let y = r - 1; y <= r + 1; y++) for (let x = c - 1; x <= c + 1; x++) if (y >= 0 && y < MN && x >= 0 && x < MN) area.push(y * MN + x);
+      const inB = (y, x) => y >= 0 && y < MN && x >= 0 && x < MN;
+      const row = y => { if (inB(y, 0)) { fired.push({ i: y * MN + c, sp: 'h' }); for (let x = 0; x < MN; x++) area.push(y * MN + x); } };
+      const col = x => { if (inB(0, x)) { fired.push({ i: r * MN + x, sp: 'v' }); for (let y = 0; y < MN; y++) area.push(y * MN + x); } };
+      const box = d => { for (let y = r - d; y <= r + d; y++) for (let x = c - d; x <= c + d; x++) if (inB(y, x)) area.push(y * MN + x); };
+      if (t.sp === 'h') row(r);
+      if (t.sp === 'v') col(c);
+      if (t.sp === 'x') { row(r); col(c); }
+      if (t.sp === 'X') for (let d = -1; d <= 1; d++) { row(r + d); col(c + d); }
+      if (t.sp === 'b' || t.sp === 'B' || t.sp === 'r') fired.push({ i, sp: t.sp });
+      if (t.sp === 'b') box(1);
+      if (t.sp === 'B') box(2);
       if (t.sp === 'r') { const kk = t._target !== undefined ? t._target : mostCommonKind(g); g.forEach((u, j) => { if (u && u.k === kk) area.push(j); }); }
       for (const j of area) if (!clear.has(j) && !createdAt.has(j)) { clear.add(j); queue.push(j); }
     }
@@ -2421,21 +2453,21 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
   ];
   function levelDef(n) {
     // niveles especiales: desbloquean un cruce secreto
-    if (n === SECRET.calico.level) return { n, moves: 30, goal: 'collect', need: { 0: 24, 1: 24, 4: 24 }, special: 'calico' };
-    if (n === SECRET.carey.level) return { n, moves: 32, goal: 'collect', need: { 0: 28, 2: 28, 3: 28 }, special: 'carey' };
+    if (n === SECRET.calico.level) return { n, moves: 30, goal: 'collect', need: { 0: 24, 3: 24, 5: 24 }, special: 'calico' };
+    if (n === SECRET.carey.level) return { n, moves: 32, goal: 'collect', need: { 0: 28, 1: 28, 2: 28 }, special: 'carey' };
     const rng = mulberry32(n * 9301 + 49297);
-    const moves = Math.max(16, 24 - Math.floor(n / 2));
+    const moves = Math.max(19, 26 - Math.floor(n / 2));
     if (n >= 3 && n % 3 === 0) {
       const f = SAND_SHAPES[(n / 3 - 1) % SAND_SHAPES.length];
       const sand = [];
       for (let r = 0; r < MN; r++) for (let c = 0; c < MN; c++) if (f(r, c)) sand.push(r * MN + c);
-      return { n, moves: moves + 6, goal: 'sand', sand };
+      return { n, moves: moves + 20, goal: 'sand', sand };
     }
     const kinds = n < 4 ? 1 : 2;
     const picks = [];
     while (picks.length < kinds) { const k = Math.floor(rng() * NK); if (!picks.includes(k)) picks.push(k); }
     const need = {};
-    picks.forEach(k => { need[k] = kinds === 1 ? Math.min(30, 12 + 2 * n) : Math.min(32, 10 + 2 * n); });
+    picks.forEach(k => { need[k] = kinds === 1 ? Math.min(26, 10 + 2 * n) : Math.min(22, 8 + Math.round(1.4 * n)); });
     return { n, moves, goal: 'collect', need };
   }
   const starsFor = (left, total) => (left / total >= .3 ? 3 : left / total >= .12 ? 2 : 1);
@@ -2447,7 +2479,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       caricatura: { key: 'moves', name: 'Ronroneo', desc: '+2 movimientos al empezar' },
       elegante: { key: 'claw', name: 'Zarpazo', desc: 'Rompe la pieza que toques' },
       egipcio: { key: 'ra', name: 'Bendición de Ra', desc: 'Vuelve explosiva la pieza que toques' },
-      mistico: { key: 'bastet', name: 'Hierba mágica', desc: 'Convierte la pieza que toques en hierba gatera' },
+      mistico: { key: 'bastet', name: 'Llamado de la esfinge', desc: 'Convierte la pieza que toques en esfinge' },
       artico: { key: 'frost', name: 'Escarcha', desc: 'Congela la pieza que toques: al borrarse, borra su fila' },
     },
     pyr: {
@@ -2527,13 +2559,16 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
   // ================= Ofrendas: piezas, pantalla y animaciones =================
   const MK = [
     { name: 'Pescado', plural: 'pescados' },
-    { name: 'Esqueleto de pescado', plural: 'esqueletos' },
     { name: 'Ratón', plural: 'ratones' },
     { name: 'Pollo rostizado', plural: 'pollos' },
     { name: 'Bola de estambre', plural: 'estambres' },
+    { name: 'Escarabajo', plural: 'escarabajos' },
+    { name: 'Perico', plural: 'pericos' },
   ];
   function pieceArt(k) {
     const ink = '#2a1f35', bone = '#f3ead8';
+    if (k >= 4) return `<circle cx="50" cy="50" r="38" fill="${PIECE_COLOR[k]}" stroke="${ink}" stroke-width="4"/><ellipse cx="38" cy="34" rx="12" ry="5" fill="#fff" opacity=".45"/>`;
+    k = [0, 2, 3, 4][k];
     if (k === 0) return `<path d="M72 50L94 28V72Z" fill="#4a9be8" stroke="${ink}" stroke-width="4" stroke-linejoin="round"/><path d="M8 50Q40 16 78 50Q40 84 8 50Z" fill="#4a9be8" stroke="${ink}" stroke-width="4"/><path d="M14 54Q40 68 72 54" stroke="#bfe0ff" stroke-width="5" fill="none" stroke-linecap="round"/><circle cx="25" cy="45" r="5" fill="${ink}"/><path d="M38 34q8 16 0 32" stroke="#2a6fbf" stroke-width="4" fill="none" stroke-linecap="round"/><ellipse cx="48" cy="36" rx="10" ry="4" fill="#fff" opacity=".5"/>`;
     if (k === 1) return `<path d="M30 50H76" stroke="${ink}" stroke-width="11" stroke-linecap="round"/><path d="M30 50H76" stroke="${bone}" stroke-width="5" stroke-linecap="round"/>
       ${[42, 53, 64].map(x => `<path d="M${x} 50Q${x + 5} 34 ${x} 24M${x} 50Q${x + 5} 66 ${x} 76" stroke="${ink}" stroke-width="8" fill="none" stroke-linecap="round"/><path d="M${x} 50Q${x + 5} 34 ${x} 24M${x} 50Q${x + 5} 66 ${x} 76" stroke="${bone}" stroke-width="3.5" fill="none" stroke-linecap="round"/>`).join('')}
@@ -2551,10 +2586,10 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       <circle cx="48" cy="50" r="36" fill="#ef5d8f" stroke="${ink}" stroke-width="4"/>
       <path d="M20 38Q48 26 76 42M14 54Q48 44 82 58M22 72Q48 62 74 76M36 18Q24 50 36 82M58 16Q72 50 60 84" stroke="#b93a6a" stroke-width="3.5" fill="none" stroke-linecap="round"/><ellipse cx="34" cy="30" rx="10" ry="5" fill="#fff" opacity=".45"/>`;
   }
-  // Hierba gatera: la pieza especial que borra todas las piezas de un tipo
+  // Esfinge (dibujo de respaldo): la pieza especial que borra todas las piezas de un tipo
   function bastetArt() {
-    const ink = '#2a1f35', cols = ['#4a9be8', '#f3ead8', '#b4a7d6', '#e0913a', '#ef5d8f'];
-    const ring = cols.map((c, i) => `<circle cx="50" cy="52" r="42" fill="none" stroke="${c}" stroke-width="8" stroke-dasharray="52.8 211.1" stroke-dashoffset="${-i * 52.8}"/>`).join('');
+    const ink = '#2a1f35', cols = PIECE_COLOR;
+    const ring = cols.map((c, i) => `<circle cx="50" cy="52" r="42" fill="none" stroke="${c}" stroke-width="8" stroke-dasharray="44 220" stroke-dashoffset="${-i * 44}"/>`).join('');
     const leaf = (x, y, r) => `<ellipse cx="${x}" cy="${y}" rx="13" ry="7" transform="rotate(${r} ${x} ${y})" fill="#5cc65a" stroke="${ink}" stroke-width="3"/>`;
     return `${ring}<path d="M50 84V26" stroke="${ink}" stroke-width="7" stroke-linecap="round"/><path d="M50 84V26" stroke="#3f9b5a" stroke-width="3" stroke-linecap="round"/>
       ${leaf(38, 66, -30)}${leaf(62, 60, 30)}${leaf(39, 46, -40)}${leaf(61, 40, 40)}${leaf(50, 26, -90)}${star4(74, 26, 6, '#fff6c4')}${star4(26, 34, 4, '#fff6c4')}`;
@@ -2565,16 +2600,19 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     if (TILE_CACHE[key]) return TILE_CACHE[key];
     const ink = '#2a1f35';
     let back = '', front = '';
+    // halo del color de la pieza, para saber de qué tipo es cada especial
+    const halo = k >= 0 && sp ? `<circle cx="50" cy="50" r="47" fill="${PIECE_COLOR[k]}" opacity=".5"/>` : '';
     if (sp === 'h' || sp === 'v') {
       const rot = sp === 'v' ? ' transform="rotate(90 50 50)"' : '';
-      back = `<rect x="0" y="40" width="100" height="20" rx="10" fill="#fff" opacity=".55"${rot}/>`;
+      back = `${halo}<rect x="0" y="40" width="100" height="20" rx="10" fill="#fff" opacity=".55"${rot}/>`;
       front = `<path d="M2 50l14-12v24zM98 50l-14-12v24z" fill="#fff" stroke="${ink}" stroke-width="3" stroke-linejoin="round"${rot}/>`;
     }
     if (sp === 'b') {
-      back = `<circle cx="50" cy="50" r="48" fill="#ffe08a" opacity=".55"/><circle cx="50" cy="50" r="48" fill="none" stroke="#fff6c4" stroke-width="4" stroke-dasharray="6 8"/>`;
+      back = `${halo}<circle cx="50" cy="50" r="48" fill="none" stroke="#fff6c4" stroke-width="4" stroke-dasharray="6 8"/>`;
       front = `<path d="M84 8l3 8 8 3-8 3-3 8-3-8-8-3 8-3z" fill="#fff" stroke="${ink}" stroke-width="2"/>`;
     }
-    const u = artURL(k >= 0 ? PIECE_ART[k] : 'hierba_gatera');
+    const u = k < 0 ? artURL('pieza_esfinge')
+      : (sp === 'h' || sp === 'v' ? artURL(STRIPE_ART[k]) : sp === 'b' ? artURL(MUMMY_ART[k]) : null) || artURL(PIECE_ART[k]);
     const art = u ? `<image href="${u}" x="3" y="3" width="94" height="94"/>` : (k >= 0 ? pieceArt(k) : bastetArt());
     return (TILE_CACHE[key] = `<svg viewBox="0 0 100 100" aria-hidden="true">${back}${art}${front}</svg>`);
   }
@@ -2744,6 +2782,12 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     await wait(180);
     if (M !== mm) return;
     M.moves--; updateMatchHud();
+    if (res.convert) {
+      // esfinge + especial: primero se ven todas las piezas convertidas y luego explotan
+      res.convert.forEach(i => { const el = M.els[i]; if (el) { el.innerHTML = pieceSVG(M.grid[i].k, M.grid[i].sp); el.classList.remove('born'); void el.offsetWidth; el.classList.add('born'); } });
+      sfx.meow(); await wait(450);
+      if (M !== mm) return;
+    }
     await runCascade(resolveStep(M.grid, M.rng, res.swapPair, res.forced), mm);
   }
   async function runCascade(step, mm) {
@@ -2829,6 +2873,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     if (f.sp === 'h') { d.style.top = r * 12.5 + '%'; }
     if (f.sp === 'v') { d.style.left = c * 12.5 + '%'; }
     if (f.sp === 'b') { d.style.left = (c - 1) * 12.5 + '%'; d.style.top = (r - 1) * 12.5 + '%'; }
+    if (f.sp === 'B') { d.style.left = (c - 2) * 12.5 + '%'; d.style.top = (r - 2) * 12.5 + '%'; }
     if (f.sp === 'r') { d.style.left = c * 12.5 + '%'; d.style.top = r * 12.5 + '%'; }
     board.appendChild(d); setTimeout(() => d.remove(), 600);
   }
@@ -2888,7 +2933,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     $('tab-juegos').innerHTML = `<div class="block">
       <h2>Juegos del templo</h2>
       <div class="game"><b>Ofrendas</b>
-        <div class="mini-pieces">${[0, 1, 2, 3, 4].map(k => pieceSVG(k)).join('')}</div>
+        <div class="mini-pieces">${PIECE_ART.map((_, k) => pieceSVG(k)).join('')}</div>
         <p>Junta 3 o más piezas iguales. Cada nivel superado da ofrendas, y los niveles pares te regalan una estatua la primera vez.</p>
         <span class="note" style="text-align:left">Vas en el nivel ${n} · ${stars} ★ ganadas</span>
         <button class="btn gold" id="play-match" type="button">Jugar nivel ${n}</button></div>
@@ -2896,7 +2941,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
         <p>Acomoda bloques de piedra y completa filas o columnas. Cada línea da 1 de piedra para mejorar el templo, y cada ${STATUE_EVERY} líneas en una partida aparece una estatua.</p>
         <span class="note" style="text-align:left">Récord: ${S.pyrBest || 0} puntos · tienes ${S.stone || 0} de piedra</span>
         <div class="actions"><button class="btn" id="up-from-games" type="button">Mejoras</button><button class="btn gold" id="play-pyr" type="button">Jugar Pirámide</button></div></div>
-      <div class="game"><b>Poderes de tus gatos</b><p>Antes de jugar eliges hasta 3 gatos. Los comunes dan movimientos extra o un cambio de bloques; los Elegantes rompen piezas; los Egipcios crean explosivos o bloques de 1×1; los Místicos crean hierba gatera o barren filas enteras; los Árticos congelan piezas o tiran avalanchas. Cada mutación suma cargas.</p></div>
+      <div class="game"><b>Poderes de tus gatos</b><p>Antes de jugar eliges hasta 3 gatos. Los comunes dan movimientos extra o un cambio de bloques; los Elegantes rompen piezas; los Egipcios crean explosivos o bloques de 1×1; los Místicos crean esfinges o barren filas enteras; los Árticos congelan piezas o tiran avalanchas. Cada mutación suma cargas.</p></div>
     </div>`;
     $('play-match').addEventListener('click', () => pickTeam('match', t => openMatch(S.match.level, t)));
     $('play-pyr').addEventListener('click', () => pickTeam('pyr', openPyramid));

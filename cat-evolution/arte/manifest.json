@@ -101,11 +101,6 @@
    "w": 192,
    "h": 192
   },
-  "esqueleto": {
-   "file": "esqueleto.png",
-   "w": 192,
-   "h": 192
-  },
   "raton": {
    "file": "raton.png",
    "w": 192,
@@ -121,8 +116,78 @@
    "w": 192,
    "h": 192
   },
-  "hierba_gatera": {
-   "file": "hierba_gatera.png",
+  "escarabajo": {
+   "file": "escarabajo.png",
+   "w": 192,
+   "h": 192
+  },
+  "perico": {
+   "file": "perico.png",
+   "w": 192,
+   "h": 192
+  },
+  "esqueleto": {
+   "file": "esqueleto.png",
+   "w": 192,
+   "h": 192
+  },
+  "queso": {
+   "file": "queso.png",
+   "w": 192,
+   "h": 192
+  },
+  "pierna": {
+   "file": "pierna.png",
+   "w": 192,
+   "h": 192
+  },
+  "hilo": {
+   "file": "hilo.png",
+   "w": 192,
+   "h": 192
+  },
+  "escarabajo_oro": {
+   "file": "escarabajo_oro.png",
+   "w": 192,
+   "h": 192
+  },
+  "perico_color": {
+   "file": "perico_color.png",
+   "w": 192,
+   "h": 192
+  },
+  "pescado_momia": {
+   "file": "pescado_momia.png",
+   "w": 192,
+   "h": 192
+  },
+  "raton_momia": {
+   "file": "raton_momia.png",
+   "w": 192,
+   "h": 192
+  },
+  "pollo_momia": {
+   "file": "pollo_momia.png",
+   "w": 192,
+   "h": 192
+  },
+  "estambre_momia": {
+   "file": "estambre_momia.png",
+   "w": 192,
+   "h": 192
+  },
+  "escarabajo_momia": {
+   "file": "escarabajo_momia.png",
+   "w": 192,
+   "h": 192
+  },
+  "perico_momia": {
+   "file": "perico_momia.png",
+   "w": 192,
+   "h": 192
+  },
+  "pieza_esfinge": {
+   "file": "pieza_esfinge.png",
    "w": 192,
    "h": 192
   },

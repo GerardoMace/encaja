@@ -28,7 +28,10 @@ ORIGEN = Path(_args[0]) if _args else Path('G:/Mi unidad/videogame/arte')
 HOJAS = {
     'hoja_gatos': ['gato_frente', 'gato_lado_1', 'gato_estira', 'gato_acostado', 'gato_sentado_lado', 'gato_agazapado'],
     'hoja_gatos_2': ['gato_lado_2', 'gato_colgado', 'gato_dormido'],
-    'hoja_ofrendas': ['pescado', 'esqueleto', 'raton', 'pollo', 'estambre', 'hierba_gatera'],
+    # Ofrendas: 6 piezas normales, su rayado (4 en línea) y su momia (explosión L o T), en el mismo orden
+    'hoja_piezas': ['pescado', 'raton', 'pollo', 'estambre', 'escarabajo', 'perico'],
+    'hoja_piezas_rayadas': ['esqueleto', 'queso', 'pierna', 'hilo', 'escarabajo_oro', 'perico_color'],
+    'hoja_piezas_momia': ['pescado_momia', 'raton_momia', 'pollo_momia', 'estambre_momia', 'escarabajo_momia', 'perico_momia'],
     'hoja_piramide': ['bloque_caliza', 'bloque_granito', 'bloque_lapislazuli', 'bloque_turquesa', 'bloque_oro', 'bloque_basalto', 'icono_piedra'],
     'hoja_egipto': ['esfinge', 'esfinge_piedra', 'sarcofago', 'altar', 'obelisco', 'estandarte', 'estanque', 'icono_ofrenda'],
     'hoja_casa_nieve': ['arbol_gato', 'canasta', 'plato', 'muneco_nieve', 'iglu', 'fogata'],
@@ -77,8 +80,8 @@ ASSETS = {
     # Abuelo Colmillo (el de ojos brillantes se recorta con el mismo encuadre que el normal)
     'abuelo': ('recorte', 512), 'abuelo_brillo': ('par', 512),
     # piezas de Ofrendas
-    'pescado': ('cuadro', 192), 'esqueleto': ('cuadro', 192), 'raton': ('cuadro', 192),
-    'pollo': ('cuadro', 192), 'estambre': ('cuadro', 192), 'hierba_gatera': ('cuadro', 192),
+    **{n: ('cuadro', 192) for h in ('hoja_piezas', 'hoja_piezas_rayadas', 'hoja_piezas_momia') for n in HOJAS[h]},
+    'pieza_esfinge': ('cuadro', 192),
     # bloques de Pirámide
     'bloque_caliza': ('cuadro', 160), 'bloque_granito': ('cuadro', 160), 'bloque_lapislazuli': ('cuadro', 160),
     'bloque_turquesa': ('cuadro', 160), 'bloque_oro': ('cuadro', 160), 'bloque_basalto': ('cuadro', 160),
