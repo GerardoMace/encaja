@@ -267,6 +267,9 @@ def main():
     # mapas de partes (cabeza, cuerpo, cola, patas) para pintar pelajes con exactitud
     import partes_gato
     partes_gato.generar(DESTINO, manifiesto)
+    # accesorios pasados al pelaje dibujado por Gemini (collar → carey)
+    import accesorio_a_pelaje
+    accesorio_a_pelaje.generar(DESTINO, manifiesto)
     # quita del destino lo que ya no está en el manifiesto
     validos = {a['file'] for a in manifiesto['assets'].values()} | {'manifest.json'}
     for p in DESTINO.iterdir():

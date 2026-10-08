@@ -888,6 +888,61 @@
   },
   "partes_gato_caminar_6_bufanda": {
    "file": "partes_gato_caminar_6_bufanda.png"
+  },
+  "gato_frente_carey_cascabel": {
+   "file": "gato_frente_carey_cascabel.png",
+   "w": 197,
+   "h": 247
+  },
+  "gato_sentado_lado_carey_cascabel": {
+   "file": "gato_sentado_lado_carey_cascabel.png",
+   "w": 197,
+   "h": 251
+  },
+  "gato_acostado_carey_cascabel": {
+   "file": "gato_acostado_carey_cascabel.png",
+   "w": 272,
+   "h": 208
+  },
+  "gato_dormido_carey_cascabel": {
+   "file": "gato_dormido_carey_cascabel.png",
+   "w": 473,
+   "h": 327
+  },
+  "gato_colgado_carey_cascabel": {
+   "file": "gato_colgado_carey_cascabel.png",
+   "w": 204,
+   "h": 480
+  },
+  "gato_caminar_1_carey_cascabel": {
+   "file": "gato_caminar_1_carey_cascabel.png",
+   "w": 288,
+   "h": 230
+  },
+  "gato_caminar_2_carey_cascabel": {
+   "file": "gato_caminar_2_carey_cascabel.png",
+   "w": 288,
+   "h": 230
+  },
+  "gato_caminar_3_carey_cascabel": {
+   "file": "gato_caminar_3_carey_cascabel.png",
+   "w": 288,
+   "h": 230
+  },
+  "gato_caminar_4_carey_cascabel": {
+   "file": "gato_caminar_4_carey_cascabel.png",
+   "w": 288,
+   "h": 230
+  },
+  "gato_caminar_5_carey_cascabel": {
+   "file": "gato_caminar_5_carey_cascabel.png",
+   "w": 288,
+   "h": 230
+  },
+  "gato_caminar_6_carey_cascabel": {
+   "file": "gato_caminar_6_carey_cascabel.png",
+   "w": 288,
+   "h": 230
   }
  }
 }

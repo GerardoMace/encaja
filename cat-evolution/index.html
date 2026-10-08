@@ -1412,7 +1412,9 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
   function catArtURL(g, pose, statue) {
     const P = POSES[pose]; if (!P) return null;
     // pelaje dibujado por Gemini (carey): se usa tal cual, sin pintar
-    const furArt = !statue && ART[P.art + '_' + g.fur], gemFur = !!(furArt && furArt.ready);
+    // pelaje dibujado por Gemini (carey); si hay versión con su accesorio, esa
+    const furAcc = !statue && g.acc && ART[P.art + '_' + g.fur + '_' + g.acc];
+    const furArt = furAcc && furAcc.ready ? furAcc : !statue && ART[P.art + '_' + g.fur], gemFur = !!(furArt && furArt.ready);
     // primero el gato que Gemini dibujó ya con su accesorio; si no existe, el gato solo + el accesorio encima
     const own = !statue && g.acc && ART[P.art + '_' + g.acc];
     const a = gemFur ? furArt : own && own.ready ? own : ART[P.art];
@@ -1420,7 +1422,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     const accA = !statue && !gemFur && !(own && own.ready) && P.acc && ACC_POS[P.acc][g.acc] && ART['acc_' + g.acc];
     const artName = own && own.ready ? P.art + '_' + g.acc : P.art, partsArt = ART['partes_' + artName];
     const acc = accA && accA.ready ? g.acc : (own && own.ready ? g.acc + '*' : '');
-    const key = gemFur ? [pose, g.fur, 'gemini'].join('|') : [pose, g.fur, g.pat, g.eyes, statue ? 1 : 0, acc, g.seed || 0].join('|');
+    const key = gemFur ? [pose, g.fur, furArt === furAcc ? g.acc : '', 'gemini'].join('|') : [pose, g.fur, g.pat, g.eyes, statue ? 1 : 0, acc, g.seed || 0].join('|');
     if (CAT_CACHE.has(key)) return CAT_CACHE.get(key);
     const img = a.img, sc = Math.min(1, 320 / Math.max(img.naturalWidth, img.naturalHeight));
     const w = Math.round(img.naturalWidth * sc), h = Math.round(img.naturalHeight * sc);
