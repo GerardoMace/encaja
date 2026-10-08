@@ -35,8 +35,47 @@ def redondos(a):
     return (r > 150) & (g > 100) & (b < 150) & (sat > .3) & (r > b * 1.4)
 
 
-# accesorio → función que reconoce sus colores (por ahora, la prueba con el collar de cascabel)
-COLORES = {'cascabel': colores_cascabel}
+def _hsv(a):
+    r, g, b = a[..., 0], a[..., 1], a[..., 2]
+    mx = a[..., :3].max(2); mn = a[..., :3].min(2)
+    return r, g, b, (mx - mn) / np.maximum(mx, 1), mx
+
+
+def colores_usekh(a):
+    """Oro y turquesa del collar egipcio."""
+    r, g, b, sat, mx = _hsv(a)
+    oro = (r > 150) & (g > 100) & (b < 150) & (sat > .3) & (r > b * 1.4)
+    turquesa = (g > 110) & (b > 100) & (r < g * .8) & (sat > .3)
+    azul = (b > 90) & (b > r * 1.5) & (sat > .4)
+    return oro | turquesa | azul
+
+
+def colores_luna(a):
+    """Oro de la diadema y de la luna."""
+    r, g, b, sat, mx = _hsv(a)
+    return (r > 150) & (g > 100) & (b < 150) & (sat > .3) & (r > b * 1.4)
+
+
+def colores_bufanda(a):
+    """Azul rey de la bufanda."""
+    r, g, b, sat, mx = _hsv(a)
+    return (b > 80) & (b > r * 1.4) & (b > g * 1.1) & (sat > .35)
+
+
+def colores_mono(a):
+    """Negro del moño: oscuro y grueso (las líneas finas del dibujo no cuentan)."""
+    oscuro = a[..., :3].mean(2) < 95
+    return ndimage.binary_opening(oscuro, iterations=2)
+
+
+# accesorio → (sus colores, si tiene partes redondas que rellenar, diferencia mínima con el gato sin accesorio)
+COLORES = {
+    'cascabel': (colores_cascabel, redondos, 70),
+    'mono': (colores_mono, None, 150),
+    'usekh': (colores_usekh, None, 70),
+    'luna': (colores_luna, None, 70),
+    'bufanda': (colores_bufanda, None, 70),
+}
 
 
 def cargar(f, size=None):
@@ -46,10 +85,10 @@ def cargar(f, size=None):
     return np.array(im).astype(int)
 
 
-def mascara(acc, base, colores):
+def mascara(acc, base, colores, redondo=None, umbral=70):
     """Peso 0-1 de cada pixel del accesorio (1 = accesorio, bordes suaves de 1 pixel)."""
     d = np.abs(acc[..., :3] - base[..., :3]).sum(2)
-    nucleo = colores(acc) & (d > 70)
+    nucleo = colores(acc) & (d > umbral)
     lab, k = ndimage.label(nucleo)
     tam = ndimage.sum(nucleo, lab, range(1, k + 1))
     nucleo = np.isin(lab, [i + 1 for i, t in enumerate(tam) if t >= 8])
@@ -58,7 +97,7 @@ def mascara(acc, base, colores):
     m = nucleo | (cerca & (acc[..., :3].mean(2) < 110) & (d > 40))
     m = ndimage.binary_closing(m, iterations=2)
     # partes redondas (cascabel): su forma completa, aunque el lado iluminado sea casi blanco
-    oro = redondos(acc) & (d > 40)
+    oro = redondo(acc) & (d > 40) if redondo else np.zeros_like(m)
     lab, k = ndimage.label(oro)
     for i in range(1, k + 1):
         comp = lab == i
@@ -96,13 +135,13 @@ def alinear(a, p, evitar):
 def generar(arte, man):
     hechos = []
     for pel in PELAJES:
-        for acc, colores in COLORES.items():
+        for acc, (colores, redondo, umbral) in COLORES.items():
             for pose in POSES:
                 fa, fb, fp = arte / f'gato_{pose}_{acc}.png', arte / f'gato_{pose}.png', arte / f'gato_{pose}_{pel}.png'
                 if not (fa.exists() and fb.exists() and fp.exists()):
                     continue
                 a = cargar(fa); size = (a.shape[1], a.shape[0])
-                peso = mascara(a, cargar(fb, size), colores)
+                peso = mascara(a, cargar(fb, size), colores, redondo, umbral)
                 p = cargar(fp, size)
                 dy, dx = alinear(a, p, ndimage.binary_dilation(peso > 0, iterations=4))
                 if dy or dx: print(f'  {pose}: el accesorio se movió {dx}, {dy} px para encajar')
