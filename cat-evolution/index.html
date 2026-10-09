@@ -1805,7 +1805,13 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     Object.assign(FLOOR, L.floor);
     DECO = L.deco;
   }
-  const maxWalkers = () => (S.up && S.up.patio ? 24 : 14);
+  // Patio: 8 gatos paseando por hábitat (+2 por nivel de "Patio amplio", hasta 14); decisión de Gerardo, 9-oct
+  const maxWalkers = () => 8 + 2 * upLv('patio');
+  // quiénes salen: primero los que el jugador sacó al patio (out === true), luego los más nuevos que no mandó a descansar
+  function patioCats(hab) {
+    const aw = S.cats.filter(c => c.awake && c.hab === hab);
+    return [...aw.filter(c => c.out === true), ...aw.filter(c => c.out == null).reverse()].slice(0, maxWalkers());
+  }
   const walkers = new Map();   // id de gato → { x, y, tx, ty, walking, until, face, el, flip }
   const spawnAt = {};          // dónde aparece un gato recién despertado o recién nacido
   const statuePos = {};
@@ -1946,7 +1952,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       world.querySelectorAll('[data-statue]').forEach(b => b.addEventListener('click', () => openCat(Number(b.dataset.statue))));
     }
     // Gatos despiertos caminando
-    const awake = S.cats.filter(c => c.awake && c.hab === S.hab).slice(-maxWalkers());
+    const awake = patioCats(S.hab);
     const ids = new Set(awake.map(c => c.id));
     [...walkers.keys()].forEach(id => { if (!ids.has(id)) walkers.delete(id); });
     const now = performance.now();
@@ -2326,7 +2332,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     const r = rarityOf(c.genes);
     return `<button class="card ${r === 'legend' ? 'legend' : r === 'epico' ? 'epico' : ''}" data-cat="${c.id}" type="button" style="--halo:${RARITY[r].halo}">
       <div class="art">${catSVG(c.genes)}</div>
-      <span class="name">${esc(c.name)} ${sexIcon(c.genes)}</span><span class="meta">${badge(r)} ${styleOf(c.genes)} · ${HABITATS[c.hab || 'egipto'].short}</span></button>`;
+      <span class="name">${esc(c.name)} ${sexIcon(c.genes)}</span><span class="meta">${badge(r)} ${styleOf(c.genes)} · ${HABITATS[c.hab || 'egipto'].short}${patioCats(c.hab || 'egipto').includes(c) ? ' · en el patio' : ' · descansando'}</span></button>`;
   }
 
   function genesHTML(g) {
@@ -2404,15 +2410,32 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       <div class="hero halo" style="--halo:${RARITY[r].halo}55">${catSVG(c.genes)}</div>
       <div class="center">${badge(r)}<span class="note">Estilo ${styleOf(c.genes)} · Generación ${c.gen}${c.parents ? ` · Hijo de ${esc(c.parents[0])} y ${esc(c.parents[1])}` : ' · Despertado de una estatua'}</span></div>
       ${catActions(c)}
+      ${patioBar(c)}
       ${genesHTML(c.genes)}
       <div class="powinfo">${['match', 'pyr'].map(gm => { const pw = powerOf(c, gm); return `<div><b>${gm === 'match' ? 'En Ofrendas' : 'En Pirámide'}: ${powerLabel(pw)}</b><small>${pw.desc}</small></div>`; }).join('')}</div>
       <div class="movebar"><span>Vive en <b>${HABITATS[c.hab || 'egipto'].name}</b></span>${HAB_ORDER.filter(h => h !== c.hab && S.habs[h].open).map(h => `<button class="btn" data-move="${h}" type="button">Mudar a ${HABITATS[h].short}</button>`).join('')}</div>`);
     $('x').addEventListener('click', closeSheet);
     $('rename').addEventListener('click', () => startRename(c));
     bindCatActions(c);
+    $('patio-tog').addEventListener('click', () => togglePatio(c));
     document.querySelectorAll('[data-move]').forEach(b => b.addEventListener('click', () => moveCat(c, b.dataset.move)));
   }
 
+  function patioBar(c) {
+    const inP = patioCats(c.hab).includes(c);
+    return `<div class="movebar"><span>${inP ? 'Está <b>paseando en el patio</b>' : 'Está <b>descansando</b>: no sale al patio'}</span>
+      <button class="btn${inP ? '' : ' turq'}" id="patio-tog" type="button">${inP ? 'Mandar a descansar' : 'Sacar al patio'}</button></div>`;
+  }
+  function togglePatio(c) {
+    if (patioCats(c.hab).includes(c)) c.out = false;
+    else {
+      const chosen = S.cats.filter(k => k.awake && k.hab === c.hab && k.out === true).length;
+      if (chosen >= maxWalkers()) { toast(`El patio está lleno (${maxWalkers()} gatos). Manda a descansar a otro primero.`); return; }
+      c.out = true;
+    }
+    save(); renderTemplo(); renderGatos();
+    const sc = $('sheet-card').scrollTop; openCat(c.id); $('sheet-card').scrollTop = sc;
+  }
   function wakeCat(c) {
     if (S.ofrendas < COST.awaken) return;
     setOfrendas(-COST.awaken);
@@ -3966,7 +3989,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     { id: 'incubar', name: 'Nidos tibios', costs: [30, 60, 100, 150], desc: l => `Los gatitos nacen ${l * 12}% más rápido.` },
     { id: 'sarc3', name: 'Tercer nido de cría', costs: [40], desc: () => 'Un lugar más para criar en cada hábitat.' },
     { id: 'sarc4', name: 'Cuarto nido de cría', costs: [90], needs: 'sarc3', desc: () => 'Otro lugar más para criar en cada hábitat.' },
-    { id: 'patio', name: 'Patio amplio', costs: [40], desc: () => 'Caben 24 gatos paseando a la vez (antes 14).' },
+    { id: 'patio', name: 'Patio amplio', costs: [40, 70, 110], desc: l => `Caben ${8 + 2 * l} gatos paseando en cada hábitat (sin mejora, 8).` },
     { id: 'estandartes', name: 'Estandartes', costs: [15], desc: () => 'Banderas azul y oro en las columnas (Egipto).' },
     { id: 'obeliscos', name: 'Obeliscos', costs: [30], desc: () => 'Dos obeliscos dorados junto a las pirámides (Egipto).' },
     { id: 'estanque', name: 'Estanque de lotos', costs: [40], desc: () => 'Un estanque con lotos en el patio (Egipto).' },
