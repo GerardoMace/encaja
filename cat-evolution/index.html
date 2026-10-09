@@ -2600,11 +2600,8 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     if (TILE_CACHE[key]) return TILE_CACHE[key];
     const ink = '#2a1f35';
     let back = '', front = '';
-    // halo del color de la pieza, para saber de qué tipo es cada especial
-    const halo = k >= 0 && sp ? `<circle cx="50" cy="50" r="47" fill="${PIECE_COLOR[k]}" opacity=".5"/>` : '';
-    if (sp === 'h' || sp === 'v') back = halo;
     if (sp === 'b') {
-      back = `${halo}<circle cx="50" cy="50" r="48" fill="none" stroke="#fff6c4" stroke-width="4" stroke-dasharray="6 8"/>`;
+      back = `<circle cx="50" cy="50" r="48" fill="none" stroke="#fff6c4" stroke-width="4" stroke-dasharray="6 8"/>`;
       front = `<path d="M84 8l3 8 8 3-8 3-3 8-3-8-8-3 8-3z" fill="#fff" stroke="${ink}" stroke-width="2"/>`;
     }
     const u = k < 0 ? artURL('pieza_esfinge')
