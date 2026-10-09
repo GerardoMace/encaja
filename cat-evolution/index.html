@@ -575,12 +575,15 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     calico: { name: 'Calicó', level: 30, fact: 'En Japón al calicó le dicen mike-neko, "gato de tres pelos", y los marineros lo llevaban en sus barcos para la buena suerte.' },
     carey: { name: 'Carey', level: 50, fact: 'El carey se llama así por la tortuga de caparazón manchado. Casi todos son hembras: un macho carey nace una vez entre miles.' },
   };
+  // Pelajes que se desbloquean al llegar a ciertos puntos en una partida de Pirámide (decisión de Gerardo, 8-oct)
+  const PYR_FURS = [['esmoquin', 4000], ['bicolor', 4500], ['siames', 5000], ['siames_azul', 5500], ['van', 6000]];
+  const isPyrFur = f => PYR_FURS.some(([k]) => k === f);
   const isTortie = g => g.fur === 'carey' || g.fur === 'calico';
   const maleTortie = g => isTortie(g) && g.sex === 'm';
   const MALE_TORTIE = 1 / 150;   // probabilidad de que un carey o calicó nazca macho
   const rarityOf = g => {
     if (maleTortie(g)) return 'legend';
-    const n = GENE_KEYS.filter(k => MUT_FAMILY[g[k]]).length + (isTortie(g) ? 1 : 0);
+    const n = GENE_KEYS.filter(k => MUT_FAMILY[g[k]]).length + (isTortie(g) || isPyrFur(g.fur) ? 1 : 0);
     return n === 0 ? 'comun' : n === 1 ? 'raro' : n === 2 ? 'epico' : 'legend';
   };
   const newSeed = () => Math.floor(Math.random() * 100000);
@@ -914,7 +917,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
   function discover(genes) {
     const fresh = [];
     GENE_KEYS.forEach(k => { const v = genes[k]; if (MUT_FAMILY[v] && !S.found.includes(v)) { S.found.push(v); fresh.push(v); } });
-    if (isTortie(genes) && !S.found.includes(genes.fur)) { S.found.push(genes.fur); fresh.push(genes.fur); }
+    if ((isTortie(genes) || isPyrFur(genes.fur)) && !S.found.includes(genes.fur)) { S.found.push(genes.fur); fresh.push(genes.fur); }
     if (maleTortie(genes) && !S.found.includes('macho_carey')) { S.found.push('macho_carey'); fresh.push('macho_carey'); }
     return fresh;
   }
@@ -2240,7 +2243,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
         ${S.sphinxAwake ? `<div class="actions" style="margin:4px 0 12px"><button class="btn turq" id="g-breed" type="button">Criar gatitos · ${COST.breed}</button><button class="btn gold" id="g-dig" type="button">Excavar estatua · ${COST.dig}</button></div>` : ''}
         <div class="grid">${cats.map(cardHTML).join('') || '<p class="note">Aún no tienes gatos.</p>'}</div>
       </div>
-      <div class="block"><h2>Libro de mutaciones</h2><div class="book">${fams}${secretBook()}</div></div>
+      <div class="block"><h2>Libro de mutaciones</h2><div class="book">${fams}${secretBook()}${pyrBook()}</div></div>
       <button class="reset" id="btn-reset" type="button">Borrar mi progreso</button>`;
     el.querySelectorAll('[data-cat]').forEach(b => b.addEventListener('click', () => openCat(Number(b.dataset.cat))));
     let armed = false;
@@ -2250,6 +2253,13 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     });
     if ($('g-breed')) { $('g-breed').addEventListener('click', openBreed); $('g-dig').addEventListener('click', dig); }
     const dg = $('dot-gatos'); if (dg) dg.hidden = !S.cats.some(c => !c.awake);
+  }
+  function pyrBook() {
+    const un = S.unlock || {};
+    const items = PYR_FURS.map(([k, pts]) => S.found.includes(k) ? `<li>${NAMES_OF[k]}<small>${pts} puntos</small></li>`
+      : un[k] ? `<li class="no">???<small>Ya puede nacer</small></li>` : `<li class="no">🔒<small>${pts} puntos en Pirámide</small></li>`);
+    const got = PYR_FURS.filter(([k]) => S.found.includes(k)).length;
+    return `<div class="fam"><h3 style="color:#e2bf7e">Pelajes de la Pirámide<span>${got}/${PYR_FURS.length}</span></h3><ul>${items.join('')}</ul></div>`;
   }
   function secretBook() {
     const un = S.unlock || {};
@@ -3478,7 +3488,54 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     for (let r = 0; r <= PN - sh.h; r++) for (let c = 0; c <= PN - sh.w; c++) if (pCanPlace(sh, r, c)) return true;
     return false;
   }
+  // Ayuda invisible: en rachas de 2 a 5 repartos el juego da justo los bloques que encajan para completar líneas
+  // (y si se puede, limpiar el tablero); luego descansa de 2 a 5 repartos normales y vuelve. El jugador no se entera.
+  function pApply(B, sh, r0, c0) {
+    const b = B.map(row => row.slice());
+    for (const [r, c] of sh.cells) b[r0 + r][c0 + c] = true;
+    const rows = [], cols = [];
+    for (let r = 0; r < PN; r++) if (b[r].every(Boolean)) rows.push(r);
+    for (let c = 0; c < PN; c++) if (b.every(row => row[c])) cols.push(c);
+    rows.forEach(r => b[r].fill(false)); cols.forEach(c => b.forEach(row => { row[c] = false; }));
+    return { b, lines: rows.length + cols.length };
+  }
+  function pFitScore(B, sh, r0, c0) {
+    const { b, lines } = pApply(B, sh, r0, c0);
+    // completar líneas es lo que más vale; si no completa, mejor un bloque chico que no tape el tablero
+    let v = lines * 100 + (lines ? sh.cells.length * 6 : -sh.cells.length * 3);
+    if (b.every(row => row.every(x => !x))) v += 1000;   // tablero limpio
+    for (let i = 0; i < PN; i++) { let fr = 0, fc = 0; for (let j = 0; j < PN; j++) { if (b[i][j]) fr++; if (b[j][i]) fc++; } v += (fr * fr + fc * fc) * .4; }
+    for (let r = 0; r < PN; r++) for (let c = 0; c < PN; c++) {   // castiga huecos encerrados de una casilla
+      if (b[r][c]) continue;
+      if ([[1, 0], [-1, 0], [0, 1], [0, -1]].every(([dr, dc]) => { const R = r + dr, C = c + dc; return R < 0 || C < 0 || R >= PN || C >= PN || b[R][C]; })) v -= 8;
+    }
+    return v;
+  }
+  function pHelpDeal() {
+    let B = PG.board.map(row => row.map(v => v >= 0));
+    const tray = [];
+    for (let k = 0; k < 3; k++) {
+      const cands = [];
+      PSHAPES.forEach((sh, si) => {
+        for (let r = 0; r <= PN - sh.h; r++) for (let c = 0; c <= PN - sh.w; c++) {
+          if (sh.cells.every(([y, x]) => !B[r + y][c + x])) cands.push({ si, r, c, v: pFitScore(B, sh, r, c) });
+        }
+      });
+      if (!cands.length) { tray.push(pRandomPiece()); continue; }
+      cands.sort((a, b) => b.v - a.v);
+      const pk = cands[Math.floor(Math.random() * Math.min(3, cands.length))];   // entre los 3 mejores, para que no se note
+      B = pApply(B, PSHAPES[pk.si], pk.r, pk.c).b;
+      tray.push({ s: pk.si, color: Math.floor(Math.random() * STONES.length) });
+    }
+    return tray;
+  }
   function pDeal() {
+    if (PG.helpLeft > 0) {
+      PG.tray = pHelpDeal();
+      if (--PG.helpLeft === 0) PG.restLeft = 2 + Math.floor(Math.random() * 4);
+      return;
+    }
+    if (PG.restLeft > 0 && --PG.restLeft === 0) PG.helpLeft = 2 + Math.floor(Math.random() * 4);
     let tray;
     for (let i = 0; i < 15; i++) { tray = [pRandomPiece(), pRandomPiece(), pRandomPiece()]; if (tray.some(p => pFits(PSHAPES[p.s]))) break; }
     PG.tray = tray;
@@ -3495,7 +3552,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
   function openPyramid(team) {
     ensureAudio();
     PG = { board: Array.from({ length: PN }, () => Array(PN).fill(-1)), tray: [null, null, null], score: 0, lines: 0, stone: 0, combo: 0, sinceClear: 0,
-      over: false, drag: null, clearFx: [], placeFx: [], floats: [], parts: [], beams: [], pvKey: '', shake: 0, statues: 0, shown: 0, exitArmed: false, stuck: false, target: -1 };
+      over: false, drag: null, clearFx: [], placeFx: [], floats: [], parts: [], beams: [], pvKey: '', helpLeft: 0, restLeft: 1, shake: 0, statues: 0, shown: 0, exitArmed: false, stuck: false, target: -1 };
     PG.team = Array.isArray(team) ? team : []; PG.powers = teamPowers(PG.team, 'pyr');
     pDeal();
     ['templo', 'gatos', 'juegos'].forEach(t => { $('tab-' + t).hidden = true; });
@@ -3675,11 +3732,23 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     }
     PG.score += gained;
     PG.floats.push({ text: `+${gained}`, x: cc, y: cr, t0: now, plain: true });
+    pFurUnlocks(now);
     if (PG.tray.every(t => !t)) pDeal();
     $('p-lines').textContent = PG.lines;
     $('p-combo').innerHTML = PG.combo >= 2 ? `<b style="color:var(--gold)">Combo ×${PG.combo}</b>` : '';
     save();
     pCheckStuck();
+  }
+  function pFurUnlocks(now) {
+    for (const [fur, pts] of PYR_FURS) {
+      if (PG.score < pts || (S.unlock || {})[fur]) continue;
+      S.unlock = { ...(S.unlock || {}), [fur]: true };
+      addCat({ ...randomStatueGenes(habFam()), fur, sex: 'f', seed: newSeed() });
+      PG.floats.push({ text: `¡${NAMES_OF[fur]} desbloqueado!`, x: PN / 2, y: PN / 2 - .5, t0: now + 300, big: true, word: 6 });
+      setTimeout(() => { confetti(); sfx.legend(); }, 300);
+      setTimeout(() => elderSay(`¡${pts} puntos! Desbloqueaste el pelaje ${NAMES_OF[fur].toLowerCase()}: te dejé una estatua en el templo. Crúzala y sus gatitos pueden heredarlo.`), 900);
+      save();
+    }
   }
   function pCheckStuck() {
     if (!PG || PG.over) return;
@@ -3731,7 +3800,8 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     PG.over = true;
     const record = PG.score > (S.pyrBest || 0);
     if (record) S.pyrBest = PG.score;
-    if (record && PG.score > 200) { setTimeout(() => elderSay(`¡Nuevo récord en Pirámide: ${PG.score} puntos!`), 600); setTimeout(() => { confetti(); sfx.legend(); }, 300); }
+    const pts = PG.score;
+    if (record && pts > 200) { setTimeout(() => elderSay(`¡Nuevo récord en Pirámide: ${pts} puntos!`), 600); setTimeout(() => { confetti(); sfx.legend(); }, 300); }
     save();
     if (!quit) [392, 330, 262, 196].forEach((f, i) => tone(f, i * .14, .3, 'sawtooth', .05));
     else sfx.awake();
