@@ -247,6 +247,10 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
 /* Pirámide y mejoras */
 .wallet{display:flex;gap:8px}
 .wallet .purse{padding:6px 12px 6px 8px}
+.purse.music{padding:6px 8px}
+.purse.music .slash{display:none}
+.purse.music.off .slash{display:inline}
+.purse.music.off{opacity:.6}
 .pwrap{display:flex;justify-content:center}
 .pwrap canvas{display:block;touch-action:none;max-width:100%}
 .ups{display:grid;gap:8px}
@@ -476,6 +480,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20L12 4l9 16z" fill="#e2bf7e" stroke="#7a5410" stroke-width="1.2" stroke-linejoin="round"/><path d="M12 4l9 16h-6z" fill="#c39d5f"/><path d="M7.5 12h9M5.2 16h13.6" stroke="#a8834a" stroke-width="1"/></svg>
       <b id="stone">0</b>
     </div>
+    <button class="purse music" id="music-btn" type="button" aria-label="Música" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V6l11-2v12" fill="none" stroke="#f4c24f" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6.5" cy="18" r="2.8" fill="#f4c24f"/><circle cx="17.5" cy="16" r="2.8" fill="#f4c24f"/><path class="slash" d="M3 3l18 18" stroke="#ff7a7a" stroke-width="2.4" stroke-linecap="round"/></svg></button>
     </div>
   </header>
 
@@ -935,6 +940,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       } catch (e) { actx = null; }
     }
     if (actx && actx.state === 'suspended') actx.resume().catch(() => {});
+    if (actx) startMusic();
   }
   const sndOn = () => actx && !S.mute;
   function tone(f, at, dur, type, vol) {
@@ -969,6 +975,102 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
   const PENTA = [0, 2, 4, 7, 9];
   const note = n => 523.25 * Math.pow(2, (12 * Math.floor(n / 5) + PENTA[((n % 5) + 5) % 5]) / 12);
   function bell(f, at, vol) { tone(f, at, .32, 'sine', vol); tone(f * 2, at, .14, 'triangle', vol * .35); tone(f * 3.01, at, .07, 'sine', vol * .2); }
+
+  // ================= Música de fondo: se compone sola, con un estilo por hábitat y por minijuego =================
+  // Cada canción: tempo, nota base, escala, acordes (grados por compás) y qué percusión lleva.
+  // La melodía es un motivo de 2 compases al azar que se repite con variaciones, para que suene a canción y no a ruido.
+  const SONGS = {
+    egipto: { bpm: 84, root: 146.83, scale: [0, 1, 4, 5, 7, 8, 10], chords: [0, 0, 5, 4], drum: 'darbuka', lead: 'triangle' },
+    casa: { bpm: 90, root: 174.61, scale: [0, 2, 4, 5, 7, 9, 11], chords: [0, 5, 3, 4], drum: 'soft', lead: 'sine' },
+    nieve: { bpm: 68, root: 196.0, scale: [0, 2, 4, 6, 7, 9, 11], chords: [0, 3, 0, 4], drum: null, lead: 'bell' },
+    match: { bpm: 116, root: 220.0, scale: [0, 2, 4, 7, 9], chords: [0, 3, 1, 4], drum: 'pop', lead: 'square' },
+    pyr: { bpm: 100, root: 130.81, scale: [0, 1, 4, 5, 7, 8, 10], chords: [0, 5, 6, 4], drum: 'darbuka', lead: 'triangle' },
+  };
+  const MZ = { bus: null, timer: 0, next: 0, step: 0, song: null, key: '', motif: null, bar: 0, seed: 1 };
+  const musicOn = () => S.music !== false && !S.mute;
+  function musicKey() {
+    if (M) return 'match';
+    if (PG) return 'pyr';
+    return S.hab && SONGS[S.hab] ? S.hab : 'egipto';
+  }
+  function mNote(song, deg, oct) {
+    const n = song.scale.length, d = ((deg % n) + n) % n, o = Math.floor(deg / n) + (oct || 0);
+    return song.root * Math.pow(2, o + song.scale[d] / 12);
+  }
+  function mTone(f, t, dur, type, vol, att) {
+    const o = actx.createOscillator(), g = actx.createGain();
+    o.type = type; o.frequency.setValueAtTime(f, t);
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + (att || .015)); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    o.connect(g).connect(MZ.bus); o.start(t); o.stop(t + dur + .05);
+  }
+  function mNoise(t, dur, vol, type, f) {
+    if (!noiseBuf) return;
+    const src = actx.createBufferSource(), fl = actx.createBiquadFilter(), g = actx.createGain();
+    src.buffer = noiseBuf; fl.type = type; fl.frequency.value = f;
+    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(.0001, t + dur);
+    src.connect(fl).connect(g).connect(MZ.bus); src.start(t, Math.random() * .5); src.stop(t + dur + .02);
+  }
+  function mRand() { MZ.seed = (MZ.seed * 16807) % 2147483647; return MZ.seed / 2147483647; }
+  function newMotif(song) {
+    // 16 octavos: en cada uno, nota (grado) o silencio; pasos cortos para que la melodía camine bonito
+    const m = []; let deg = 2 + Math.floor(mRand() * 3);
+    for (let i = 0; i < 16; i++) {
+      const play = i % 4 === 0 ? mRand() < .85 : mRand() < (song.drum === 'pop' ? .45 : .3);
+      if (play) { deg += [-2, -1, -1, 0, 1, 1, 2][Math.floor(mRand() * 7)]; deg = Math.max(0, Math.min(song.scale.length + 3, deg)); m.push(deg); } else m.push(null);
+    }
+    return m;
+  }
+  function scheduleStep(t, song, night) {
+    const st = MZ.step % 8, bar = MZ.bar, spb = 30 / (song.bpm * (night ? .85 : 1)), chord = song.chords[bar % song.chords.length];
+    // bajo
+    if (st === 0 || st === 4 || (song.drum === 'darbuka' && st === 6)) mTone(mNote(song, chord, -1), t, spb * 1.6, 'triangle', .07);
+    // colchón: el acorde del compás, entrando despacito
+    if (st === 0) [0, 2, 4].forEach(k => mTone(mNote(song, chord + k, 0), t, spb * 8.4, 'sine', .014, .5));
+    // melodía (cada 4 compases cambia un poco el motivo)
+    const deg = MZ.motif[(bar % 2) * 8 + st];
+    if (deg !== null && deg !== undefined) {
+      const f = mNote(song, deg + chord % 2, 1), len = spb * (song.lead === 'bell' ? 3 : 1.4);
+      if (song.lead === 'bell') { mTone(f, t, len, 'sine', .035); mTone(f * 2.01, t, len * .4, 'sine', .01); }
+      else mTone(f, t, len, song.lead, song.lead === 'square' ? .012 : .03);
+    }
+    // percusión (de noche, solo lo más suave)
+    if (song.drum === 'darbuka' && !night) {
+      if (st === 0 || st === 5) mTone(95, t, .18, 'sine', .16);
+      if (st === 2 || st === 3 || st === 6) mNoise(t, .05, .05, 'highpass', 3500);
+    }
+    if (song.drum === 'soft' && st % 2 === 0) mNoise(t, .03, night ? .01 : .02, 'highpass', 6000);
+    if (song.drum === 'pop') {
+      if (st === 0 || st === 4) mTone(70, t, .14, 'sine', .2);
+      if (st === 2 || st === 6) mNoise(t, .09, .06, 'bandpass', 1500);
+      if (st % 2 === 1) mNoise(t, .025, .02, 'highpass', 7000);
+    }
+    return spb;
+  }
+  function musicTick() {
+    if (!actx || !MZ.bus) return;
+    if (document.hidden) { MZ.next = 0; return; }
+    MZ.bus.gain.setTargetAtTime(musicOn() ? .55 : .0001, actx.currentTime, .3);
+    if (!musicOn()) { MZ.next = 0; return; }
+    if (!MZ.next || MZ.next < actx.currentTime) MZ.next = actx.currentTime + .1;
+    while (MZ.next < actx.currentTime + .3) {
+      if (MZ.step % 8 === 0) {
+        const key = musicKey();
+        if (key !== MZ.key) { MZ.key = key; MZ.song = SONGS[key]; MZ.bar = 0; MZ.seed = 7 + key.length * 97 + Math.floor(Math.random() * 1000); MZ.motif = newMotif(MZ.song); }
+        else if (MZ.bar % 8 === 0 && MZ.bar) MZ.motif = MZ.motif.map(d => (d !== null && mRand() < .25 ? d + (mRand() < .5 ? 1 : -1) : d));
+      }
+      const night = !M && !PG && skyMode() === 'night';
+      MZ.next += scheduleStep(MZ.next, MZ.song, night);
+      MZ.step++; if (MZ.step % 8 === 0) MZ.bar++;
+    }
+  }
+  function startMusic() {
+    if (!actx || MZ.bus) return;
+    MZ.bus = actx.createGain(); MZ.bus.gain.value = .0001; MZ.bus.connect(master);
+    if (!noiseBuf) { noiseBuf = actx.createBuffer(1, actx.sampleRate, actx.sampleRate); const d = noiseBuf.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
+    MZ.timer = setInterval(musicTick, 90);
+  }
+  function setMusicBtn() { const b = $('music-btn'); if (b) { b.classList.toggle('off', S.music === false); b.setAttribute('aria-pressed', String(S.music !== false)); } }
+
   const sfx = {
     coin() { tone(988, 0, .08, 'square', .04); tone(1319, .07, .14, 'square', .04); },
     rumble() { for (let i = 0; i < 6; i++) tone(70 + Math.random() * 40, i * .12, .16, 'sawtooth', .05); },
@@ -1854,7 +1956,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
   }
 
   function petCat(w, c) {
-    emote(w, '♥'); sfx.purr(); buzz(8);
+    emote(w, '♥'); sfx.purr(); buzz(8); heartsAt(w.el, 5);
     const v = petLove(c);
     showChip(w, c, v);
   }
@@ -1906,7 +2008,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     const chip = w.el.querySelector('.namechip'); if (chip) chip.remove();
     w.liftW = world.clientWidth * .22;
     $('lift-layer').appendChild(w.el);
-    sfx.mrrp(); buzz(15);
+    sfx.mrrp(); buzz(15); burstXY(x, y, ['#fff', GOLD], 6, { speed: 120, lift: 60, life: .6, size: 6, shape: 'star', g: 200 });
     moveLift(x, y);
   }
   function moveLift(x, y) {
@@ -1938,6 +2040,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     dust.className = 'dust'; dust.style.left = (w.x * 100) + '%'; dust.style.top = (w.y * 100) + '%';
     world.appendChild(dust); setTimeout(() => dust.remove(), 600);
     sfx.thump(); buzz(12);
+    burstXY(x, y + 10, S.hab === 'nieve' ? ['#ffffff', '#dff4ff', '#bfe6ff'] : S.hab === 'casa' ? ['#e9d2b0', '#c9a27a', '#fff'] : ['#e2bf7e', '#c9a66b', '#fff3d6'], 12, { speed: 160, lift: 40, life: .55, size: 5, shape: 'dot', g: 600 });
     if (habBtn) {
       const to = habBtn.dataset.hab;
       if (to === c.hab) return;
@@ -1956,7 +2059,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       const now = Date.now();
       if (now - (c.fedAt || 0) < 60000) { emote(w, '…'); toast(`${c.name} ya comió hace un momento.`); return; }
       c.fedAt = now; const v = addLove(c, 8);
-      emote(w, '♥'); sfx.purr(); showChip(w, c, v);
+      emote(w, '♥'); sfx.purr(); showChip(w, c, v); heartsAt(w.el, 6); bell(note(7), .1, .06); bell(note(9), .2, .06);
       toast(`${c.name} comió en el ${HABITATS[S.hab].feeder.toLowerCase()}. ¡Ñam!`);
       return;
     }
@@ -1966,7 +2069,8 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       const now = Date.now(), tired = now - (c.mateAt || 0) < 30000;
       c.mateAt = now;
       addLove(c, tired ? 1 : 5); addLove(o, tired ? 1 : 5);
-      emote(w, '♪'); setTimeout(() => emote(ow, '♥'), 250);
+      emote(w, '♪'); setTimeout(() => emote(ow, '♥'), 250); heartsAt(w.el, 4); setTimeout(() => heartsAt(ow.el, 4), 250);
+      [0, 2, 4, 2].forEach((d, i) => bell(note(6 + d), .3 + i * .1, .05));
       sfx.meow(); setTimeout(() => sfx.purr(), 300);
       toast(`${c.name} y ${o.name} se pusieron a jugar.`);
     }
@@ -2096,6 +2200,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       obj.className = 'obj sarc-obj' + (left ? '' : ' ready');
       const glow = { comun: 'transparent', raro: '#36cbb9', epico: '#b48cff', legend: '#f4c24f' }[s.rarity];
       obj.style.setProperty('--glow', glow);
+      if (!left && Math.random() < .45) burstAt(obj, s.rarity === 'comun' ? ['#fff6c4', '#fff'] : [glow, '#fff'], 3, { speed: 60, lift: 90, g: -30, life: 1.2, size: 5, shape: 'star', y: .35 });
     });
   }
 
@@ -2185,6 +2290,8 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     ensureAudio();
     const a = altarAmount(); if (!a) return;
     S.altarAt = Date.now(); setOfrendas(a); sfx.coin(); buzz(10); save(); tickTemplo();
+    coinsToPurse($('obj-altar'), Math.min(10, Math.max(3, Math.ceil(a / 3))));
+    burstAt($('obj-altar'), [GOLD, '#fff6c4', '#fff'], 10, { speed: 160, lift: 160, g: 300, life: .7, size: 6, shape: 'star', y: .4 });
     toast(`+${a} ofrendas`);
   }
 
@@ -3179,6 +3286,36 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     }
     screenParts(out);
   }
+  // estallido desde un punto de la pantalla
+  function burstXY(x, y, cols, n, o) {
+    if (reduceMotion) return;
+    const out = [];
+    for (let j = 0; j < n; j++) out.push(part(x, y, cols[j % cols.length], { speed: 320, lift: 80, life: 1, size: 7, g: 500, shape: j % 3 === 0 ? 'star' : 'chip', ...o }));
+    screenParts(out);
+  }
+  const HEARTS = ['#ff5f8f', '#ff8ab0', '#ffd1e0'];
+  const heartsAt = (el, n) => burstAt(el, HEARTS, n || 6, { speed: 110, lift: 220, g: 160, life: 1.1, size: 7, shape: 'heart', y: .3 });
+  // ofrendas que vuelan del altar al monedero, sonando más agudo una tras otra
+  function coinsToPurse(fromEl, n) {
+    const purse = $('purse'); if (!fromEl || !purse) return;
+    const a = fromEl.getBoundingClientRect(), b = purse.querySelector('svg').getBoundingClientRect();
+    const icon = purse.querySelector('svg').outerHTML;
+    for (let i = 0; i < n; i++) {
+      setTimeout(() => {
+        bell(note(5 + i), 0, .05);
+        if (reduceMotion || !document.body.animate) return;
+        const d = document.createElement('div'); d.className = 'flyer'; d.innerHTML = icon;
+        const x0 = a.left + a.width * (.3 + Math.random() * .4), y0 = a.top + a.height * .3;
+        Object.assign(d.style, { left: x0 - 12 + 'px', top: y0 - 12 + 'px', width: '24px', height: '24px' });
+        document.body.appendChild(d);
+        const dx = b.left + b.width / 2 - x0, dy = b.top + b.height / 2 - y0;
+        d.animate([{ transform: 'translate(0,0) scale(.6)' }, { transform: `translate(${dx * .2}px,${dy * .2 - 50}px) scale(1.3)`, offset: .35 }, { transform: `translate(${dx}px,${dy}px) scale(1)` }],
+          { duration: 650, easing: 'cubic-bezier(.5,0,.6,1)' }).onfinish = () => {
+          d.remove(); const p = $('purse'); p.classList.remove('bump'); void p.offsetWidth; p.classList.add('bump');
+        };
+      }, i * 70);
+    }
+  }
   // estallido desde el centro de un elemento de la pantalla
   function burstAt(el, cols, n, o) {
     if (!el || reduceMotion) return;
@@ -3714,7 +3851,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     S.stone -= u.cost; S.up = { ...(S.up || {}), [id]: true };
     if (id === 'sarc3' || id === 'sarc4') HAB_ORDER.forEach(h => S.habs[h].slots.push(null));
     $('stone').textContent = S.stone;
-    save(); sfx.awake(); buzz([20, 40, 20]);
+    save(); sfx.legend(); buzz([20, 40, 20]); confetti(['#c9a66b', '#e2bf7e', GOLD, '#fff', '#36cbb9']);
     renderTemplo(); openUpgrades();
     elderSay(`¡${u.name} listo! Así da gusto vivir aquí.`);
   }
@@ -3766,6 +3903,10 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     S.found = [...new Set(S.found.map(v => OLD_GENES.pat[v] || OLD_GENES.eyes[v] || v))];
     renderAll();
     setInterval(tickTemplo, 1000);
+    // el navegador solo deja prender el audio después de un toque: cualquier toque lo enciende (y arranca la música)
+    document.addEventListener('pointerdown', ensureAudio, true);
+    setMusicBtn();
+    $('music-btn').addEventListener('click', () => { ensureAudio(); S.music = S.music === false; save(); setMusicBtn(); toast(S.music === false ? 'Música apagada' : 'Música encendida'); });
     setInterval(() => { if (skyMode() !== mode && !$('tab-templo').hidden) renderTemplo(); }, 60000);
     if (window.ResizeObserver) new ResizeObserver(() => { placeWalkers(); fitObjects(); }).observe(document.body);
     requestAnimationFrame(walkLoop);
