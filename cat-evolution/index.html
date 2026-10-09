@@ -273,7 +273,6 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
 .power.on small{color:#08302b}
 .power:disabled{opacity:.55}
 .pick .card .pw{font-size:.72rem;font-weight:900;color:#1d6f5f;line-height:1.2}
-.pick .card .pw.none{color:#8a7a5c;font-weight:800}
 .stuck{margin:0;background:var(--gold);color:var(--sand-ink);border-radius:14px;padding:10px 12px;font-weight:800;text-align:center}
 .stuck button{text-decoration:underline;font-weight:900}
 .powinfo{display:grid;gap:6px}
@@ -2837,13 +2836,14 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     return out;
   }
   const powerLabel = p => (p.key === 'moves' ? `${p.name} +${p.charges}` : `${p.name} ×${p.charges}`);
-  const powersLabel = ps => (ps.length ? ps.map(powerLabel).join(' · ') + (ps.some(p => p.love) ? ' ♥' : '') : 'Sin poder');
+  const powersLabel = ps => (ps.length ? ps.map(powerLabel).join(' · ') + (ps.some(p => p.love) ? ' ♥' : '') : '');
 
   // Elegir equipo antes de jugar
   let teamPick = [];
   function pickTeam(game, start) {
     ensureAudio();
-    const awake = S.cats.filter(c => c.awake);
+    // solo se pueden elegir los gatos que traen algún poder en este juego (en Pirámide los comunes no traen)
+    const awake = S.cats.filter(c => c.awake && powersOf(c, game).length);
     if (!awake.length) { start([]); return; }
     S.team = S.team || {};
     teamPick = (S.team[game] || []).filter(id => awake.some(c => c.id === id)).slice(0, TEAM_MAX);
@@ -2854,7 +2854,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
         <div class="pick">${sorted.map(c => {
           const i = teamPick.indexOf(c.id), ps = powersOf(c, game), r = rarityOf(c.genes);
           return `<button class="card" data-team="${c.id}" type="button" aria-pressed="${i >= 0}">${i >= 0 ? `<span class="tag">${i + 1}</span>` : ''}
-            <div class="art">${catSVG(c.genes)}</div><span class="name">${esc(c.name)}</span><span class="meta">${badge(r)}</span><span class="pw${ps.length ? '' : ' none'}">${powersLabel(ps)}</span></button>`;
+            <div class="art">${catSVG(c.genes)}</div><span class="name">${esc(c.name)}</span><span class="meta">${badge(r)}</span><span class="pw">${powersLabel(ps)}</span></button>`;
         }).join('')}</div>
         <div class="actions"><button class="btn" id="team-none" type="button">Jugar sin gatos</button><button class="btn gold" id="team-go" type="button">${teamPick.length ? `Empezar con ${teamPick.length} gato${teamPick.length > 1 ? 's' : ''}` : 'Elige hasta 3 gatos'}</button></div>`);
       $('x').addEventListener('click', closeSheet);
