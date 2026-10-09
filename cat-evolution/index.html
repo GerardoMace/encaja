@@ -2602,11 +2602,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     let back = '', front = '';
     // halo del color de la pieza, para saber de qué tipo es cada especial
     const halo = k >= 0 && sp ? `<circle cx="50" cy="50" r="47" fill="${PIECE_COLOR[k]}" opacity=".5"/>` : '';
-    if (sp === 'h' || sp === 'v') {
-      const rot = sp === 'v' ? ' transform="rotate(90 50 50)"' : '';
-      back = `${halo}<rect x="0" y="40" width="100" height="20" rx="10" fill="#fff" opacity=".55"${rot}/>`;
-      front = `<path d="M2 50l14-12v24zM98 50l-14-12v24z" fill="#fff" stroke="${ink}" stroke-width="3" stroke-linejoin="round"${rot}/>`;
-    }
+    if (sp === 'h' || sp === 'v') back = halo;
     if (sp === 'b') {
       back = `${halo}<circle cx="50" cy="50" r="48" fill="none" stroke="#fff6c4" stroke-width="4" stroke-dasharray="6 8"/>`;
       front = `<path d="M84 8l3 8 8 3-8 3-3 8-3-8-8-3 8-3z" fill="#fff" stroke="${ink}" stroke-width="2"/>`;
