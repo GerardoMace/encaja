@@ -440,6 +440,18 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
   box-shadow:0 10px 30px rgba(0,0,0,.35);max-width:calc(100vw - 32px);text-align:center;
 }
 .waking{animation:shake .9s}
+.hatching{animation:hatchshake var(--d,1.2s) ease-in forwards;isolation:isolate}
+@keyframes hatchshake{0%{transform:none}10%{transform:translateX(-1px) rotate(-1deg)}20%{transform:translateX(1px) rotate(1deg)}30%{transform:translateX(-2px) rotate(-2deg)}40%{transform:translateX(3px) rotate(2deg)}50%{transform:translateX(-4px) rotate(-3deg)}60%{transform:translateX(5px) rotate(3deg)}70%{transform:translateX(-6px) rotate(-4deg)}80%{transform:translateX(7px) rotate(4deg) scale(1.04)}90%{transform:translateX(-8px) rotate(-5deg) scale(1.08)}100%{transform:scale(1.14)}}
+.rays{position:absolute;inset:-35%;z-index:-1;pointer-events:none;border-radius:50%;background:repeating-conic-gradient(var(--glow) 0 9deg,transparent 9deg 24deg);-webkit-mask:radial-gradient(circle,#000 18%,transparent 68%);mask:radial-gradient(circle,#000 18%,transparent 68%);animation:spin 9s linear infinite}
+.hatching .rays{opacity:0;animation:spin 3s linear infinite,raysin var(--d,1.2s) ease-in forwards}
+.hero.reveal{isolation:isolate}
+.hero.reveal .rays{animation:spin 12s linear infinite,fadein .6s ease-out}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes raysin{to{opacity:1}}
+@keyframes fadein{from{opacity:0}}
+.wflash{position:fixed;inset:0;z-index:65;pointer-events:none;background:var(--c,#fff);animation:wflash .6s ease-out forwards}
+@keyframes wflash{from{opacity:.9}to{opacity:0}}
+.new-mut.late{animation:pop .5s cubic-bezier(.2,1.5,.4,1) both}
 .flash{animation:flash .7s}
 .pop{animation:pop .5s cubic-bezier(.2,1.5,.4,1)}
 @keyframes shake{0%,100%{transform:none}15%{transform:translateX(-6px) rotate(-2deg)}30%{transform:translateX(6px) rotate(2deg)}45%{transform:translateX(-8px) rotate(-3deg)}60%{transform:translateX(8px) rotate(3deg)}80%{transform:translateX(-4px)}}
@@ -448,7 +460,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
 @keyframes wobble{0%,100%{transform:rotate(0)}25%{transform:rotate(-4deg)}75%{transform:rotate(4deg)}}
 @keyframes pulse{50%{transform:scale(1.12)}}
 @keyframes up{from{transform:translateY(60px)}to{transform:none}}
-@media (prefers-reduced-motion:reduce){.waking,.flash,.pop,.slot.ready .sarc,.sheet-card,.purse.bump{animation:none}}
+@media (prefers-reduced-motion:reduce){.hatching,.rays,.wflash,.new-mut.late,.waking,.flash,.pop,.slot.ready .sarc,.sheet-card,.purse.bump{animation:none}}
 </style>
 
 <div class="app">
@@ -973,6 +985,21 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     goal() { bell(1047, 0, .1); bell(1568, .09, .1); },
     star(i) { bell(note(7 + i * 2), 0, .13); tone(note(7 + i * 2) / 2, 0, .3, 'triangle', .05); },
     tick() { tone(72, 0, .12, 'sine', .22); tone(72, .16, .1, 'sine', .14); },
+    // nacimientos: redoble que acelera y sube mientras el nido tiembla
+    charge(ms) {
+      const d = ms / 1000; sweep(180, 720, 0, d, 'triangle', .05); noise(0, d, .03, 'bandpass', 400, 3000, 1.2);
+      let t = 0, gap = .2, k = 0; while (t < d - .05) { tone(90 + k * 6, t, .07, 'sine', .14); bell(note(k), t, .025); t += gap; gap = Math.max(.045, gap * .86); k++; }
+    },
+    crack() { noise(0, .12, .18, 'highpass', 1800); tone(120, 0, .1, 'square', .04); },
+    hatch(r) {
+      noise(0, .35, .12, 'lowpass', 3000, 300);
+      if (r === 'comun') { sfx.awake(); return; }
+      if (r === 'raro') { sfx.awake(); [7, 9, 11].forEach((n, i) => bell(note(n), .35 + i * .07, .07)); return; }
+      if (r === 'epico') { sweep(90, 45, 0, .5, 'sine', .25); for (let i = 0; i < 8; i++) bell(note(4 + i), .1 + i * .06, .08); return; }
+      sfx.boom(); sfx.legend(); setTimeout(sfx.sphinx, 500);
+    },
+    hearts() { [0, 2, 4, 7].forEach((n, i) => bell(note(n + 2), i * .08, .06)); },
+    mutation() { bell(note(9), 0, .1); bell(note(12), .08, .1); tone(2637, .16, .3, 'sine', .03); },
     deny() { tone(150, 0, .14, 'square', .05); },
     fail() { [330, 262, 196].forEach((f, i) => tone(f, i * .12, .28, 'sawtooth', .04)); },
     purr() { if (!actx) return; for (let i = 0; i < 12; i++) tone(48 + (i % 2) * 7, i * .075, .08, 'sawtooth', .045); },
@@ -2206,7 +2233,10 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     const box = $('statue'); $('wake').disabled = true;
     box.innerHTML = catSVG(c.genes, { statue: true, cracks: true });
     box.classList.add('waking'); sfx.rumble(); buzz([30, 60, 30, 60, 80]);
+    const dust = ['#c9a66b', '#e2bf7e', '#8a7a62', '#fff3d6'];
+    [250, 550, 800].forEach((t, k) => setTimeout(() => { sfx.crack(); burstAt(box, dust, 10 + k * 8, { speed: 220 + k * 80, lift: 120, size: 6, shape: 'chip', g: 900 }); }, t));
     setTimeout(() => {
+      flashScreen('#fff3d6');
       if (statuePos[c.id]) spawnAt[c.id] = statuePos[c.id];
       c.awake = true;
       const fresh = discover(c.genes);
@@ -2217,15 +2247,23 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
 
   function showReveal(c, title, fresh) {
     const r = rarityOf(c.genes);
-    openSheet(`<div class="center"><div class="hero halo flash" style="--halo:${RARITY[r].halo}66">${catSVG(c.genes)}</div>
+    openSheet(`<div class="center"><div class="hero halo flash reveal" id="reveal-hero" style="--halo:${RARITY[r].halo}66;--glow:${RARITY[r].halo}">${r !== 'comun' ? '<div class="rays"></div>' : ''}${catSVG(c.genes)}</div>
       ${badge(r)}<div class="big-name">${esc(title)} ${sexIcon(c.genes)}</div>
       <span class="note">Estilo ${styleOf(c.genes)}${c.parents ? ` · Hijo de ${esc(c.parents[0])} y ${esc(c.parents[1])}` : ''}</span></div>
-      ${fresh.map(v => `<div class="new-mut">¡Mutación nueva descubierta: ${NAMES_OF[v]}!</div>`).join('')}
+      ${fresh.map((v, i) => `<div class="new-mut late" style="animation-delay:${.5 + i * .35}s">¡Mutación nueva descubierta: ${NAMES_OF[v]}!</div>`).join('')}
       <label class="namefield"><span>Ponle nombre</span><input id="reveal-name" maxlength="14" value="${esc(c.name)}"></label>
       ${genesHTML(c.genes)}
       <button class="btn gold" id="ok" type="button">¡Genial!</button>`);
-    r === 'legend' ? sfx.legend() : sfx.awake();
-    setTimeout(() => sfx.meow(), 450);
+    sfx.hatch(r);
+    setTimeout(() => sfx.meow(), r === 'legend' ? 900 : 450);
+    fresh.forEach((v, i) => setTimeout(sfx.mutation, 500 + i * 350));
+    {
+      const hero = $('reveal-hero'), cols = [RARITY[r].halo, '#fff', GOLD];
+      const n = { comun: 18, raro: 34, epico: 60, legend: 90 }[r];
+      requestAnimationFrame(() => burstAt(hero, cols, n, { speed: r === 'comun' ? 260 : 420 }));
+      if (r === 'epico' || r === 'legend') setTimeout(() => confetti(r === 'legend' ? [GOLD, '#fff6c4', '#ffe7a3', '#fff', ...PIECE_COLOR] : [RARITY[r].halo, '#b48cff', '#fff', GOLD]), 150);
+      if (r === 'legend') setTimeout(() => confetti([GOLD, '#fff6c4', '#fff']), 900);
+    }
     if (r === 'legend') setTimeout(() => elderSay(`¡Un legendario! Mis viejos ojos no lo pueden creer: ${c.name}.`), 700);
     else if (fresh.length) setTimeout(() => elderSay(`¡Mutación nueva: ${NAMES_OF[fresh[0]]}! Esa no la veía desde la Era de Hielo.`), 700);
     buzz(r === 'comun' ? 20 : [20, 40, 20, 40, 60]);
@@ -2280,19 +2318,31 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       slotsOf()[free] = { genes, rarity, parents: [A.id, B.id], names: [A.name, B.name], gen: Math.max(A.gen, B.gen) + 1, readyAt: Date.now() + INCUBATE[rarity] * 1000 };
       picked = [];
       save(); closeSheet(); showTab('templo');
-      sfx.rumble();
+      sfx.rumble(); sfx.hearts();
+      requestAnimationFrame(() => burstAt(document.querySelector(`[data-slot="${free}"]`), ['#ff5f8f', '#ff8ab0', '#ffd1e0', GOLD], 22, { speed: 200, lift: 260, g: 260, life: 1.3, size: 8, shape: 'heart' }));
       toast(rarity === 'comun' ? 'A esperar a que nazca…' : `El ${HABITATS[S.hab].nest.toLowerCase()} brilla… ¡viene algo especial!`);
     });
   }
 
+  const HATCH_MS = { comun: 1100, raro: 1600, epico: 2100, legend: 2800 };
+  function flashScreen(c) {
+    if (reduceMotion) return;
+    const d = document.createElement('div'); d.className = 'wflash'; d.style.setProperty('--c', c);
+    document.body.appendChild(d); setTimeout(() => d.remove(), 650);
+  }
   function openSlot(i) {
     ensureAudio();
     const s = slotsOf()[i]; if (!s) return;
     const left = Math.ceil((s.readyAt - Date.now()) / 1000);
     if (left > 0) { toast(`Faltan ${fmt(left)} para que despierte.`); return; }
-    openSheet(`<div class="center"><div class="hero waking" style="width:140px">${nestArt(S.hab)}</div><div class="big-name">Abriendo…</div></div>`);
-    sfx.rumble(); buzz([30, 50, 30, 50, 30]);
+    // cuanto más raro, más larga la espera y más fuerte el brillo: el color avisa la rareza antes de ver al gatito
+    const r = s.rarity || rarityOf(s.genes), glow = RARITY[r].halo, ms = reduceMotion ? 400 : HATCH_MS[r];
+    openSheet(`<div class="center"><div class="hero hatching" id="hatch" style="width:150px;--d:${ms}ms;--glow:${r === 'comun' ? 'rgba(255,243,214,.35)' : glow}"><div class="rays"></div>${nestArt(S.hab)}</div><div class="big-name">Abriendo…</div></div>`);
+    sfx.charge(ms); buzz([30, 50, 30, 50, 30]);
+    const sparkle = setInterval(() => burstAt($('hatch'), [glow, '#fff'], r === 'comun' ? 3 : 6, { speed: 120, lift: 160, g: -60, life: .9, size: 5, shape: 'star' }), 160);
     setTimeout(() => {
+      clearInterval(sparkle);
+      flashScreen(r === 'comun' ? '#fff' : glow);
       slotsOf()[i] = null;
       const c = addCat(s.genes, { awake: true, gen: s.gen, parents: s.names, hab: S.hab });
       spawnAt[c.id] = { x: SPOTS.sarc[i].x, y: FLOOR.y0 + .02 };
@@ -2300,7 +2350,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       const fresh = discover(c.genes);
       save(); renderTemplo(); renderGatos();
       showReveal(c, `¡Nació ${c.name}!`, fresh);
-    }, 1000);
+    }, ms);
   }
 
   // ================= Motor de Ofrendas (match-3), sin DOM para poder probarlo =================
@@ -3022,6 +3072,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     ctx.save(); ctx.globalAlpha = Math.min(1, k * 1.6); ctx.fillStyle = p.color; ctx.strokeStyle = p.color; ctx.translate(p.x, p.y);
     if (p.shape === 'ring') { ctx.lineWidth = 6 * k; ctx.beginPath(); ctx.arc(0, 0, p.size + p.grow * (1 - k), 0, Math.PI * 2); ctx.stroke(); }
     else if (p.shape === 'star') { ctx.globalCompositeOperation = 'lighter'; ctx.rotate(p.rot); drawStar(ctx, p.size * (.5 + k * .5)); }
+    else if (p.shape === 'heart') { const r = p.size; ctx.beginPath(); ctx.moveTo(0, r * .9); ctx.bezierCurveTo(-r * 1.6, -r * .2, -r * .6, -r * 1.4, 0, -r * .45); ctx.bezierCurveTo(r * .6, -r * 1.4, r * 1.6, -r * .2, 0, r * .9); ctx.fill(); }
     else if (p.shape === 'chip') { ctx.rotate(p.rot); ctx.fillRect(-p.size, -p.size * .35, p.size * 2, p.size * .7); }
     else { ctx.beginPath(); ctx.arc(0, 0, p.size * (.4 + k * .6), 0, Math.PI * 2); ctx.fill(); }
     ctx.restore();
@@ -3098,25 +3149,42 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       if (g) { g.classList.remove('gbump'); void g.offsetWidth; g.classList.add('gbump'); }
     };
   }
-  // confeti de pantalla completa al ganar
-  function confetti() {
+  // partículas de pantalla completa (confeti, nacimientos, estatuas): un canvas fijo encima de todo
+  const SFX = { C: null, parts: [], raf: 0, last: 0 };
+  function screenParts(list) {
+    if (reduceMotion || !list.length) return;
+    if (!SFX.C || !SFX.C.cv.isConnected) { SFX.C = fxCanvas(document.body, 'confetti'); SFX.parts = []; }
+    SFX.parts.push(...list);
+    if (SFX.parts.length > 700) SFX.parts.splice(0, SFX.parts.length - 700);
+    if (!SFX.raf) {
+      SFX.last = performance.now();
+      const loop = now => {
+        const C = SFX.C, dt = Math.min(.05, (now - SFX.last) / 1000); SFX.last = now;
+        C.ctx.clearRect(0, 0, C.w, C.h);
+        SFX.parts = SFX.parts.filter(p => (p.life += dt) < p.max);
+        stepParts(SFX.parts, dt, .975);
+        SFX.parts.forEach(p => drawPart(C.ctx, p));
+        if (SFX.parts.length) SFX.raf = requestAnimationFrame(loop); else { SFX.raf = 0; C.cv.remove(); SFX.C = null; }
+      };
+      SFX.raf = requestAnimationFrame(loop);
+    }
+  }
+  function confetti(cols) {
     if (reduceMotion) return;
-    const C = fxCanvas(document.body, 'confetti'), cols = [...PIECE_COLOR, GOLD, '#fff'];
-    let parts = [];
+    cols = cols || [...PIECE_COLOR, GOLD, '#fff'];
+    const w = window.innerWidth, h = window.innerHeight, out = [];
     for (let j = 0; j < 140; j++) {
       const left = j % 2 === 0, spread = .25 + Math.random() * .6;
-      parts.push(part(left ? 0 : C.w, C.h * .8, cols[j % cols.length], { ang: -Math.PI / 2 + (left ? spread : -spread), speed: Math.max(700, C.h * 1.3), life: 2.6, size: 7, shape: j % 3 ? 'chip' : 'star', g: 900 }));
+      out.push(part(left ? 0 : w, h * .8, cols[j % cols.length], { ang: -Math.PI / 2 + (left ? spread : -spread), speed: Math.max(700, h * 1.3), life: 2.6, size: 7, shape: j % 3 ? 'chip' : 'star', g: 900 }));
     }
-    let last = performance.now();
-    const loop = now => {
-      const dt = Math.min(.05, (now - last) / 1000); last = now;
-      C.ctx.clearRect(0, 0, C.w, C.h);
-      parts = parts.filter(p => (p.life += dt) < p.max);
-      stepParts(parts, dt, .975);
-      parts.forEach(p => drawPart(C.ctx, p));
-      if (parts.length) requestAnimationFrame(loop); else C.cv.remove();
-    };
-    requestAnimationFrame(loop);
+    screenParts(out);
+  }
+  // estallido desde el centro de un elemento de la pantalla
+  function burstAt(el, cols, n, o) {
+    if (!el || reduceMotion) return;
+    const r = el.getBoundingClientRect(), x = r.left + r.width / 2, y = r.top + r.height * (o && o.y !== undefined ? o.y : .5), out = [];
+    for (let j = 0; j < n; j++) out.push(part(x, y, cols[j % cols.length], { speed: 320, lift: 80, life: 1, size: 7, g: 500, shape: j % 3 === 0 ? 'star' : 'chip', ...o }));
+    screenParts(out);
   }
   // el marcador sube contando en vez de saltar
   function rollScore() {
@@ -3269,7 +3337,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
   function openPyramid(team) {
     ensureAudio();
     PG = { board: Array.from({ length: PN }, () => Array(PN).fill(-1)), tray: [null, null, null], score: 0, lines: 0, stone: 0, combo: 0, sinceClear: 0,
-      over: false, drag: null, clearFx: [], placeFx: [], floats: [], shake: 0, statues: 0, shown: 0, exitArmed: false, stuck: false, target: -1 };
+      over: false, drag: null, clearFx: [], placeFx: [], floats: [], parts: [], beams: [], pvKey: '', shake: 0, statues: 0, shown: 0, exitArmed: false, stuck: false, target: -1 };
     PG.team = Array.isArray(team) ? team : []; PG.powers = teamPowers(PG.team, 'pyr');
     pDeal();
     ['templo', 'gatos', 'juegos'].forEach(t => { $('tab-' + t).hidden = true; });
@@ -3387,18 +3455,27 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     tone(660, 0, .06, 'triangle', .06);
     e.preventDefault();
   }
-  function pMove(e) { if (PG && PG.drag) { const p = pPos(e); PG.drag.x = p.x; PG.drag.y = p.y; } }
+  function pMove(e) {
+    if (!PG || !PG.drag) return;
+    const p = pPos(e); PG.drag.x = p.x; PG.drag.y = p.y;
+    const pv = pPreview(), n = pv && pv.valid ? pv.rows.size + pv.cols.size : 0;
+    const key = n ? `${pv.r0},${pv.c0}` : '';
+    if (key !== PG.pvKey) { PG.pvKey = key; if (n) { bell(note(4 + n), 0, .05); buzz(5); } }
+  }
   function pUp() {
     if (!PG || !PG.drag) return;
     const pv = pPreview(), slot = PG.drag.slot;
-    PG.drag = null;
-    if (pv && pv.valid) pPlace(slot, pv.r0, pv.c0);
+    PG.drag = null; PG.pvKey = '';
+    if (pv && pv.valid) pPlace(slot, pv.r0, pv.c0); else if (pv) tone(300, 0, .06, 'sine', .05);
   }
 
   function pPlace(slot, r0, c0) {
     const p = PG.tray[slot], sh = PSHAPES[p.s], now = performance.now();
     const { rows, cols } = pLines(sh, r0, c0);
-    for (const [r, c] of sh.cells) { PG.board[r0 + r][c0 + c] = p.color; PG.placeFx.push({ r: r0 + r, c: c0 + c, t0: now }); }
+    for (const [r, c] of sh.cells) {
+      PG.board[r0 + r][c0 + c] = p.color; PG.placeFx.push({ r: r0 + r, c: c0 + c, t0: now });
+      if (!reduceMotion) for (let j = 0; j < 3; j++) PG.parts.push(part(PL.pad + (c0 + c + .5) * PL.cell, PL.pad + (r0 + r + .9) * PL.cell, '#e8d9b8', { speed: 70, lift: 40, life: .4, size: PL.cell * .07, g: 120 }));
+    }
     PG.tray[slot] = null;
     const lines = rows.size + cols.size;
     let gained = sh.cells.length;
@@ -3407,27 +3484,30 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       PG.combo++; PG.sinceClear = 0;
       gained += 10 * lines * (lines + 1) / 2 * PG.combo;
       const gone = new Set();
-      rows.forEach(r => { for (let c = 0; c < PN; c++) gone.add(r * PN + c); });
-      cols.forEach(c => { for (let r = 0; r < PN; r++) gone.add(r * PN + c); });
+      rows.forEach(r => { for (let c = 0; c < PN; c++) gone.add(r * PN + c); PG.beams.push({ r, t0: now }); });
+      cols.forEach(c => { for (let r = 0; r < PN; r++) gone.add(r * PN + c); PG.beams.push({ c, t0: now }); });
       gone.forEach(k => {
         const r = Math.floor(k / PN), c = k % PN;
         PG.clearFx.push({ r, c, color: PG.board[r][c], t0: now + (reduceMotion ? 0 : (Math.abs(r + .5 - cr) + Math.abs(c + .5 - cc)) * 22) });
         PG.board[r][c] = -1;
       });
       let stone = lines;
-      if (PG.board.every(row => row.every(v => v < 0))) { stone += 10; gained += 300; PG.floats.push({ text: '¡Tablero limpio! +10 piedra', x: PN / 2, y: PN / 2 - 1, t0: now + 150, big: true }); }
+      if (PG.board.every(row => row.every(v => v < 0))) { stone += 10; gained += 300; PG.floats.push({ text: '¡Tablero limpio! +10 piedra', x: PN / 2, y: PN / 2 - 1, t0: now + 150, big: true }); setTimeout(() => { confetti(); sfx.legend(); }, 250); }
       const before = Math.floor(PG.lines / STATUE_EVERY);
       PG.lines += lines; PG.stone += stone; S.stone = (S.stone || 0) + stone;
       PG.floats.push({ text: `+${stone} piedra`, x: cc, y: cr - 1, t0: now + 80, big: true });
-      if (PG.combo >= 2) PG.floats.push({ text: `Combo ×${PG.combo}`, x: cc, y: cr + 1.2, t0: now + 160 });
+      const lvl = Math.min(6, Math.max(PG.combo, lines >= 2 ? lines : 0));
+      if (lvl >= 2) PG.floats.push({ text: COMBO_WORDS[lvl] + (PG.combo >= 2 ? ` ×${PG.combo}` : ''), x: cc, y: cr + 1.2, t0: now + 160, word: lvl });
       if (Math.floor(PG.lines / STATUE_EVERY) > before) {
         PG.statues++; addCat(randomStatueGenes(habFam()));
         elderSay(`¡Una estatua entre los bloques! Ya está en ${HABITATS[S.hab].short}.`);
-        sfx.awake();
+        sfx.awake(); setTimeout(() => confetti(['#c9a66b', '#e2bf7e', GOLD, '#fff']), 200);
       }
-      PG.shake = reduceMotion ? 0 : Math.min(4 + lines * 2, 12);
-      const notes = [523, 659, 784, 1047, 1319, 1568], up = 1 + .06 * Math.min(PG.combo - 1, 6);
-      for (let i = 0; i < Math.min(2 + lines, notes.length); i++) tone(notes[i] * up, i * .06, .18, 'square', .05);
+      PG.shake = reduceMotion ? 0 : Math.min(4 + lines * 3, 14);
+      // campanitas: cada combo empieza una nota más arriba, cada línea agrega una nota
+      const base = Math.min(PG.combo - 1, 8);
+      for (let i = 0; i < 2 + lines; i++) bell(note(base + i * 2), i * .06, .08);
+      sfx.line(); if (lines >= 3) sfx.boom();
       tone(110, 0, .25, 'triangle', .22);
       buzz(lines >= 2 ? [15, 30, 25] : 18);
       setStoneHud();
@@ -3493,7 +3573,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     PG.over = true;
     const record = PG.score > (S.pyrBest || 0);
     if (record) S.pyrBest = PG.score;
-    if (record && PG.score > 200) setTimeout(() => elderSay(`¡Nuevo récord en Pirámide: ${PG.score} puntos!`), 600);
+    if (record && PG.score > 200) { setTimeout(() => elderSay(`¡Nuevo récord en Pirámide: ${PG.score} puntos!`), 600); setTimeout(() => { confetti(); sfx.legend(); }, 300); }
     save();
     if (!quit) [392, 330, 262, 196].forEach((f, i) => tone(f, i * .14, .3, 'sawtooth', .05));
     else sfx.awake();
@@ -3509,8 +3589,11 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
   }
 
   let pLast = 0;
+  const WORD_COLORS = ['', '', '#7ee0ff', '#9dff6a', '#f4c24f', '#ff8ad8', '#ffffff'];
   function pLoop(now) {
     if (!PG) return;
+    const dt = Math.min(.05, pLast ? (now - pLast) / 1000 : 0); pLast = now;
+    PG.parts = PG.parts.filter(q => (q.life += dt) < q.max); stepParts(PG.parts, dt, .97);
     pRender(now);
     if (PG.shown !== PG.score) { PG.shown = PG.shown < PG.score ? Math.min(PG.score, PG.shown + Math.max(1, Math.ceil((PG.score - PG.shown) * .18))) : PG.score; const s = $('p-score'); if (s) s.textContent = PG.shown; }
     requestAnimationFrame(pLoop);
@@ -3533,17 +3616,43 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     for (let i = PG.placeFx.length - 1; i >= 0; i--) {
       const f = PG.placeFx[i], t = (now - f.t0) / 220;
       if (t >= 1) { PG.placeFx.splice(i, 1); continue; }
+      const k = reduceMotion ? 0 : Math.sin(t * Math.PI) * .12, sz = cell * (1 + k), o = (cell - sz) / 2;
+      if (PG.board[f.r][f.c] >= 0) drawStone(pad + f.c * cell + o, pad + f.r * cell + o, sz, PG.board[f.r][f.c]);
       ctx.fillStyle = `rgba(255,255,255,${.45 * (1 - t)})`; prr(ctx, pad + f.c * cell + cell * .05, pad + f.r * cell + cell * .05, cell * .9, cell * .9, cell * .14); ctx.fill();
     }
     const dur = reduceMotion ? 150 : 380;
     for (let i = PG.clearFx.length - 1; i >= 0; i--) {
       const f = PG.clearFx[i], t = (now - f.t0) / dur, x = pad + f.c * cell, y = pad + f.r * cell;
       if (t < 0) { drawStone(x, y, cell, f.color); continue; }
+      if (!f.burst && !reduceMotion) {
+        f.burst = true;
+        const col = STONES[f.color] ? STONES[f.color].base : GOLD;
+        for (let j = 0; j < 5; j++) PG.parts.push(part(x + cell / 2, y + cell / 2, col, { speed: cell * 4, lift: cell * 2, life: .6, size: cell * .11, shape: 'chip', g: cell * 14 }));
+        PG.parts.push(part(x + cell / 2, y + cell / 2, '#fff6c4', { speed: cell * 2, life: .45, size: cell * .16, shape: 'star', g: 0 }));
+      }
       if (t >= 1) { PG.clearFx.splice(i, 1); continue; }
       const s = cell * (1 - t * t), o = (cell - s) / 2;
       drawStone(x + o, y + o, s, f.color, 1 - t * .6);
       if (t < .35) { ctx.fillStyle = `rgba(255,240,200,${.8 * (1 - t / .35)})`; prr(ctx, x + o, y + o, s, s, s * .14); ctx.fill(); }
     }
+    // rayo de luz sobre cada línea completada
+    for (let i = PG.beams.length - 1; i >= 0; i--) {
+      const b = PG.beams[i], t = (now - b.t0) / 420;
+      if (t >= 1 || reduceMotion) { PG.beams.splice(i, 1); continue; }
+      const th = cell * (1 - t * .7), a = 1 - t;
+      ctx.save(); ctx.globalAlpha = a; ctx.fillStyle = '#fff6c4'; ctx.shadowColor = '#f4c24f'; ctx.shadowBlur = cell * .8;
+      if (b.r !== undefined) prr(ctx, pad, pad + (b.r + .5) * cell - th / 2, PN * cell, th, th / 2);
+      else prr(ctx, pad + (b.c + .5) * cell - th / 2, pad, th, PN * cell, th / 2);
+      ctx.fill(); ctx.restore();
+    }
+    // líneas que se van a completar si sueltas aquí: borde dorado que late
+    if (pv && pv.valid && (pv.rows.size || pv.cols.size)) {
+      ctx.save(); ctx.strokeStyle = '#f4c24f'; ctx.lineWidth = cell * .07; ctx.globalAlpha = .55 + .35 * Math.sin(now / 110);
+      pv.rows.forEach(r => { prr(ctx, pad + cell * .02, pad + r * cell + cell * .02, PN * cell - cell * .04, cell * .96, cell * .16); ctx.stroke(); });
+      pv.cols.forEach(c => { prr(ctx, pad + c * cell + cell * .02, pad + cell * .02, cell * .96, PN * cell - cell * .04, cell * .16); ctx.stroke(); });
+      ctx.restore();
+    }
+    PG.parts.forEach(q => drawPart(ctx, q));
     const slotW = W / 3;
     for (let i = 0; i < 3; i++) {
       const p = PG.tray[i];
@@ -3563,13 +3672,13 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       const f = PG.floats[i], t = (now - f.t0) / 900;
       if (t < 0) continue;
       if (t >= 1) { PG.floats.splice(i, 1); continue; }
-      const size = cell * (f.big ? .5 : .44) * (t < .15 ? .6 + t / .15 * .4 : 1);
+      const size = cell * (f.word >= 4 ? .62 : f.big || f.word ? .5 : .44) * (t < .15 ? .6 + t / .15 * .4 : 1);
       const x = Math.max(cell * 2.4, Math.min(W - cell * 2.4, pad + f.x * cell)), y = pad + f.y * cell - t * cell * (reduceMotion ? 0 : 1.1);
       ctx.globalAlpha = 1 - t * t;
       ctx.font = `${size}px "Bagel Fat One", "Arial Rounded MT Bold", sans-serif`;
       ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
       ctx.lineWidth = size * .22; ctx.strokeStyle = '#1d2458'; ctx.strokeText(f.text, x, y);
-      ctx.fillStyle = f.plain ? '#ffffff' : '#f4c24f'; ctx.fillText(f.text, x, y);
+      ctx.fillStyle = f.plain ? '#ffffff' : f.word ? WORD_COLORS[f.word] : '#f4c24f'; ctx.fillText(f.text, x, y);
       ctx.globalAlpha = 1;
     }
   }
