@@ -513,9 +513,17 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
 (() => {
   'use strict';
   // ================= Reglas del juego (valores de prueba) =================
-  const COST = { awaken: 15, breed: 10, dig: 50 };
-  const ALTAR = { get everyMs() { return S.up && S.up.altar ? 3000 : 4000; }, get cap() { return S.up && S.up.altar ? 80 : 40; } }; // el Altar mayor lo mejora
-  const INCUBATE = { comun: 15, raro: 40, epico: 90, legend: 180 }; // segundos (en el juego final serían horas)
+  // ===== Economía =====
+  // TIEMPO es el ritmo de todo lo que se espera (nidos y altar). 1 = intermedio (nidos de 5 a 60 min, altar lleno en 30 min).
+  // Para la versión de celular, con nidos de horas, basta con subirlo (6 = nidos de 30 min a 6 h, altar lleno en 3 h).
+  const TIEMPO = 1;
+  // Regla: jugar rinde mucho más que esperar. Un nivel de Ofrendas (2-3 min) paga ~1 cría; el altar solo da 1 por minuto.
+  const COST = { awaken: 40, breed: 30, dig: 120, treat: 2 };
+  const upLv = id => { const v = S.up && S.up[id]; return v === true ? 1 : v || 0; };   // nivel de una mejora (las viejas guardaban true)
+  const ALTAR_LV = [{ per: 1, cap: 30 }, { per: 1.5, cap: 45 }, { per: 2, cap: 60 }, { per: 2.5, cap: 80 }, { per: 3, cap: 100 }, { per: 4, cap: 130 }];   // per = ofrendas por minuto
+  const ALTAR = { get everyMs() { return 60000 * TIEMPO / ALTAR_LV[upLv('altar')].per; }, get cap() { return ALTAR_LV[upLv('altar')].cap; } };
+  const INCUBATE = { comun: 300, raro: 900, epico: 1800, legend: 3600 };   // segundos con TIEMPO = 1
+  const incubSecs = r => Math.round(INCUBATE[r] * TIEMPO * (1 - .12 * upLv('incubar')));
   const MUT_RATE = 0.14;                                // probabilidad de mutación por gen
   const FAM_WEIGHT = { elegante: .55, egipcio: .30, mistico: .15, artico: 0 }; // la Ártica solo sale en la Nieve o por herencia
 
@@ -911,7 +919,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     return fresh;
   }
   const altarAmount = () => Math.min(ALTAR.cap, Math.floor((Date.now() - S.altarAt) / ALTAR.everyMs));
-  const fmt = s => s >= 60 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}` : `${s} s`;
+  const fmt = s => s >= 3600 ? `${Math.floor(s / 3600)} h ${String(Math.floor(s / 60) % 60).padStart(2, '0')} min` : s >= 60 ? `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}` : `${s} s`;
 
   // ================= Utilidades de interfaz =================
   const $ = id => document.getElementById(id);
@@ -1122,8 +1130,8 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     if (!awake.length && !statues.length) return `Aquí no vive ningún gato todavía. Levanta un gato y suéltalo en este hábitat en el menú de arriba, o excava una estatua (botón de Gatos).`;
     if (awake.length < 2 && statues.length) return `Toca las estatuas para despertarlas. Cuesta ${COST.awaken} ofrendas cada una.`;
     if (statues.length > SPOTS.statues.length) return `Tienes ${statues.length - SPOTS.statues.length} estatuas más guardadas: búscalas con el botón de Gatos.`;
-    if (S.ofrendas < COST.breed && altarAmount() < COST.breed) return '¿Te faltan ofrendas? Juega Ofrendas: cada nivel da ofrendas y los niveles pares regalan una estatua.';
-    if ((S.stone || 0) >= 10 && !Object.keys(S.up || {}).length) return 'Ya tienes piedra para una mejora. Toca el botón de la pirámide con flecha.';
+    if (S.ofrendas < COST.breed && altarAmount() < COST.breed) return '¿Te faltan ofrendas? Juega Ofrendas: cada nivel da de 26 a 48 ofrendas y cada 3 niveles nuevos regalan una estatua.';
+    if ((S.stone || 0) >= 15 && !Object.keys(S.up || {}).length) return 'Ya tienes piedra para una mejora. Toca el botón de la pirámide con flecha.';
     if (!S.habs.casa.open && (S.stone || 0) >= HABITATS.casa.cost) return '¡Ya tienes piedra para abrir La Casa! Ábrela en el menú de hábitats, arriba.';
     if (!S.births && !busy.length) return `¡Ya tienes dos gatos despiertos! Toca un ${H.nest.toLowerCase()} vacío y elige a los dos padres.`;
     if (!S.births && busy.length) return `Mientras más raro sea el bebé, más tarda en nacer. Si el ${H.nest.toLowerCase()} brilla, viene algo especial.`;
@@ -1241,9 +1249,9 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
   const HABITATS = {
     egipto: { name: 'Templo de Egipto', short: 'Egipto', fam: 'egipcio', cost: 0, nest: 'Sarcófago', feeder: 'Altar de ofrendas', center: 'La Esfinge',
       desc: 'El templo donde empezó todo. Aquí salen más mutaciones Egipcias.' },
-    casa: { name: 'La Casa', short: 'Casa', fam: 'elegante', cost: 60, nest: 'Canasta', feeder: 'Plato de croquetas', center: 'El rascador',
+    casa: { name: 'La Casa', short: 'Casa', fam: 'elegante', cost: 80, nest: 'Canasta', feeder: 'Plato de croquetas', center: 'El rascador',
       desc: 'Una casa acogedora con sofá, tapete y ventana. Aquí los gatos se ponen Elegantes.' },
-    nieve: { name: 'Montaña nevada', short: 'Nieve', fam: 'artico', cost: 120, nest: 'Iglú', feeder: 'Fogata', center: 'El gato de nieve',
+    nieve: { name: 'Montaña nevada', short: 'Nieve', fam: 'artico', cost: 200, nest: 'Iglú', feeder: 'Fogata', center: 'El gato de nieve',
       desc: 'Una montaña con lago congelado. Es el único lugar donde nacen gatos Árticos.' },
   };
   const HAB_ORDER = ['egipto', 'casa', 'nieve'];
@@ -2097,7 +2105,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       <small>${v >= LOVE_BONUS_AT ? `Con tanto cariño lleva +1 carga de su poder a los minijuegos.` : `Con ${LOVE_BONUS_AT} o más lleva +1 carga de su poder a los minijuegos.`}</small></div>
       <div class="cat-acts">
         <button class="btn" data-act="pet" type="button">Acariciar</button>
-        <button class="btn" data-act="treat" type="button">Premio · 1</button>
+        <button class="btn" data-act="treat" type="button">Premio · ${COST.treat}</button>
         <button class="btn" data-act="play" type="button">Jugar</button>
       </div>`;
   }
@@ -2108,8 +2116,8 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       let v, mark = '♥';
       if (act === 'pet') { v = petLove(c); sfx.purr(); }
       if (act === 'treat') {
-        if (S.ofrendas < 1) { toast('No tienes ofrendas para el premio.'); return; }
-        setOfrendas(-1); v = addLove(c, 12); sfx.coin(); setTimeout(() => sfx.meow(), 200); mark = '★';
+        if (S.ofrendas < COST.treat) { toast('No tienes ofrendas para el premio.'); return; }
+        setOfrendas(-COST.treat); v = addLove(c, 12); sfx.coin(); setTimeout(() => sfx.meow(), 200); mark = '★';
       }
       if (act === 'play') {
         const wait = 120000 - (now - (c.playAt || 0));
@@ -2286,11 +2294,11 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
         S.sphinxAwake = true;
         addCat({ fur: 'naranja', pat: 'humo', eyes: 'normal', acc: 'cascabel', sex: 'm', seed: newSeed() });
         addCat({ fur: 'negro', pat: 'parejo', eyes: 'normal', acc: 'ninguno', sex: 'f', seed: newSeed() });
-        S.ofrendas = 40; S.altarAt = Date.now();
+        S.ofrendas = 100; S.altarAt = Date.now();
         save(); renderAll();
         openSheet(`<div class="center"><div class="hero" id="intro-abuelo">${abueloSVG()}</div>
           <div class="big-name">¡Despertaste a la Esfinge!</div>
-          <p class="note">"Soy el Abuelo Colmillo, el gato más viejo que vas a conocer. Hace siglos que los gatos de este templo duermen convertidos en piedra. Te dejé 2 estatuas aquí y 40 ofrendas. Despiértalas, crúzalas… y descubre qué nace. Cuando pase algo importante, me verás brillar los ojos."</p>
+          <p class="note">"Soy el Abuelo Colmillo, el gato más viejo que vas a conocer. Hace siglos que los gatos de este templo duermen convertidos en piedra. Te dejé 2 estatuas aquí y 100 ofrendas. Despiértalas, crúzalas… y descubre qué nace. Cuando pase algo importante, me verás brillar los ojos."</p>
           <button class="btn gold" id="go-temple" type="button">¡Vamos!</button></div>`);
         const ab = $('intro-abuelo').firstElementChild; if (ab) ab.classList.add('glow');
         sfx.elder();
@@ -2435,7 +2443,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       setOfrendas(-COST.breed);
       const genes = breedGenes(A, B, S.births === 0 && !allSlots().some(Boolean), habFam());
       const rarity = rarityOf(genes);
-      slotsOf()[free] = { genes, rarity, parents: [A.id, B.id], names: [A.name, B.name], gen: Math.max(A.gen, B.gen) + 1, readyAt: Date.now() + INCUBATE[rarity] * 1000 };
+      slotsOf()[free] = { genes, rarity, parents: [A.id, B.id], names: [A.name, B.name], gen: Math.max(A.gen, B.gen) + 1, readyAt: Date.now() + incubSecs(rarity) * 1000 };
       picked = [];
       save(); closeSheet(); showTab('templo');
       sfx.rumble(); sfx.hearts();
@@ -3366,8 +3374,8 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     if (win) {
       const stars = M.stars || starsFor(M.moves, M.total), spare = M.spare !== undefined ? M.spare : M.moves;
       const first = !(S.match.best[n] > 0);
-      const reward = 6 + 4 * stars + (first ? 5 : 0);
-      const statue = first && n % 2 === 0;
+      const reward = 20 + 6 * stars + (first ? 10 : 0);
+      const statue = first && n % 3 === 0;
       S.match.best[n] = Math.max(S.match.best[n] || 0, stars);
       S.match.level = Math.max(S.match.level, n + 1);
       setOfrendas(reward);
@@ -3385,7 +3393,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
         <div class="bigstars">${[1, 2, 3].map(i => `<i class="${i <= stars ? 'on' : ''}" style="animation-delay:${i * .15}s">★</i>`).join('')}</div>
         <div class="big-name">¡Nivel ${n} superado!</div>
         <span class="note">${M.score} puntos · te sobraron ${spare} movimientos</span></div>
-        <div class="new-mut">+${reward} ofrendas${first ? ' (incluye 5 por primera vez)' : ''}</div>
+        <div class="new-mut">+${reward} ofrendas${first ? ' (incluye 10 por primera vez)' : ''}</div>
         ${newly ? `<div class="new-mut">¡Desbloqueaste el ${SECRET[sp].name}! Cruza un gato naranja con una gata negra (o al revés) y puede nacer uno.</div>` : ''}
         ${sc ? `<div class="center"><div class="hero" style="width:140px">${catSVG(sc.genes, { statue: true })}</div><b>${newly ? `¡Una estatua ${SECRET[sp].name.toLowerCase()} de regalo!` : '¡Encontraste una estatua!'}</b><span class="note">Ya está en tu templo, esperando que la despiertes.</span></div>` : ''}
         <div class="actions"><button class="btn" id="m-home" type="button">Ir al templo</button><button class="btn gold" id="m-next" type="button">Nivel ${n + 1}</button></div>`);
@@ -3393,9 +3401,9 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       $('m-next').addEventListener('click', () => { closeSheet(); openMatch(n + 1, team); });
       $('m-home').addEventListener('click', () => { closeSheet(); closeMatch('templo'); });
     } else {
-      setOfrendas(3); save(); sfx.fail();
+      setOfrendas(5); save(); sfx.fail();
       const what = M.def.goal === 'sand' ? `Te faltaron ${M.sand.size} casillas de arena.` : `Te faltaron ${Object.entries(M.left).filter(([, v]) => v > 0).map(([k, v]) => `${v} ${MK[k].plural}`).join(' y ')}.`;
-      openSheet(`<div class="center"><div class="big-name">Sin movimientos</div><span class="note">${what} Te llevas 3 ofrendas de consuelo.</span></div>
+      openSheet(`<div class="center"><div class="big-name">Sin movimientos</div><span class="note">${what} Te llevas 5 ofrendas de consuelo.</span></div>
         <div class="actions"><button class="btn" id="m-home" type="button">Ir al templo</button><button class="btn gold" id="m-retry" type="button">Reintentar</button></div>`);
       $('m-retry').addEventListener('click', () => { closeSheet(); openMatch(n, team); });
       $('m-home').addEventListener('click', () => { closeSheet(); closeMatch('templo'); });
@@ -3409,7 +3417,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       <h2>Juegos del templo</h2>
       <div class="game"><b>Ofrendas</b>
         <div class="mini-pieces">${PIECE_ART.map((_, k) => pieceSVG(k)).join('')}</div>
-        <p>Junta 3 o más piezas iguales. Cada nivel superado da ofrendas, y los niveles pares te regalan una estatua la primera vez.</p>
+        <p>Junta 3 o más piezas iguales. Cada nivel superado da ofrendas, y cada 3 niveles nuevos te regalan una estatua.</p>
         <span class="note" style="text-align:left">Vas en el nivel ${n} · ${stars} ★ ganadas</span>
         <button class="btn gold" id="play-match" type="button">Jugar nivel ${n}</button></div>
       <div class="game"><b>Pirámide</b>
@@ -3449,7 +3457,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     { base: '#f4c24f', hi: '#ffe597', lo: '#c58f22', mark: '#946510' },
     { base: '#6b6f8e', hi: '#959ab5', lo: '#474a66', mark: '#30324a' },
   ];
-  const STATUE_EVERY = 25;
+  const STATUE_EVERY = 30;
   function pRandomPiece() {
     let x = Math.random() * PTOTAL, s = 0;
     for (let i = 0; i < PSHAPES.length; i++) { x -= PSHAPES[i].weight; if (x < 0) { s = i; break; } }
@@ -3835,13 +3843,15 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
 
   // ================= Mejoras del templo (se pagan con piedra) =================
   const UPGRADES = [
-    { id: 'sarc3', name: 'Tercer nido de cría', desc: 'Un lugar más para criar en cada hábitat.', cost: 30 },
-    { id: 'sarc4', name: 'Cuarto nido de cría', desc: 'Otro lugar más para criar en cada hábitat.', cost: 60, needs: 'sarc3' },
-    { id: 'altar', name: 'Altar mayor', desc: 'El altar guarda hasta 80 ofrendas y junta 1 cada 3 s.', cost: 25 },
-    { id: 'patio', name: 'Patio amplio', desc: 'Caben 24 gatos paseando a la vez (antes 14).', cost: 40 },
-    { id: 'estandartes', name: 'Estandartes', desc: 'Banderas azul y oro en las columnas (Egipto).', cost: 10 },
-    { id: 'obeliscos', name: 'Obeliscos', desc: 'Dos obeliscos dorados junto a las pirámides (Egipto).', cost: 20 },
-    { id: 'estanque', name: 'Estanque de lotos', desc: 'Un estanque con lotos en el patio (Egipto).', cost: 25 },
+    // costs: precio de cada nivel (en piedra); desc(l): qué hace en el nivel l
+    { id: 'altar', name: 'Altar', costs: [25, 50, 90, 140, 200], desc: l => `Junta ${ALTAR_LV[l].per} ofrendas por minuto y guarda hasta ${ALTAR_LV[l].cap}.` },
+    { id: 'incubar', name: 'Nidos tibios', costs: [30, 60, 100, 150], desc: l => `Los gatitos nacen ${l * 12}% más rápido.` },
+    { id: 'sarc3', name: 'Tercer nido de cría', costs: [40], desc: () => 'Un lugar más para criar en cada hábitat.' },
+    { id: 'sarc4', name: 'Cuarto nido de cría', costs: [90], needs: 'sarc3', desc: () => 'Otro lugar más para criar en cada hábitat.' },
+    { id: 'patio', name: 'Patio amplio', costs: [40], desc: () => 'Caben 24 gatos paseando a la vez (antes 14).' },
+    { id: 'estandartes', name: 'Estandartes', costs: [15], desc: () => 'Banderas azul y oro en las columnas (Egipto).' },
+    { id: 'obeliscos', name: 'Obeliscos', costs: [30], desc: () => 'Dos obeliscos dorados junto a las pirámides (Egipto).' },
+    { id: 'estanque', name: 'Estanque de lotos', costs: [40], desc: () => 'Un estanque con lotos en el patio (Egipto).' },
   ];
   function openUpgrades() {
     ensureAudio();
@@ -3849,9 +3859,11 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     openSheet(`<div class="sheet-head"><h2>Mejoras</h2><button class="x" id="x" type="button" aria-label="Cerrar">×</button></div>
       <p class="note" style="text-align:left">Tienes <b style="color:var(--ink)">${have} de piedra</b>. La piedra se gana en Pirámide: 1 por cada línea.</p>
       <div class="ups">${UPGRADES.map(u => {
-        const done = S.up && S.up[u.id], locked = u.needs && !(S.up && S.up[u.needs]);
-        return `<div class="up${done ? ' done' : ''}"><div><b>${u.name}</b><small>${u.desc}${locked ? ' Primero construye el anterior.' : ''}</small></div>
-          ${done ? '<span class="up-ok">Construido</span>' : `<button class="btn ${have >= u.cost && !locked ? 'gold' : ''}" data-up="${u.id}" type="button" ${have >= u.cost && !locked ? '' : 'disabled'}>${u.cost} piedra</button>`}</div>`;
+        const l = upLv(u.id), max = u.costs.length, done = l >= max, cost = u.costs[l], locked = u.needs && !upLv(u.needs);
+        const info = max > 1 ? `Nivel ${l} de ${max}. ${done ? u.desc(l) : `${l ? 'Ahora: ' + u.desc(l) + ' ' : ''}Siguiente: ${u.desc(l + 1)}`}` : u.desc(1);
+        const ok = !done && have >= cost && !locked;
+        return `<div class="up${done ? ' done' : ''}"><div><b>${u.name}${max > 1 && l ? ` · nivel ${l}` : ''}</b><small>${info}${locked ? ' Primero construye el anterior.' : ''}</small></div>
+          ${done ? `<span class="up-ok">${max > 1 ? 'Nivel máximo' : 'Construido'}</span>` : `<button class="btn ${ok ? 'gold' : ''}" data-up="${u.id}" type="button" ${ok ? '' : 'disabled'}>${l && max > 1 ? 'Subir · ' : ''}${cost} piedra</button>`}</div>`;
       }).join('')}</div>
       <button class="btn turq" id="go-pyr" type="button">Jugar Pirámide para ganar piedra</button>`);
     $('x').addEventListener('click', closeSheet);
@@ -3860,13 +3872,14 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
   }
   function buyUpgrade(id) {
     const u = UPGRADES.find(x => x.id === id);
-    if (!u || (S.stone || 0) < u.cost || (S.up && S.up[id])) return;
-    S.stone -= u.cost; S.up = { ...(S.up || {}), [id]: true };
-    if (id === 'sarc3' || id === 'sarc4') HAB_ORDER.forEach(h => S.habs[h].slots.push(null));
+    const l = u ? upLv(id) : 0, cost = u && u.costs[l];
+    if (!u || cost === undefined || (S.stone || 0) < cost || (u.needs && !upLv(u.needs))) return;
+    S.stone -= cost; S.up = { ...(S.up || {}), [id]: l + 1 };
+    if ((id === 'sarc3' || id === 'sarc4') && l === 0) HAB_ORDER.forEach(h => S.habs[h].slots.push(null));
     $('stone').textContent = S.stone;
     save(); sfx.legend(); buzz([20, 40, 20]); confetti(['#c9a66b', '#e2bf7e', GOLD, '#fff', '#36cbb9']);
     renderTemplo(); openUpgrades();
-    elderSay(`¡${u.name} listo! Así da gusto vivir aquí.`);
+    elderSay(u.costs.length > 1 ? `¡${u.name} nivel ${l + 1}! ${u.desc(l + 1)}` : `¡${u.name} listo! Así da gusto vivir aquí.`);
   }
 
   // ================= Navegación y hoja =================
