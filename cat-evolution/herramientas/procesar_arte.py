@@ -273,6 +273,9 @@ def main():
     # accesorios pasados al pelaje dibujado por Gemini (collar → carey)
     import accesorio_a_pelaje
     accesorio_a_pelaje.generar(DESTINO, manifiesto)
+    # bloques de Pirámide recoloreados (jade y amatista) para que se vean sobre el tablero oscuro
+    import recolor_bloques
+    recolor_bloques.generar(DESTINO, manifiesto)
     # quita del destino lo que ya no está en el manifiesto
     validos = {a['file'] for a in manifiesto['assets'].values()} | {'manifest.json'}
     for p in DESTINO.iterdir():

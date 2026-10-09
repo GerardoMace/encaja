@@ -1228,6 +1228,16 @@
    "file": "gato_caminar_6_carey_bufanda.png",
    "w": 288,
    "h": 230
+  },
+  "bloque_jade": {
+   "file": "bloque_jade.png",
+   "w": 160,
+   "h": 160
+  },
+  "bloque_amatista": {
+   "file": "bloque_amatista.png",
+   "w": 160,
+   "h": 160
   }
  }
 }

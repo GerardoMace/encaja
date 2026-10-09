@@ -1179,7 +1179,8 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
   const STRIPE_ART = ['esqueleto', 'queso', 'pierna', 'hilo', 'escarabajo_oro', 'perico_color'];   // rayado (4 en línea)
   const MUMMY_ART = PIECE_ART.map(n => n + '_momia');   // explosión (L o T)
   const PIECE_COLOR = ['#4a9be8', '#b4a7d6', '#e0913a', '#ef5d8f', '#3fae5a', '#f2cf3a'];   // halo detrás de los especiales
-  const BLOCK_ART = ['bloque_caliza', 'bloque_granito', 'bloque_lapislazuli', 'bloque_turquesa', 'bloque_oro', 'bloque_basalto'];
+  // jade y amatista: el lapislázuli y el basalto recoloreados (herramientas/recolor_bloques.py) porque se perdían en el tablero oscuro
+  const BLOCK_ART = ['bloque_caliza', 'bloque_granito', 'bloque_jade', 'bloque_turquesa', 'bloque_oro', 'bloque_amatista'];
   const artURL = n => (ART[n] && ART[n].ready ? ART[n].src : null);
   function loadArt() {
     fetch('arte/manifest.json', { cache: 'no-cache' })
@@ -3533,10 +3534,10 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
   const STONES = [
     { base: '#e9cf95', hi: '#f8e7bf', lo: '#c39d5f', mark: '#a8834a' },
     { base: '#d98273', hi: '#f0a99d', lo: '#ad5a4f', mark: '#8c4238' },
-    { base: '#3f6fe0', hi: '#8aa6f2', lo: '#2a4fb0', mark: '#f4c24f' },
+    { base: '#4cc46a', hi: '#9ee6ad', lo: '#2f8f4a', mark: '#1d5c2f' },
     { base: '#2fc6a0', hi: '#86e6cc', lo: '#1d9175', mark: '#13664f' },
     { base: '#f4c24f', hi: '#ffe597', lo: '#c58f22', mark: '#946510' },
-    { base: '#6b6f8e', hi: '#959ab5', lo: '#474a66', mark: '#30324a' },
+    { base: '#a46ad8', hi: '#cfa8f0', lo: '#7445a8', mark: '#4a2a70' },
   ];
   const STATUE_EVERY = 30;
   function pRandomPiece() {
