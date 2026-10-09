@@ -273,6 +273,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
 .power.on small{color:#08302b}
 .power:disabled{opacity:.55}
 .pick .card .pw{font-size:.72rem;font-weight:900;color:#1d6f5f;line-height:1.2}
+.pick .card .pw.none{color:#8a7a5c;font-weight:800}
 .stuck{margin:0;background:var(--gold);color:var(--sand-ink);border-radius:14px;padding:10px 12px;font-weight:800;text-align:center}
 .stuck button{text-decoration:underline;font-weight:900}
 .powinfo{display:grid;gap:6px}
@@ -2413,7 +2414,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       ${catActions(c)}
       ${patioBar(c)}
       ${genesHTML(c.genes)}
-      <div class="powinfo">${['match', 'pyr'].map(gm => { const pw = powerOf(c, gm); return `<div><b>${gm === 'match' ? 'En Ofrendas' : 'En Pirámide'}: ${powerLabel(pw)}</b><small>${pw.desc}</small></div>`; }).join('')}</div>
+      <div class="powinfo">${['match', 'pyr'].map(gm => { const ps = powersOf(c, gm), where = gm === 'match' ? 'En Ofrendas' : 'En Pirámide'; return ps.length ? ps.map(pw => `<div><b>${where}: ${powerLabel(pw)}</b><small>${pw.desc}</small></div>`).join('') : `<div><b>${where}: sin poder</b><small>Los gatos comunes no traen poder aquí</small></div>`; }).join('')}</div>
       <div class="movebar"><span>Vive en <b>${HABITATS[c.hab || 'egipto'].name}</b></span>${HAB_ORDER.filter(h => h !== c.hab && S.habs[h].open).map(h => `<button class="btn" data-move="${h}" type="button">Mudar a ${HABITATS[h].short}</button>`).join('')}</div>`);
     $('x').addEventListener('click', closeSheet);
     $('rename').addEventListener('click', () => startRename(c));
@@ -2802,13 +2803,15 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       artico: { key: 'frost', name: 'Escarcha', desc: 'Congela la pieza que toques: al borrarse, borra su fila' },
     },
     pyr: {
-      caricatura: { key: 'reroll', name: 'Cambio', desc: 'Cambia los 3 bloques de abajo' },
       elegante: { key: 'claw', name: 'Zarpazo', desc: 'Quita el bloque que toques' },
       egipcio: { key: 'small', name: 'Cincel', desc: 'Convierte un bloque de abajo en uno de 1×1' },
       mistico: { key: 'sweep', name: 'Barrido estelar', desc: 'Borra la fila y la columna que toques' },
       artico: { key: 'avalanche', name: 'Avalancha', desc: 'Borra los bloques de un cuadro de 3×3 donde toques' },
     },
   };
+  // En Pirámide los comunes no traen poder; el Cambio perfecto es épico: solo lo dan los gatos épicos (×1) y legendarios (×2),
+  // además del poder de su familia.
+  const PYR_REROLL = { key: 'reroll', name: 'Cambio perfecto', desc: 'Cambia los 3 bloques de abajo por unos que encajan perfecto en el tablero' };
   const TEAM_MAX = 3;
   function famKey(g) {
     const c = {};
@@ -2817,14 +2820,24 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     ['mistico', 'artico', 'egipcio', 'elegante'].forEach(f => { if (c[f] && (!best || c[f] > c[best])) best = f; });
     return best || 'caricatura';
   }
-  function powerOf(cat, game) {
-    const fam = famKey(cat.genes), base = POWERS[game][fam];
+  // Lista de poderes de un gato en un juego: puede ser ninguno (comunes en Pirámide) o dos (épicos y legendarios en Pirámide).
+  function powersOf(cat, game) {
+    const base = POWERS[game][famKey(cat.genes)], r = rarityOf(cat.genes);
     const muts = GENE_KEYS.filter(k => MUT_FAMILY[cat.genes[k]]).length;
-    const charges = { moves: 2, reroll: 1, claw: 1 + muts, ra: muts, bastet: Math.ceil(muts / 2), small: muts, sweep: Math.ceil(muts / 2), frost: muts, avalanche: muts }[base.key];
     const bonus = loveOf(cat) >= LOVE_BONUS_AT ? 1 : 0;
-    return { ...base, charges: charges + bonus, love: !!bonus, catId: cat.id };
+    const out = [];
+    if (base) {
+      const charges = { moves: 2, claw: 1 + muts, ra: muts, bastet: Math.ceil(muts / 2), small: muts, sweep: Math.ceil(muts / 2), frost: muts, avalanche: muts }[base.key];
+      out.push({ ...base, charges: charges + bonus, love: !!bonus, catId: cat.id });
+    }
+    if (game === 'pyr' && (r === 'epico' || r === 'legend')) {
+      const extra = !out.length ? bonus : 0;   // el cariño suma una carga al primer poder del gato
+      out.push({ ...PYR_REROLL, charges: (r === 'legend' ? 2 : 1) + extra, love: !!extra, catId: cat.id });
+    }
+    return out;
   }
   const powerLabel = p => (p.key === 'moves' ? `${p.name} +${p.charges}` : `${p.name} ×${p.charges}`);
+  const powersLabel = ps => (ps.length ? ps.map(powerLabel).join(' · ') + (ps.some(p => p.love) ? ' ♥' : '') : 'Sin poder');
 
   // Elegir equipo antes de jugar
   let teamPick = [];
@@ -2839,9 +2852,9 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       openSheet(`<div class="sheet-head"><h2>Elige tu equipo</h2><button class="x" id="x" type="button" aria-label="Cerrar">×</button></div>
         <p class="note" style="text-align:left">Lleva hasta ${TEAM_MAX} gatos a ${game === 'match' ? 'Ofrendas' : 'Pirámide'}. Cada uno te da un poder; los gatos con más mutaciones traen más cargas, y los marcados con ♥ traen una extra por el cariño.</p>
         <div class="pick">${sorted.map(c => {
-          const i = teamPick.indexOf(c.id), p = powerOf(c, game), r = rarityOf(c.genes);
+          const i = teamPick.indexOf(c.id), ps = powersOf(c, game), r = rarityOf(c.genes);
           return `<button class="card" data-team="${c.id}" type="button" aria-pressed="${i >= 0}">${i >= 0 ? `<span class="tag">${i + 1}</span>` : ''}
-            <div class="art">${catSVG(c.genes)}</div><span class="name">${esc(c.name)}</span><span class="meta">${badge(r)}</span><span class="pw">${powerLabel(p)}${p.love ? ' ♥' : ''}</span></button>`;
+            <div class="art">${catSVG(c.genes)}</div><span class="name">${esc(c.name)}</span><span class="meta">${badge(r)}</span><span class="pw${ps.length ? '' : ' none'}">${powersLabel(ps)}</span></button>`;
         }).join('')}</div>
         <div class="actions"><button class="btn" id="team-none" type="button">Jugar sin gatos</button><button class="btn gold" id="team-go" type="button">${teamPick.length ? `Empezar con ${teamPick.length} gato${teamPick.length > 1 ? 's' : ''}` : 'Elige hasta 3 gatos'}</button></div>`);
       $('x').addEventListener('click', closeSheet);
@@ -2858,7 +2871,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     };
     draw();
   }
-  const teamPowers = (ids, game) => (ids || []).map(id => S.cats.find(c => c.id === id && c.awake)).filter(Boolean).map(c => powerOf(c, game));
+  const teamPowers = (ids, game) => (ids || []).map(id => S.cats.find(c => c.id === id && c.awake)).filter(Boolean).flatMap(c => powersOf(c, game));
 
   // Barra de poderes dentro de cada minijuego
   function renderPowerBar(el, powers, target, onTap) {
@@ -3506,7 +3519,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
         <p>Acomoda bloques de piedra y completa filas o columnas. Cada línea da 1 de piedra para mejorar el templo, y cada ${STATUE_EVERY} líneas en una partida aparece una estatua.</p>
         <span class="note" style="text-align:left">Récord: ${S.pyrBest || 0} puntos · tienes ${S.stone || 0} de piedra</span>
         <div class="actions"><button class="btn" id="up-from-games" type="button">Mejoras</button><button class="btn gold" id="play-pyr" type="button">Jugar Pirámide</button></div></div>
-      <div class="game"><b>Poderes de tus gatos</b><p>Antes de jugar eliges hasta 3 gatos. Los comunes dan movimientos extra o un cambio de bloques; los Elegantes rompen piezas; los Egipcios crean explosivos o bloques de 1×1; los Místicos crean esfinges o barren filas enteras; los Árticos congelan piezas o tiran avalanchas. Cada mutación suma cargas.</p></div>
+      <div class="game"><b>Poderes de tus gatos</b><p>Antes de jugar eliges hasta 3 gatos. En Ofrendas los comunes dan movimientos extra; en Pirámide no traen poder, y solo los épicos y legendarios traen el Cambio perfecto (bloques que encajan justo en el tablero). Los Elegantes rompen piezas; los Egipcios crean explosivos o bloques de 1×1; los Místicos crean esfinges o barren filas enteras; los Árticos congelan piezas o tiran avalanchas. Cada mutación suma cargas.</p></div>
     </div>`;
     $('play-match').addEventListener('click', () => pickTeam('match', t => openMatch(S.match.level, t)));
     $('play-pyr').addEventListener('click', () => pickTeam('pyr', openPyramid));
@@ -3600,6 +3613,40 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       tray.push({ s: pk.si, color: Math.floor(Math.random() * STONES.length) });
     }
     return tray;
+  }
+  // Cambio perfecto: busca 3 bloques que entren uno tras otro (contando las líneas que se van borrando) y que completen
+  // todas las líneas posibles. Prueba varios repartos y se queda con el mejor; siempre caben los 3 en ese orden.
+  function pFitsOn(B, sh) {
+    for (let r = 0; r <= PN - sh.h; r++) for (let c = 0; c <= PN - sh.w; c++) if (sh.cells.every(([y, x]) => !B[r + y][c + x])) return true;
+    return false;
+  }
+  function pPerfectDeal() {
+    const B0 = PG.board.map(row => row.map(v => v >= 0));
+    let best = null;
+    for (let t = 0; t < 12; t++) {
+      let B = B0, total = 0, lines = 0;
+      const tray = [];
+      for (let k = 0; k < 3; k++) {
+        const cands = [];
+        PSHAPES.forEach((sh, si) => {
+          for (let r = 0; r <= PN - sh.h; r++) for (let c = 0; c <= PN - sh.w; c++) {
+            if (sh.cells.every(([y, x]) => !B[r + y][c + x])) cands.push({ si, r, c, v: pFitScore(B, sh, r, c) });
+          }
+        });
+        cands.sort((a, b) => b.v - a.v);
+        // el primer intento es el mejor puro; los demás varían un poco entre los mejores para buscar algo aún mejor
+        const pk = cands[t ? Math.floor(Math.random() * Math.min(4, cands.length)) : 0];
+        const res = pApply(B, PSHAPES[pk.si], pk.r, pk.c);
+        B = res.b; lines += res.lines; total += pk.v;
+        tray.push({ s: pk.si, color: Math.floor(Math.random() * STONES.length) });
+      }
+      const clean = B.every(row => row.every(x => !x));
+      // mejor si además cada uno de los 3 cabe ya en el tablero de ahora, para que el orden no importe tanto
+      const fitNow = tray.filter(p => PSHAPES[p.s].cells.length && pFitsOn(B0, PSHAPES[p.s])).length;
+      const v = lines * 1000 + (clean ? 5000 : 0) + fitNow * 3000 + total;
+      if (!best || v > best.v) best = { v, tray };
+    }
+    return best.tray;
   }
   function pDeal() {
     if (PG.helpLeft > 0) {
@@ -3835,7 +3882,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       if (!PG || PG.over) return;
       ensureAudio();
       const p = PG.powers[i];
-      if (p.key === 'reroll') { p.charges--; pDeal(); PG.target = -1; sfx.meow(); buzz(12); renderPyrPowers(); pCheckStuck(); return; }
+      if (p.key === 'reroll') { p.charges--; PG.tray = pPerfectDeal(); PG.target = -1; sfx.meow(); buzz(12); renderPyrPowers(); pCheckStuck(); return; }
       PG.target = PG.target === i ? -1 : i;
       $('p-note').textContent = PG.target >= 0 ? `${p.desc}. Toca el poder otra vez para cancelar.` : PYR_NOTE;
       renderPyrPowers();
