@@ -427,6 +427,13 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
 .genes li.mut{box-shadow:inset 4px 0 0 var(--fc)}
 .genes li.mut b{color:var(--fc)}
 .note{margin:0;color:var(--muted);line-height:1.45;font-size:.92rem;text-align:center}
+.odds{width:100%;border-collapse:collapse;font-size:.85rem;text-align:left}
+.odds th{color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;padding:4px 6px}
+.odds td{padding:7px 6px;border-top:1px solid rgba(255,255,255,.08);vertical-align:top}
+.odds td.pct{font-family:var(--display);color:var(--gold);white-space:nowrap;text-align:right}
+.odds td small{display:block;font-family:var(--body,inherit);color:var(--muted);font-size:.7rem}
+.odds tr.no td{color:var(--muted)}
+.odds tr.sep td{color:var(--gold);font-weight:900;padding-top:12px;border-top:none}
 .new-mut{background:var(--gold);color:var(--sand-ink);border-radius:14px;padding:10px 12px;font-weight:900;text-align:center}
 .pick{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
 .pick .card{padding:6px 6px 8px;gap:2px;font-size:.9rem}
@@ -575,8 +582,16 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     calico: { name: 'Calicó', level: 30, fact: 'En Japón al calicó le dicen mike-neko, "gato de tres pelos", y los marineros lo llevaban en sus barcos para la buena suerte.' },
     carey: { name: 'Carey', level: 50, fact: 'El carey se llama así por la tortuga de caparazón manchado. Casi todos son hembras: un macho carey nace una vez entre miles.' },
   };
-  // Pelajes que se desbloquean al llegar a ciertos puntos en una partida de Pirámide (decisión de Gerardo, 8-oct)
-  const PYR_FURS = [['esmoquin', 4000], ['bicolor', 4500], ['siames', 5000], ['siames_azul', 5500], ['van', 6000]];
+  // Pelajes de la Pirámide (decisión de Gerardo, 8-oct): llegar a los puntos en una partida NO regala nada,
+  // solo desbloquea su receta de cruce. [pelaje, puntos, [papá, mamá] (en cualquier orden), probabilidad por cría, pista del Abuelo]
+  // "azul" es como los criadores le dicen al gato gris
+  const PYR_FURS = [
+    ['esmoquin', 4000, ['negro', 'crema'], .25, 'Cuando un gato negro y uno crema tienen gatitos, a veces uno sale vestido de gala: negro con pechera blanca. ¡Un esmoquin!'],
+    ['bicolor', 4500, ['naranja', 'blanco'], .25, 'Cruza un gato naranja con uno blanco: a veces el gatito sale mitad y mitad. ¡Un bicolor!'],
+    ['siames', 5000, ['negro', 'blanco'], .25, 'Un secreto de los templos de Siam: un gato negro y uno blanco… y a veces nace un siamés, con la cara y las patas oscuras.'],
+    ['siames_azul', 5500, ['siames', 'gris'], .2, 'Si cruzas un siamés con un gato gris (los criadores le dicen azul), puede nacer un siamés azul.'],
+    ['van', 6000, ['bicolor', 'blanco'], .2, 'Cruza un bicolor con un gato blanco: a veces el gatito se queda casi todo blanco, con color solo en la cabeza y la cola. ¡Un van!'],
+  ];
   const isPyrFur = f => PYR_FURS.some(([k]) => k === f);
   const isTortie = g => g.fur === 'carey' || g.fur === 'calico';
   const maleTortie = g => isTortie(g) && g.sex === 'm';
@@ -624,6 +639,11 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     if ((ob || torParent) && Math.random() < (torParent ? .4 : .3)) {
       const opts = [un.calico && 'calico', un.carey && 'carey'].filter(Boolean);
       if (opts.length) g.fur = torParent && opts.includes(torParent) && Math.random() < .7 ? torParent : pick(opts);
+    }
+    // pelajes de la Pirámide: si los papás son la pareja de la receta y ya se desbloqueó
+    for (const [fur, , [x, y], p] of PYR_FURS) {
+      if (!un[fur]) continue;
+      if ((furs[0] === x && furs[1] === y) || (furs[0] === y && furs[1] === x)) { if (Math.random() < p) g.fur = fur; break; }
     }
     g.seed = newSeed();
     g.sex = isTortie(g) ? (Math.random() < MALE_TORTIE ? 'm' : 'f') : (Math.random() < .5 ? 'm' : 'f');
@@ -1235,7 +1255,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     </svg>`;
   }
   let elderTimer = 0;
-  function elderSay(msg) {
+  function elderSay(msg, ms) {
     const el = $('elder');
     $('elder-av').innerHTML = abueloSVG();
     $('elder-msg').textContent = msg;
@@ -1245,7 +1265,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
     sfx.elder(); buzz([30, 40, 30]);
     clearTimeout(elderTimer);
-    elderTimer = setTimeout(() => { el.hidden = true; }, 4200);
+    elderTimer = setTimeout(() => { el.hidden = true; }, ms || 4200);
   }
 
   // ================= Hábitats: cada uno con su escenario, sus gatos, sus nidos y una familia favorita =================
@@ -2243,7 +2263,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
         ${S.sphinxAwake ? `<div class="actions" style="margin:4px 0 12px"><button class="btn turq" id="g-breed" type="button">Criar gatitos · ${COST.breed}</button><button class="btn gold" id="g-dig" type="button">Excavar estatua · ${COST.dig}</button></div>` : ''}
         <div class="grid">${cats.map(cardHTML).join('') || '<p class="note">Aún no tienes gatos.</p>'}</div>
       </div>
-      <div class="block"><h2>Libro de mutaciones</h2><div class="book">${fams}${secretBook()}${pyrBook()}</div></div>
+      <div class="block"><h2>Libro de mutaciones</h2><button class="btn" id="g-odds" type="button" style="margin-bottom:10px">Probabilidades de pelaje</button><div class="book">${fams}${secretBook()}${pyrBook()}</div></div>
       <button class="reset" id="btn-reset" type="button">Borrar mi progreso</button>`;
     el.querySelectorAll('[data-cat]').forEach(b => b.addEventListener('click', () => openCat(Number(b.dataset.cat))));
     let armed = false;
@@ -2252,14 +2272,42 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       S = freshState(); save(); $('ofr').textContent = 0; $('stone').textContent = 0; showTab('templo'); renderAll();
     });
     if ($('g-breed')) { $('g-breed').addEventListener('click', openBreed); $('g-dig').addEventListener('click', dig); }
+    if ($('g-odds')) $('g-odds').addEventListener('click', openOdds);
     const dg = $('dot-gatos'); if (dg) dg.hidden = !S.cats.some(c => !c.awake);
   }
   function pyrBook() {
     const un = S.unlock || {};
-    const items = PYR_FURS.map(([k, pts]) => S.found.includes(k) ? `<li>${NAMES_OF[k]}<small>${pts} puntos</small></li>`
-      : un[k] ? `<li class="no">???<small>Ya puede nacer</small></li>` : `<li class="no">🔒<small>${pts} puntos en Pirámide</small></li>`);
+    const pair = ([x, y]) => `${NAMES_OF[x]} × ${NAMES_OF[y].toLowerCase()}`;
+    const items = PYR_FURS.map(([k, pts, par]) => S.found.includes(k) ? `<li>${NAMES_OF[k]}<small>${pair(par)}</small></li>`
+      : un[k] ? `<li class="no">???<small>Pista: ${pair(par)}</small></li>` : `<li class="no">🔒<small>${pts} puntos en Pirámide</small></li>`);
     const got = PYR_FURS.filter(([k]) => S.found.includes(k)).length;
     return `<div class="fam"><h3 style="color:#e2bf7e">Pelajes de la Pirámide<span>${got}/${PYR_FURS.length}</span></h3><ul>${items.join('')}</ul></div>`;
+  }
+  // Probabilidades de cada pelaje por cría, calculadas con los mismos números que usa breedGenes (en el hábitat actual)
+  function openOdds() {
+    const fav = habFam(), w = { ...FAM_WEIGHT };
+    w[fav] += 2.4 * .25;   // el hábitat favorece a su familia (igual que pickFamily)
+    const tot = Object.values(w).reduce((a, b) => a + b, 0), un = S.unlock || {};
+    const pct = x => { const v = x * 100; return v === 0 ? '0%' : v < 1 ? v.toFixed(1) + '%' : (Math.round(v * 10) / 10) + '%'; };
+    const row = (name, how, p, locked) => `<tr${locked ? ' class="no"' : ''}><td><b>${name}</b></td><td>${how}</td><td class="pct">${p}</td></tr>`;
+    const muts = Object.entries(GENES.fur.mut).map(([f, fur]) => row(NAMES_OF[fur], `Mutación ${FAMILY[f].label.toLowerCase()}, con cualquier pareja`,
+      w[f] ? pct(MUT_RATE * w[f] / tot) : '0%<small>solo en Nieve o heredado</small>'));
+    const tort = ['calico', 'carey'].filter(k => un[k]);
+    const secret = Object.entries(SECRET).sort((a, b) => a[1].level - b[1].level).map(([k, x]) => row(NAMES_OF[k], 'Naranja × negro',
+      un[k] ? pct(.3 / tort.length) : `🔒<small>nivel ${x.level} de Ofrendas</small>`, !un[k]));
+    const pyr = PYR_FURS.map(([k, pts, [x, y], p]) => row(NAMES_OF[k], un[k] ? `${NAMES_OF[x]} × ${NAMES_OF[y].toLowerCase()}` : '???',
+      un[k] ? pct(p) : `🔒<small>${pts} puntos en Pirámide</small>`, !un[k]));
+    openSheet(`<div class="sheet-head"><h2>Probabilidades de pelaje</h2><button class="x" id="x" type="button" aria-label="Cerrar">×</button></div>
+      <p class="note" style="text-align:left">Por cada gatito que nace en <b style="color:var(--ink)">${HABITATS[S.hab].short}</b>. Cada hábitat sube la mutación de su familia.</p>
+      <table class="odds"><thead><tr><th>Pelaje</th><th>Cómo sale</th><th>Por cría</th></tr></thead><tbody>
+        ${row('El de papá o mamá', 'Lo hereda de uno de los dos (mitad y mitad)', pct(1 - MUT_RATE))}
+        ${muts.join('')}
+        <tr class="sep"><td colspan="3">Cruces secretos</td></tr>${secret.join('')}
+        ${row('Macho carey o calicó', 'De cada carey o calicó que nace', '1 de ' + Math.round(1 / MALE_TORTIE), !tort.length)}
+        <tr class="sep"><td colspan="3">Pelajes de la Pirámide</td></tr>${pyr.join('')}
+      </tbody></table>
+      <p class="note" style="text-align:left">Los cruces especiales cambian el pelaje del gatito solo si los papás son esa pareja exacta. Si los papás ya tienen mutaciones, su familia sale más seguido.</p>`);
+    $('x').addEventListener('click', closeSheet);
   }
   function secretBook() {
     const un = S.unlock || {};
@@ -3740,13 +3788,13 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     pCheckStuck();
   }
   function pFurUnlocks(now) {
-    for (const [fur, pts] of PYR_FURS) {
+    for (const [fur, pts, , , hint] of PYR_FURS) {
       if (PG.score < pts || (S.unlock || {})[fur]) continue;
       S.unlock = { ...(S.unlock || {}), [fur]: true };
-      addCat({ ...randomStatueGenes(habFam()), fur, sex: 'f', seed: newSeed() });
       PG.floats.push({ text: `¡${NAMES_OF[fur]} desbloqueado!`, x: PN / 2, y: PN / 2 - .5, t0: now + 300, big: true, word: 6 });
       setTimeout(() => { confetti(); sfx.legend(); }, 300);
-      setTimeout(() => elderSay(`¡${pts} puntos! Desbloqueaste el pelaje ${NAMES_OF[fur].toLowerCase()}: te dejé una estatua en el templo. Crúzala y sus gatitos pueden heredarlo.`), 900);
+      // la pista dura bastante más que un aviso normal, para que dé tiempo de leerla (y queda escrita en el libro)
+      setTimeout(() => elderSay(`¡${pts} puntos! ${hint}`, 13000), 900);
       save();
     }
   }
