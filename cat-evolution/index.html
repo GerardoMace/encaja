@@ -1176,8 +1176,8 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
   // ================= Arte final (imágenes de Gemini; si falta una, se usa el dibujo con código) =================
   const ART = {};
   const PIECE_ART = ['pescado', 'raton', 'pollo', 'estambre', 'escarabajo', 'perico'];
-  const STRIPE_ART = ['esqueleto', 'queso', 'pierna', 'hilo', 'escarabajo_oro', 'perico_color'];   // rayado (4 en línea)
-  const MUMMY_ART = PIECE_ART.map(n => n + '_momia');   // explosión (L o T)
+  const STRIPE_ART = ['esqueleto', 'queso', 'pierna', 'hilo', 'escarabajo_oro', 'perico_color'];   // explosión (L o T); antes era el rayado, Gerardo los invirtió el 9-oct
+  const MUMMY_ART = PIECE_ART.map(n => n + '_momia');   // rayo de fila o columna (4 en línea)
   const PIECE_COLOR = ['#4a9be8', '#b4a7d6', '#e0913a', '#ef5d8f', '#3fae5a', '#f2cf3a'];   // halo detrás de los especiales
   // jade y amatista: el lapislázuli y el basalto recoloreados (herramientas/recolor_bloques.py) porque se perdían en el tablero oscuro
   const BLOCK_ART = ['bloque_caliza', 'bloque_granito', 'bloque_jade', 'bloque_turquesa', 'bloque_oro', 'bloque_amatista'];
@@ -2937,7 +2937,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       front = `<path d="M84 8l3 8 8 3-8 3-3 8-3-8-8-3 8-3z" fill="#fff" stroke="${ink}" stroke-width="2"/>`;
     }
     const u = k < 0 ? artURL('pieza_esfinge')
-      : (sp === 'h' || sp === 'v' ? artURL(STRIPE_ART[k]) : sp === 'b' ? artURL(MUMMY_ART[k]) : null) || artURL(PIECE_ART[k]);
+      : (sp === 'h' || sp === 'v' ? artURL(MUMMY_ART[k]) : sp === 'b' ? artURL(STRIPE_ART[k]) : null) || artURL(PIECE_ART[k]);
     const art = u ? `<image href="${u}" x="3" y="3" width="94" height="94"/>` : (k >= 0 ? pieceArt(k) : bastetArt());
     return (TILE_CACHE[key] = `<svg viewBox="0 0 100 100" aria-hidden="true">${back}${art}${front}</svg>`);
   }
@@ -3321,7 +3321,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     for (let j = 0; j < Math.ceil(n / 3); j++) out.push(part(x, y, '#fff6c4', { speed: 120, lift: 60, life: .5, size: 7, shape: 'star', g: 200 }));
     spawnParts(out);
   }
-  // rayo (fila o columna), explosión de momia o la esfinge
+  // rayo (fila o columna), explosión (pieza dorada) o la esfinge
   function fxSpecial(f) {
     if (!fxBoard()) return;
     const out = [];
