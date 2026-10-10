@@ -2808,9 +2808,11 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       artico: { key: 'avalanche', name: 'Avalancha', desc: 'Borra los bloques de un cuadro de 3×3 donde toques' },
     },
   };
-  // En Pirámide los comunes no traen poder; el Cambio perfecto es épico: solo lo dan los gatos épicos (×1) y legendarios (×2),
-  // además del poder de su familia.
+  // En Pirámide los comunes no traen poder. El Cambio perfecto (decisión de Gerardo, 9-oct) es uno u otro: un épico o legendario
+  // puede nacer con él EN LUGAR del poder de su familia (5% épicos ×1, 15% legendarios ×2). Se decide con su semilla, así que no cambia.
   const PYR_REROLL = { key: 'reroll', name: 'Cambio perfecto', desc: 'Cambia los 3 bloques de abajo por unos que encajan perfecto en el tablero' };
+  const REROLL_CHANCE = { epico: .05, legend: .15 };
+  const rerollRoll = cat => ((((cat.genes.seed || 0) + 7919) * 2654435761) >>> 0) % 10000 / 10000;   // 0..1 fijo por gato
   const TEAM_MAX = 3;
   function famKey(g) {
     const c = {};
@@ -2819,9 +2821,12 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     ['mistico', 'artico', 'egipcio', 'elegante'].forEach(f => { if (c[f] && (!best || c[f] > c[best])) best = f; });
     return best || 'caricatura';
   }
-  // Lista de poderes de un gato en un juego: puede ser ninguno (comunes en Pirámide) o dos (épicos y legendarios en Pirámide).
+  // Lista de poderes de un gato en un juego: ninguno (comunes en Pirámide) o uno.
   function powersOf(cat, game) {
-    const base = POWERS[game][famKey(cat.genes)], r = rarityOf(cat.genes);
+    const r = rarityOf(cat.genes), fam = POWERS[game][famKey(cat.genes)];
+    // sin poder de familia (macho carey sin mutaciones) un épico o legendario se queda con el Cambio perfecto
+    const reroll = game === 'pyr' && REROLL_CHANCE[r] && (!fam || rerollRoll(cat) < REROLL_CHANCE[r]);
+    const base = reroll ? null : fam;
     const muts = GENE_KEYS.filter(k => MUT_FAMILY[cat.genes[k]]).length;
     const bonus = loveOf(cat) >= LOVE_BONUS_AT ? 1 : 0;
     const out = [];
@@ -2829,10 +2834,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       const charges = { moves: 2, claw: 1 + muts, ra: muts, bastet: Math.ceil(muts / 2), small: muts, sweep: Math.ceil(muts / 2), frost: muts, avalanche: muts }[base.key];
       out.push({ ...base, charges: charges + bonus, love: !!bonus, catId: cat.id });
     }
-    if (game === 'pyr' && (r === 'epico' || r === 'legend')) {
-      const extra = !out.length ? bonus : 0;   // el cariño suma una carga al primer poder del gato
-      out.push({ ...PYR_REROLL, charges: (r === 'legend' ? 2 : 1) + extra, love: !!extra, catId: cat.id });
-    }
+    if (reroll) out.push({ ...PYR_REROLL, charges: (r === 'legend' ? 2 : 1) + bonus, love: !!bonus, catId: cat.id });
     return out;
   }
   const powerLabel = p => (p.key === 'moves' ? `${p.name} +${p.charges}` : `${p.name} ×${p.charges}`);
@@ -3519,7 +3521,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
         <p>Acomoda bloques de piedra y completa filas o columnas. Cada línea da 1 de piedra para mejorar el templo, y cada ${STATUE_EVERY} líneas en una partida aparece una estatua.</p>
         <span class="note" style="text-align:left">Récord: ${S.pyrBest || 0} puntos · tienes ${S.stone || 0} de piedra</span>
         <div class="actions"><button class="btn" id="up-from-games" type="button">Mejoras</button><button class="btn gold" id="play-pyr" type="button">Jugar Pirámide</button></div></div>
-      <div class="game"><b>Poderes de tus gatos</b><p>Antes de jugar eliges hasta 3 gatos. En Ofrendas los comunes dan movimientos extra; en Pirámide no traen poder, y solo los épicos y legendarios traen el Cambio perfecto (bloques que encajan justo en el tablero). Los Elegantes rompen piezas; los Egipcios crean explosivos o bloques de 1×1; los Místicos crean esfinges o barren filas enteras; los Árticos congelan piezas o tiran avalanchas. Cada mutación suma cargas.</p></div>
+      <div class="game"><b>Poderes de tus gatos</b><p>Antes de jugar eliges hasta 3 gatos. En Ofrendas los comunes dan movimientos extra; en Pirámide no traen poder, y muy de vez en cuando un épico o legendario nace con el Cambio perfecto (bloques que encajan justo en el tablero) en lugar del poder de su familia. Los Elegantes rompen piezas; los Egipcios crean explosivos o bloques de 1×1; los Místicos crean esfinges o barren filas enteras; los Árticos congelan piezas o tiran avalanchas. Cada mutación suma cargas.</p></div>
     </div>`;
     $('play-match').addEventListener('click', () => pickTeam('match', t => openMatch(S.match.level, t)));
     $('play-pyr').addEventListener('click', () => pickTeam('pyr', openPyramid));
