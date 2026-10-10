@@ -329,6 +329,16 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
 .lift-layer{position:fixed;inset:0;pointer-events:none;z-index:45}
 .lift-layer .walker{position:absolute;left:0;top:0;filter:drop-shadow(0 14px 10px rgba(0,0,0,.35))}
 .walker.land .front svg{animation:land .45s cubic-bezier(.3,1.6,.5,1)}
+/* jugar entre gatos: la pose de juego mira a la izquierda, así que "adelante" es -x (el .flip ya voltea hacia el otro gato) */
+.walker .front{transform-origin:50% 100%}
+.walker.pwig .front{animation:pwig .32s ease-in-out infinite alternate}
+.walker.pounce .front{animation:pounce .62s cubic-bezier(.3,.7,.4,1)}
+.walker.dodge .front{animation:dodge .55s cubic-bezier(.3,.7,.4,1)}
+.walker.tumble .front{animation:tumble .7s ease-in-out}
+@keyframes pwig{from{transform:rotate(-2.5deg)}to{transform:translateY(2%) rotate(2.5deg) scale(1.02,.97)}}
+@keyframes pounce{0%{transform:none}18%{transform:translateY(3%) scale(1.08,.88)}55%{transform:translate(-34%,-34%) rotate(-10deg)}78%{transform:translate(-22%,0) scale(1.1,.9)}100%{transform:none}}
+@keyframes dodge{0%{transform:none}35%{transform:translate(16%,-30%) rotate(12deg)}65%{transform:translate(10%,0) scale(1.08,.92)}100%{transform:none}}
+@keyframes tumble{0%{transform:none}30%{transform:translate(-26%,-18%) rotate(-25deg)}55%{transform:translate(-20%,-6%) rotate(20deg)}80%{transform:translate(-8%,0) rotate(-8deg)}100%{transform:none}}
 .dust{position:absolute;width:14%;height:3.5%;border-radius:50%;background:rgba(255,255,255,.6);transform:translate(-50%,-50%);pointer-events:none;z-index:999;animation:dust .55s ease-out forwards}
 .namechip{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);display:flex;align-items:center;gap:6px;white-space:nowrap;background:rgba(19,27,74,.92);color:var(--ink);border-radius:99px;padding:4px 4px 4px 11px;font-weight:900;font-size:.78rem;z-index:3}
 .namechip .hearts{color:#ff8fb0}
@@ -353,7 +363,7 @@ h2{font-family:var(--display);font-weight:400;font-size:1.35rem;margin:0;letter-
 @keyframes sway{from{transform:rotate(-7deg)}to{transform:rotate(7deg)}}
 @keyframes land{0%{transform:translateY(-16%)}55%{transform:translateY(0) scale(1.12,.86)}100%{transform:none}}
 @keyframes dust{from{opacity:.9;transform:translate(-50%,-50%) scale(.4)}to{opacity:0;transform:translate(-50%,-50%) scale(1.7)}}
-@media (prefers-reduced-motion:reduce){.walker.lifted .hang svg,.walker.land .front svg,.dust,.hero-heart,.hero.playing .cat{animation:none}}
+@media (prefers-reduced-motion:reduce){.walker.pwig .front,.walker.pounce .front,.walker.dodge .front,.walker.tumble .front,.walker.lifted .hang svg,.walker.land .front svg,.dust,.hero-heart,.hero.playing .cat{animation:none}}
 /* Gato real (imágenes pintadas) */
 img.catimg{display:block;width:100%;height:auto}
 .sex{font-weight:900;font-size:.95em}
@@ -1483,8 +1493,8 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     lado:      { art: 'gato_lado_1',       neck: [.79, .47, .22, -.55], crown: [.84, .03], eyes: [[.86, .32]], eyeR: .05 },
     acostado:  { art: 'gato_acostado', acc: 'acostado', size: .9, ears: [[.59, .09, .06, .09], [.93, .09, .06, .09]], tail: [[.17, .88, .2, .12]], head: [.75, .32, .25, .3], muz: [.75, .45], belly: .7, paws: [[.38, .5, .86], [.66, .84, .84]],     neck: [.73, .6, .3, 0],      crown: [.73, .04], eyes: [[.62, .37], [.83, .37]], eyeR: .055, wing: 1 },
     sentado:   { art: 'gato_sentado_lado', acc: 'sentado', size: .8, legCut: .86, ears: [[.6, .07, .08, .08], [.75, .05, .07, .07]], tail: [[.3, .9, .3, .08]], head: [.74, .22, .26, .22], muz: [.92, .34], belly: .62, paws: [[.62, .82, .9]], neck: [.68, .43, .26, -.45], crown: [.74, .03], eyes: [[.79, .29]], eyeR: .05 },
-    estira:    { art: 'gato_estira',       eyes: [[.19, .64], [.39, .64]], eyeR: .05 },
-    agazapado: { art: 'gato_agazapado',    eyes: [[.13, .5], [.33, .5]], eyeR: .05 },
+    estira:    { art: 'gato_estira', size: .9, eyes: [[.19, .64], [.39, .64]], eyeR: .05 },
+    agazapado: { art: 'gato_agazapado', size: .9, eyes: [[.13, .5], [.33, .5]], eyeR: .05 },
     dormido:   { art: 'gato_dormido', size: .85, ears: [[.06, .38, .08, .09], [.47, .18, .07, .09]], tail: [[.72, .72, .26, .1]], head: [.3, .55, .28, .3], muz: [.37, .67], belly: .74, paws: [[.22, .4, .89]] },
     colgado:   { art: 'gato_colgado', noTint: .18, legCut: .78, ears: [[.12, .05, .1, .05], [.5, .04, .08, .05]], tail: [[.78, .85, .12, .16]], head: [.3, .13, .32, .14], muz: [.3, .21], belly: .48, paws: [[.1, .42, .5], [.3, .62, .68]] },   // arriba está la mano que lo sostiene: no se pinta
     // cuadros de la caminata (todos del mismo tamaño, alineados por la nariz)
@@ -2053,6 +2063,7 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
   function startLift(x, y) {
     const w = lift.w, world = $('world');
     lift.lifted = true;
+    stopPlay(w);
     w.lifted = true; w.walking = false;
     habMenu(true);
     w.el.classList.remove('walking', 'land'); w.el.classList.add('lifted');
@@ -2120,10 +2131,9 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
       const now = Date.now(), tired = now - (c.mateAt || 0) < 30000;
       c.mateAt = now;
       addLove(c, tired ? 1 : 5); addLove(o, tired ? 1 : 5);
-      emote(w, '♪'); setTimeout(() => emote(ow, '♥'), 250); heartsAt(w.el, 4); setTimeout(() => heartsAt(ow.el, 4), 250);
-      [0, 2, 4, 2].forEach((d, i) => bell(note(6 + d), .3 + i * .1, .05));
-      sfx.meow(); setTimeout(() => sfx.purr(), 300);
+      sfx.meow();
       toast(`${c.name} y ${o.name} se pusieron a jugar.`);
+      playPair(w, ow);
     }
   }
 
@@ -2191,6 +2201,100 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     }
     if (Math.random() < .3) emote(w, pick(['♥', 'z', '♪', '✦', '…']));
   }
+  // ================= Gatos jugando (soltar uno encima de otro) =================
+  // Se agazapan frente a frente, se saltan por turnos, ruedan juntos y al final uno corre y el otro lo persigue.
+  // La pose de juego solo se usa si se ve bien con ese pelaje y accesorio; si no, juegan con la pose de frente.
+  function playPoseOK(g) {
+    if ((FUR[g.fur] || {}).points || g.acc === 'nemes') return false;
+    const gem = ART['gato_agazapado_' + g.fur];
+    if (gem && gem.ready) return g.acc === 'ninguno' || !!(ART['gato_agazapado_' + g.fur + '_' + g.acc] || {}).ready;
+    return g.acc === 'ninguno' || !!(ART['gato_agazapado_' + g.acc] || {}).ready;
+  }
+  function setPose(w, pose) {
+    const im = w.el && w.el.querySelector('.front img'); if (!im || !w.genes) return;
+    const p = pose !== 'frente' && pose !== 'sentado' && !playPoseOK(w.genes) ? 'frente' : pose;
+    const u = catArtURL(w.genes, p, false) || catArtURL(w.genes, 'frente', false);
+    if (u) { im.src = u; sizeFront(w, catArtURL(w.genes, p, false) ? p : 'frente'); }
+  }
+  const PLAY_CLS = ['pwig', 'pounce', 'dodge', 'tumble'];
+  function playMove(w, cls) {
+    if (!w.el) return;
+    w.el.classList.remove(...PLAY_CLS); void w.el.offsetWidth; w.el.classList.add(cls);
+  }
+  function stopPlay(w, keepPartner) {
+    (w.playT || []).forEach(clearTimeout); w.playT = [];
+    if (w.el) w.el.classList.remove(...PLAY_CLS);
+    if (w.playing || w.chase) { w.playing = false; w.chase = false; if (!w.walking) w.until = performance.now() + 1500; }
+    w.follow = null; w.fast = 0;
+    const o = w.partner; w.partner = null;
+    if (o && !keepPartner && o.partner === w) stopPlay(o, true);
+  }
+  function playPair(a, b) {
+    if (reduceMotion || a === b) { heartsAt(a.el, 4); heartsAt(b.el, 4); emote(a, '♪'); emote(b, '♥'); return; }
+    stopPlay(a); stopPlay(b);
+    // frente a frente, a la misma altura
+    let side = a.x < b.x ? -1 : 1;
+    if (b.x + side * .12 < FLOOR.x0 || b.x + side * .12 > FLOOR.x1) side = -side;
+    a.x = a.tx = Math.max(FLOOR.x0, Math.min(FLOOR.x1, b.x + side * .12)); a.y = a.ty = b.y; b.tx = b.x; b.ty = b.y;
+    [a, b].forEach(w => { w.playing = true; w.walking = false; w.el && w.el.classList.remove('walking'); w.until = Infinity; w.playT = []; });
+    a.partner = b; b.partner = a;
+    a.face = b.x > a.x ? -1 : 1; b.face = -a.face;   // la pose de juego mira a la izquierda: se voltea para ver al otro
+    setPose(a, 'agazapado'); setPose(b, 'estira');
+    placeWalkers();
+    playMove(a, 'pwig'); playMove(b, 'pwig');
+    emote(a, '!'); sfx.mrrp();
+    const at = (ms, fn) => a.playT.push(setTimeout(() => { if (a.playing && b.playing) fn(); }, ms));
+    const puff = big => {
+      const world = $('world'); if (!world || !a.el || !b.el) return;
+      const d = document.createElement('i'); d.className = 'dust';
+      d.style.left = ((a.x + b.x) * 50) + '%'; d.style.top = (a.y * 100) + '%';
+      world.appendChild(d); setTimeout(() => d.remove(), 600);
+      const ra = a.el.getBoundingClientRect(), rb = b.el.getBoundingClientRect();
+      burstXY((ra.left + ra.right + rb.left + rb.right) / 4, (ra.top + ra.bottom + rb.top + rb.bottom) / 4,
+        ['#fff', GOLD, '#ffd1e0'], big ? 14 : 7, { speed: big ? 220 : 140, lift: 80, life: .6, size: 6, shape: 'star', g: 300 });
+    };
+    // 1. a salta sobre b, b lo esquiva
+    at(650, () => { playMove(a, 'pounce'); sfx.mrrp(); buzz(8); at(220, () => { playMove(b, 'dodge'); emote(b, '!'); puff(false); bell(note(7), 0, .05); }); });
+    // 2. ahora b salta sobre a
+    at(1450, () => { playMove(a, 'pwig'); playMove(b, 'pounce'); sfx.meow(); at(220, () => { playMove(a, 'dodge'); puff(false); bell(note(9), 0, .05); }); });
+    // 3. ruedan juntos en una nube de polvo
+    at(2250, () => {
+      setPose(a, 'frente'); setPose(b, 'frente');
+      playMove(a, 'tumble'); playMove(b, 'tumble'); puff(true); sfx.thump(); buzz(15);
+      [0, 2, 4].forEach((d, i) => bell(note(6 + d), i * .08, .05));
+    });
+    // 4. b huye hacia el lado contrario de a y a lo persigue
+    at(3000, () => {
+      [a, b].forEach(w => { w.el.classList.remove(...PLAY_CLS); w.playing = false; w.chase = true; w.fast = 2.4; });
+      const L = FLOOR.x0 + .05, R = FLOOR.x1 - .05;
+      b.tx = b.x > a.x ? R : L;
+      if (Math.abs(b.tx - b.x) < .15) b.tx = b.tx > b.x ? L : R;   // pegado a la orilla: le da la vuelta y corre al otro lado
+      b.ty = FLOOR.y0 + Math.random() * (FLOOR.y1 - FLOOR.y0);
+      b.walking = true; b.el.classList.add('walking'); emote(b, '♪');
+      a.follow = b;
+      a.playT.push(setTimeout(() => { if (a.chase) { a.walking = true; a.el.classList.add('walking'); } }, 250));
+    });
+    // por si algo se atora
+    a.playT.push(setTimeout(() => { if (a.partner === b) { endChase(b, performance.now()); endChase(a, performance.now()); } }, 9000));
+  }
+  // Al llegar: si el otro sigue corriendo, se espera; cuando llegan los dos, se sientan viéndose y les salen corazones.
+  function endChase(w, t) {
+    const o = w.partner;
+    w.chase = false; w.follow = null; w.fast = 0; w.walking = false; w.playing = false;
+    if (w.el) w.el.classList.remove('walking', ...PLAY_CLS);
+    if (o && o.chase) return;
+    const both = [w, o].filter(Boolean);
+    both.forEach(k => {
+      (k.playT || []).forEach(clearTimeout); k.playT = []; k.partner = null;
+      k.chase = false; k.follow = null; k.fast = 0; k.walking = false; k.playing = false;
+      if (k.el) k.el.classList.remove('walking', ...PLAY_CLS);
+      setPose(k, 'sentado'); k.until = t + 2500 + Math.random() * 2500;
+    });
+    if (o) { w.face = o.x > w.x ? 1 : -1; o.face = -w.face; }   // sentado mira a la derecha: así quedan viéndose
+    placeWalkers();
+    both.forEach((k, i) => setTimeout(() => { emote(k, '♥'); heartsAt(k.el, 5); }, i * 250));
+    sfx.purr(); [0, 2, 4, 7].forEach((d, i) => bell(note(6 + d), .1 + i * .1, .05));
+  }
   function setWalk(w) {
     if (reduceMotion) { w.until = Infinity; return; }
     w.tx = FLOOR.x0 + Math.random() * (FLOOR.x1 - FLOOR.x0);
@@ -2215,14 +2319,15 @@ body.in-hab .stage{width:max(100cqw,min(calc(100cqh * .714),130cqw))}
     if (world && !$('tab-templo').hidden && world.clientWidth) {
       const W = world.clientWidth, H = world.clientHeight;
       for (const w of walkers.values()) {
-        if (!w.el || !w.el.isConnected || w.lifted) continue;
+        if (!w.el || !w.el.isConnected || w.lifted || w.playing) continue;
         if (w.walking) {
+          if (w.follow) { const f = w.follow; w.tx = Math.max(FLOOR.x0, Math.min(FLOOR.x1, f.x - (f.face || 1) * .1)); w.ty = f.y; }
           const dx = (w.tx - w.x) * W, dy = (w.ty - w.y) * H, d = Math.hypot(dx, dy);
-          const stepPx = W * .05 * depth(w.y) * dt;
-          if (d <= stepPx) { w.x = w.tx; w.y = w.ty; setIdle(w, t); }
+          const stepPx = W * .05 * depth(w.y) * dt * (w.fast || 1);
+          if (d <= stepPx) { w.x = w.tx; w.y = w.ty; if (w.chase) endChase(w, t); else setIdle(w, t); }
           else {
             w.x += dx / d * stepPx / W; w.y += dy / d * stepPx / H; if (Math.abs(dx) > 2) w.face = dx < 0 ? -1 : 1;
-            if (w.genes && t - (w.frameT || 0) > WALK_MS && hasWalkArt()) {
+            if (w.genes && t - (w.frameT || 0) > WALK_MS / (w.fast || 1) && hasWalkArt()) {
               w.frameT = t; w.frame = ((w.frame || 0) + 1) % WALK_FRAMES;
               const im = w.side || (w.side = w.el.querySelector('.side img.frames'));
               const u = im && catArtURL(w.genes, 'caminar' + (w.frame + 1), false);
